@@ -29,6 +29,11 @@ verification:
 points_regroupement:
   capacite_kg: 3000                      # [H]
   distance_max_a_pied_m: 300             # [H]
+  couverture_cible: 0.95                 # [H] part de la zone à moins de distance_max_a_pied_m d'un point
+  max_points_par_zone: 60                # [H] borne le calcul ; au-delà, la zone est signalée mal couverte
+  poids_depotoir: 5                      # [H] attraction d'un dépotoir actif sur le placement (1 = un échantillon de ménages)
+  pas_echantillonnage_m: 100             # résolution de la grille des ménages (agrandie si > max_echantillons_par_zone)
+  max_echantillons_par_zone: 2000        # borne le temps de calcul
 
 camions:
   - {id: camion_1, capacite_kg: 6000, cout_km_xof: 400, cout_jour_xof: 15000, disponible: true}   # [H]
