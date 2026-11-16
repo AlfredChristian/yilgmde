@@ -7,11 +7,11 @@
 ## Phase 0 — Squelette (jour 1)
 
 - [x] Dépôt créé, structure en place, API `/health` qui tourne (Christian)
-- [ ] Faissal et Cramer ont cloné le dépôt et lancé l'API
-- [ ] Contrat d'API (`docs/api-contract.md`) relu et validé par Christian et Faissal
-- [ ] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence)
-- [ ] Jeux de données d'exemple dans `data/sample/` utilisés par le front et le back
-- [ ] Questions ouvertes de `CONTEXT.md` posées aux organisateurs (Cramer)
+- [x] Faissal et Cramer ont cloné le dépôt et lancé l'API
+- [x] Contrat d'API (`docs/api-contract.md`) relu et validé par Christian et Faissal
+- [x] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence)
+- [x] Jeux de données d'exemple dans `data/sample/` utilisés par le front et le back
+- [x] Questions ouvertes de `CONTEXT.md` posées aux organisateurs (Cramer)
 
 ## Faissal — back-end et moteur
 
@@ -45,7 +45,8 @@
 
 ## Christian — front-end
 
-- [ ] Choisir et initialiser le framework, Leaflet + OSM, proxy ou CORS vers l'API (P1)
+- [x] Choisir et initialiser le framework (React + Vite), Leaflet + OSM (P1)
+- [ ] Proxy ou CORS vers l'API (P1)
 - [ ] A1 — Formulaire de signalement mobile (position GPS ajustable, photo, type, volume) (P1)
 - [ ] B1/B2 — Carte publique : dépotoirs vérifiés, couches zones/points/tournées (P1)
 - [ ] F1/F2 — Connexion et vues selon le rôle (P1)

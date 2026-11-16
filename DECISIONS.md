@@ -21,5 +21,6 @@
 | D14 | 2026-11-16 | Base SQLite pour le MVP (opérations spatiales faites en Python) ; PostGIS écarté pour l'instant | Moins de configuration, pas de Docker obligatoire | Proposé |
 | D15 | 2026-11-16 | Le constat d'infraction enregistre et trace, il ne décide jamais d'une sanction ; accès réservé à Laabal et admin ; la carte publique montre le dépotoir, pas la personne | Données personnelles sensibles | Proposé |
 | D16 | 2026-11-16 | Licence du code : Apache-2.0 ; données dérivées d'OSM sous ODbL | Réutilisation facile par d'autres communes ; compatibilité OSM | Proposé |
-| D17 | — | Framework front (React, Vue, Angular…) | À choisir selon ce que Christian maîtrise | À décider |
+| D17 | 2026-11-16 | Front : React + Vite, avec Leaflet et react-leaflet | Maîtrisé par Christian ; démarrage rapide ; compatible PWA (D12) | Retenu |
 | D18 | — | Simulation : boucle Python maison ou Mesa | À choisir par Faissal | À décider |
+| D19 | 2026-11-16 | Le front lit `public/mock/` quand `VITE_USE_MOCK=true`, et `GET /depotoirs` sinon. Le format de réponse est identique (GeoJSON FeatureCollection). Tout accès aux données passe par `frontend/src/api/client.js` | Avancer sans attendre l'API ; basculer sans toucher aux composants ; sert aussi de plan B hors ligne pour la démo | Retenu |
