@@ -1,0 +1,425 @@
+{
+ "type": "FeatureCollection",
+ "_note": "Jeu de test FICTIF pour la vérification automatique (A2). 'attendu' = résultat attendu ; 'categorie' = type de piège. Ces deux propriétés sont réservées aux tests : le jury n'en fournira pas. 'jeton_appareil' et 'cree_le' (optionnels) simulent l'en-tête X-Device-Token et l'heure d'envoi. Traiter les signalements dans l'ordre des id. Zone et rayon : config/ouagadougou.yaml et config/default.yaml.",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.5197,
+     12.3714
+    ]
+   },
+   "properties": {
+    "id": 1,
+    "categorie": "valide",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Référence : tas d'ordures au bord de la route",
+    "attendu": "en_attente_revue"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.53,
+     12.365
+    ]
+   },
+   "properties": {
+    "id": 2,
+    "categorie": "valide",
+    "type_dechet": "gravats",
+    "volume_estime": "gros",
+    "description": "Référence : gravats sur terrain vague",
+    "attendu": "en_attente_revue"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.47,
+     12.33
+    ]
+   },
+   "properties": {
+    "id": 3,
+    "categorie": "valide",
+    "type_dechet": "encombrants",
+    "volume_estime": "petit",
+    "description": "Référence : encombrants près d'un marché",
+    "attendu": "en_attente_revue"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.51972,
+     12.37142
+    ]
+   },
+   "properties": {
+    "id": 4,
+    "categorie": "doublon",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Quasi même point que n°1 (~3 m)",
+    "attendu": "alerte doublon_probable:1"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.5197,
+     12.371625
+    ]
+   },
+   "properties": {
+    "id": 5,
+    "categorie": "doublon_limite",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "À ~25 m du n°1 : juste DANS le rayon de 30 m",
+    "attendu": "alerte doublon_probable:1"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.5197,
+     12.37176
+    ]
+   },
+   "properties": {
+    "id": 6,
+    "categorie": "non_doublon_limite",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "À ~40 m du n°1 : juste HORS du rayon de 30 m, ne doit PAS être un doublon",
+    "attendu": "en_attente_revue"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.5001,
+     12.4001
+    ]
+   },
+   "properties": {
+    "id": 7,
+    "categorie": "reapparition",
+    "type_dechet": "plastiques",
+    "volume_estime": "petit",
+    "description": "À ~16 m du dépotoir éradiqué n°3 : après validation, n°3 repasse 'actif' et nb_reapparitions +1",
+    "attendu": "en_attente_revue (puis dépotoir 3 actif, nb_reapparitions +1 à la validation)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -4.0083,
+     5.36
+    ]
+   },
+   "properties": {
+    "id": 8,
+    "categorie": "hors_zone",
+    "type_dechet": "menager",
+    "volume_estime": "petit",
+    "description": "Abidjan",
+    "attendu": "rejete_auto: hors_zone"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.52,
+     12.51
+    ]
+   },
+   "properties": {
+    "id": 9,
+    "categorie": "hors_zone_limite",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Juste au nord de la zone d'étude (lat 12.51 > 12.50)",
+    "attendu": "rejete_auto: hors_zone"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.64,
+     12.29
+    ]
+   },
+   "properties": {
+    "id": 10,
+    "categorie": "dans_zone_limite",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Proche du coin sud-ouest MAIS dans la zone : doit être accepté",
+    "attendu": "en_attente_revue"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     0.0,
+     0.0
+    ]
+   },
+   "properties": {
+    "id": 11,
+    "categorie": "position_incoherente",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Position 0,0 (GPS non initialisé)",
+    "attendu": "rejete_auto: position_incoherente (ou hors_zone)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     12.3714,
+     -1.5197
+    ]
+   },
+   "properties": {
+    "id": 12,
+    "categorie": "position_incoherente",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Latitude et longitude inversées",
+    "attendu": "rejete_auto: position_incoherente (ou hors_zone)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.5197,
+     95.0
+    ]
+   },
+   "properties": {
+    "id": 13,
+    "categorie": "position_incoherente",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Latitude impossible (95 > 90)",
+    "attendu": "rejete_auto: position_incoherente"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": null,
+   "properties": {
+    "id": 14,
+    "categorie": "position_incoherente",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Aucune géométrie (geometry = null)",
+    "attendu": "rejete: position_incoherente (ou 422), sans planter"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.54,
+     12.35
+    ]
+   },
+   "properties": {
+    "id": 15,
+    "categorie": "volume_aberrant",
+    "type_dechet": "menager",
+    "volume_estime": "énorme",
+    "description": "volume_estime hors énumération",
+    "attendu": "rejete: volume_aberrant (ou 422)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.545,
+     12.355
+    ]
+   },
+   "properties": {
+    "id": 16,
+    "categorie": "type_inconnu",
+    "type_dechet": "radioactif",
+    "volume_estime": "moyen",
+    "description": "type_dechet hors énumération",
+    "attendu": "rejete: 422 type_dechet invalide"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.55,
+     12.36
+    ]
+   },
+   "properties": {
+    "id": 17,
+    "categorie": "champ_manquant",
+    "type_dechet": "menager",
+    "description": "volume_estime absent",
+    "attendu": "rejete: 422 champ manquant"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.46,
+     12.31
+    ]
+   },
+   "properties": {
+    "id": 18,
+    "categorie": "appareil_spam",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Signalement 1/6 du même appareil",
+    "attendu": "en_attente_revue",
+    "jeton_appareil": "tok-spam-001",
+    "cree_le": "2026-11-17T09:10:00Z"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.462,
+     12.312
+    ]
+   },
+   "properties": {
+    "id": 19,
+    "categorie": "appareil_spam",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Signalement 2/6 du même appareil",
+    "attendu": "en_attente_revue",
+    "jeton_appareil": "tok-spam-001",
+    "cree_le": "2026-11-17T09:12:00Z"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.464,
+     12.314
+    ]
+   },
+   "properties": {
+    "id": 20,
+    "categorie": "appareil_spam",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Signalement 3/6 du même appareil",
+    "attendu": "en_attente_revue",
+    "jeton_appareil": "tok-spam-001",
+    "cree_le": "2026-11-17T09:14:00Z"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.466,
+     12.316
+    ]
+   },
+   "properties": {
+    "id": 21,
+    "categorie": "appareil_spam",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Signalement 4/6 du même appareil",
+    "attendu": "en_attente_revue",
+    "jeton_appareil": "tok-spam-001",
+    "cree_le": "2026-11-17T09:16:00Z"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.468,
+     12.318
+    ]
+   },
+   "properties": {
+    "id": 22,
+    "categorie": "appareil_spam",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Signalement 5/6 du même appareil",
+    "attendu": "en_attente_revue",
+    "jeton_appareil": "tok-spam-001",
+    "cree_le": "2026-11-17T09:18:00Z"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.47,
+     12.32
+    ]
+   },
+   "properties": {
+    "id": 23,
+    "categorie": "appareil_spam",
+    "type_dechet": "menager",
+    "volume_estime": "moyen",
+    "description": "Signalement 6/6 du même appareil",
+    "attendu": "alerte appareil_suspect (6e en moins d'une heure)",
+    "jeton_appareil": "tok-spam-001",
+    "cree_le": "2026-11-17T09:20:00Z"
+   }
+  }
+ ]
+}
