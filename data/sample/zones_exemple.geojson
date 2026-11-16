@@ -1,0 +1,78 @@
+{
+ "type": "FeatureCollection",
+ "_note": "Zones FICTIVES (rectangles et populations inventés) pour développer sans attendre les vraies données. Les dépotoirs de depotoirs_exemple.geojson y sont rattachés.",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "id": 1,
+    "nom": "Zone exemple A",
+    "population": 12000,
+    "densite": 8000
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -1.54,
+       12.36
+      ],
+      [
+       -1.51,
+       12.36
+      ],
+      [
+       -1.51,
+       12.38
+      ],
+      [
+       -1.54,
+       12.38
+      ],
+      [
+       -1.54,
+       12.36
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "id": 2,
+    "nom": "Zone exemple B",
+    "population": 8000,
+    "densite": 5000
+   },
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -1.51,
+       12.39
+      ],
+      [
+       -1.48,
+       12.39
+      ],
+      [
+       -1.48,
+       12.41
+      ],
+      [
+       -1.51,
+       12.41
+      ],
+      [
+       -1.51,
+       12.39
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

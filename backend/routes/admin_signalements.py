@@ -34,6 +34,7 @@ from backend.schemas import (
 )
 from backend.securite import exiger_role
 from backend.utilisateurs import journaliser
+from backend.zones import zone_id_pour_point
 
 router = APIRouter(prefix="/admin", tags=["moderation"])
 
@@ -140,11 +141,13 @@ def valider_signalement(
 
         with db.transaction(conn):
             if fusionner_avec is None:
+                # Zone du dépotoir : None si le point n'est dans aucune zone connue.
+                zone_id = zone_id_pour_point(conn, sig["latitude"], sig["longitude"])
                 curseur = conn.execute(
-                    "INSERT INTO depotoir (latitude, longitude, volume_estime, statut, legalite,"
+                    "INSERT INTO depotoir (latitude, longitude, zone_id, volume_estime, statut, legalite,"
                     " nb_signalements, nb_reapparitions, premiere_detection, derniere_maj)"
-                    " VALUES (?, ?, ?, 'actif', 'illegal', 1, 0, ?, ?)",
-                    (sig["latitude"], sig["longitude"], sig["volume_estime"], maintenant, maintenant),
+                    " VALUES (?, ?, ?, ?, 'actif', 'illegal', 1, 0, ?, ?)",
+                    (sig["latitude"], sig["longitude"], zone_id, sig["volume_estime"], maintenant, maintenant),
                 )
                 depotoir_id = curseur.lastrowid
             else:
