@@ -102,7 +102,20 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
 - `POST /scenarios/{id}/activer` → scénario, devenu le seul actif.
 - `POST /scenarios/{id}/calculer` → Plan, calcul forcé.
 - `GET /scenarios/{id}/plan` → dernier Plan, **recalculé d'abord si les entrées ont changé** (dépotoirs, zones, paramètres) ; sinon le même plan est renvoyé.
-- `POST /scenarios/{id}/simuler` : `{"jours": 30, "graine": 42}` → `{"indicateurs": [{"jour": 1, "pct_collecte": 61.2, "depotoirs_actifs": 14, "cout_xof": 140000, "distance_km": 12.4}]}` (à faire, E1–E3)
+- `POST /scenarios/{id}/simuler` : `{"jours": 30, "graine": 42}` (corps optionnel ; `jours` de 1 à 365, défaut 30 ; `graine` par défaut celle de la config). Simule sur le plan à jour du scénario ; **même graine = mêmes résultats**. `422` si `jours` hors bornes, `404` si scénario inconnu. Les colonnes `pct_collecte`, `depotoirs_actifs`, `cout_xof`, `distance_km` sont enregistrées dans `indicateur_simulation` (la simulation précédente du même plan est remplacée).
+```json
+{ "scenario_id": 1, "plan_id": 7, "graine": 42,
+  "indicateurs": [{ "jour": 1, "pct_collecte": 78.2, "depotoirs_actifs": 2, "cout_xof": 0, "distance_km": 0.0,
+                    "production_kg": 10000, "dechets_sauvages_kg": 2185, "stock_points_kg": 7816, "collecte_kg": 0,
+                    "passage": false, "collecte_suspendue": false, "depotoirs_eradiques": 2,
+                    "depotoirs_sous_surveillance": 0, "reapparitions": 0, "constats": 0, "amendes_xof": 0,
+                    "budget_restant_xof": 166667 }],
+  "resume": { "jours": 30, "pct_collecte_moyen": 77.7, "depotoirs_actifs_debut": 2, "depotoirs_actifs_fin": 5,
+              "nouveaux_depotoirs": 41, "depotoirs_eradiques": 54, "reapparitions": 16, "dechets_sauvages_kg": 66921,
+              "passages_collecte": 8, "passages_suspendus_budget": 0, "cout_total_xof": 804048,
+              "distance_totale_km": 1110.2, "amendes_total_xof": 150000, "constats": 15, "budget_restant_xof": 4345952 } }
+```
+  - `pct_collecte` : part de la production du jour arrivée aux points (pré-collecte + apport volontaire − débordement). `cout_xof`, `distance_km` : non nuls les seuls jours de passage. `budget_restant_xof` : `null` si pas de budget dans la config.
 - `GET /scenarios/comparer?ids=1,2` (P2, à faire)
 
 **Plan (réponse)**
