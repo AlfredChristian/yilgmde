@@ -33,9 +33,14 @@ Toute modification d'API passe par une PR qui met à jour ce fichier. La documen
 |---|---|---|
 | GET | `/health` | → `{"status": "ok"}` |
 | GET | `/depotoirs?statut=&zone_id=` | Dépotoirs **vérifiés** en GeoJSON (`FeatureCollection`, propriétés : `id`, `statut`, `legalite`, `volume_estime`, `nb_signalements`, `zone_id`, `derniere_maj`) |
+| GET | `/zones` | Zones (quartiers ou secteurs) en GeoJSON, avec la demande de déchets estimée (C1) |
 | GET | `/points-regroupement` | Points du plan courant, GeoJSON |
 | POST | `/signalements` | Créer un signalement (anonyme) |
 | GET | `/signalements/suivi/{code_suivi}` | Statut d'un signalement |
+
+**GET `/zones`** → `FeatureCollection` de `Polygon` (ou `MultiPolygon`), propriétés : `id`, `nom`, `population` (peut être `null`), `densite`, `demande_kg_jour`. La demande vaut `population × production_dechets_kg_hab_jour × coef_production(saison)` selon la config courante ; elle vaut `0` si la population est inconnue. Vide tant qu'aucune zone n'est chargée.
+
+À la validation d'un signalement, le nouveau dépotoir est rattaché à la zone qui le contient (`zone_id`), ou `null` si aucune zone ne le contient.
 
 **POST `/signalements`** — `multipart/form-data` : `latitude`, `longitude`, `type_dechet`, `volume_estime`, `description` (optionnel), `photo` (fichier, optionnel).
 Réponse `201` :
