@@ -20,6 +20,10 @@ verification:
   rayon_doublon_m: 30                    # signalements plus proches = doublon probable
   max_signalements_par_appareil_heure: 5
   photo_requise: false
+  penalite_doublon: 0.3                  # [H] retranchée du score si un signalement proche existe déjà
+  penalite_depotoir_proche: 0.1          # [H] retranchée du score si un dépotoir connu est proche
+  seuil_confiance_appareil: 0.3          # [H] en dessous, l'appareil est jugé peu fiable
+  penalite_appareil_peu_fiable: 0.2      # [H]
 
 points_regroupement:
   capacite_kg: 3000                      # [H]

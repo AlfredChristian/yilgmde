@@ -23,3 +23,4 @@
 | D16 | 2026-11-16 | Licence du code : Apache-2.0 ; données dérivées d'OSM sous ODbL | Réutilisation facile par d'autres communes ; compatibilité OSM | Proposé |
 | D17 | — | Framework front (React, Vue, Angular…) | À choisir selon ce que Christian maîtrise | À décider |
 | D18 | — | Simulation : boucle Python maison ou Mesa | À choisir par Faissal | À décider |
+| D19 | 2026-11-16 | Vérification A2 : fonction pure `verifier(lat, lon, config, contexte)` (stdlib, haversine). Rejet auto : appareil bloqué, limite/heure, position incohérente (0,0, NaN, lat/lon inversées), hors zone, photo requise. Doublon et dépotoir proche = alertes + baisse du score, jamais un rejet (l'admin tranche). Pénalités dans `config/default.yaml` [H] | Rejets explicables ; un vrai second signalement ne doit pas être perdu | Retenu (`backend/verification.py`) |
