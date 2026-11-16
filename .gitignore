@@ -30,3 +30,5 @@ uploads/
 Thumbs.db
 .idea/
 .vscode/
+# Traces de plantage (Git Bash sous Windows)
+*.stackdump
