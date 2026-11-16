@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend import db
 from backend.config import charger_config
+from backend.routes import depotoirs, signalements
 
 
 @asynccontextmanager
@@ -26,6 +27,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(signalements.router)
+app.include_router(depotoirs.router)
 
 
 @app.get("/health")

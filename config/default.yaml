@@ -20,6 +20,7 @@ verification:
   rayon_doublon_m: 30                    # signalements plus proches = doublon probable
   max_signalements_par_appareil_heure: 5
   photo_requise: false
+  photo_taille_max_mo: 5                 # [H] au-delà, la photo est refusée (HTTP 413)
   penalite_doublon: 0.3                  # [H] retranchée du score si un signalement proche existe déjà
   penalite_depotoir_proche: 0.1          # [H] retranchée du score si un dépotoir connu est proche
   seuil_confiance_appareil: 0.3          # [H] en dessous, l'appareil est jugé peu fiable

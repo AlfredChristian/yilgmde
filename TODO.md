@@ -22,7 +22,7 @@
 - [ ] F2 — Droits par rôle vérifiés côté serveur (P1)
 
 **Signalements**
-- [ ] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
+- [x] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
 - [x] A2 — Vérification automatique : doublon, hors zone, position incohérente, limite par appareil, score + motif (P1)
 - [ ] A3 — Modération : valider, rejeter avec motif, fusionner (P1)
 - [ ] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1)
