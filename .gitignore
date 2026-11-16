@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Secrets et environnement
+.env
+.env.*
+!.env.example
+
+# Données lourdes ou personnelles
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+uploads/
+*.sqlite3
+*.db
+
+# Système et éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

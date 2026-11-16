@@ -1,0 +1,12 @@
+{
+  "type": "FeatureCollection",
+  "_note": "Dépotoirs vérifiés FICTIFS, au format de GET /depotoirs.",
+  "features": [
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-1.5197, 12.3714]},
+     "properties": {"id": 1, "statut": "actif", "legalite": "illegal", "volume_estime": "moyen", "nb_signalements": 2, "zone_id": 1, "derniere_maj": "2026-11-17T09:30:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-1.5300, 12.3650]},
+     "properties": {"id": 2, "statut": "actif", "legalite": "illegal", "volume_estime": "gros", "nb_signalements": 1, "zone_id": 1, "derniere_maj": "2026-11-17T09:35:00Z"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-1.5000, 12.4000]},
+     "properties": {"id": 3, "statut": "eradique", "legalite": "illegal", "volume_estime": "petit", "nb_signalements": 1, "zone_id": 2, "derniere_maj": "2026-11-17T10:10:00Z"}}
+  ]
+}

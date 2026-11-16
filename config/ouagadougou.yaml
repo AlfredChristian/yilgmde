@@ -1,0 +1,21 @@
+# Paramètres PROPRES à Ouagadougou. [H] = hypothèse / à affiner.
+
+ville: Ouagadougou
+pays: BF
+devise: XOF
+crs_geographique: EPSG:4326       # latitude / longitude
+crs_metrique: EPSG:32630          # UTM 30N, pour calculer des distances en mètres
+
+zone_etude:
+  # Rectangle approximatif autour de Ouagadougou [H] — à affiner avec le secteur réel.
+  bbox: {min_lat: 12.28, max_lat: 12.50, min_lon: -1.65, max_lon: -1.38}
+
+secteur_equipe: null              # à renseigner : secteur de collecte attribué à notre équipe
+
+population_totale: null           # à renseigner (source : recensement / mairie)
+
+sources_donnees:
+  - OpenStreetMap (ODbL)
+  - Open Buildings
+  - Signalements collectés par l'équipe dans son secteur
+  - Paramètres de départ fixés avec la mairie (à obtenir)

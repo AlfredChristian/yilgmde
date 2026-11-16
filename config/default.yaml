@@ -1,0 +1,51 @@
+# Paramètres GÉNÉRIQUES (réutilisables par n'importe quelle commune).
+# [H] = HYPOTHÈSE de départ, sans source établie : à ajuster avec la mairie ou des données réelles.
+
+scenario:
+  nom: base
+  saison: seche              # seche | pluies
+  horizon_jours: 30          # durée de la simulation
+  graine_aleatoire: 42       # reproductibilité
+
+population:
+  habitants_par_menage: 6                # [H]
+  production_dechets_kg_hab_jour: 0.5    # [H]
+  taux_abonnement_precollecteurs: 0.3    # [H] part des ménages abonnés à un pré-collecteur
+
+saisons:
+  seche:  {coef_production: 1.0, coef_vitesse_camion: 1.0, coef_depots_sauvages: 1.0}
+  pluies: {coef_production: 1.1, coef_vitesse_camion: 0.7, coef_depots_sauvages: 1.2}   # [H]
+
+verification:
+  rayon_doublon_m: 30                    # signalements plus proches = doublon probable
+  max_signalements_par_appareil_heure: 5
+  photo_requise: false
+
+points_regroupement:
+  capacite_kg: 3000                      # [H]
+  distance_max_a_pied_m: 300             # [H]
+
+camions:
+  - {id: camion_1, capacite_kg: 6000, cout_km_xof: 400, cout_jour_xof: 15000, disponible: true}   # [H]
+  - {id: camion_2, capacite_kg: 6000, cout_km_xof: 400, cout_jour_xof: 15000, disponible: true}   # [H]
+  - {id: camion_3, capacite_kg: 6000, cout_km_xof: 400, cout_jour_xof: 15000, disponible: true}   # [H]
+
+collecte:
+  frequence_passages_par_semaine: 2      # [H]
+  vitesse_moyenne_kmh: 20                # [H]
+
+precollecteurs:
+  nombre: 20                             # [H]
+  abonnement_mensuel_xof: 1000           # [H]
+  capacite_kg_jour: 150                  # [H]
+
+laabal:
+  nombre_brigades: 1                     # [H]
+  capacite_eradication_par_jour: 2       # [H] dépotoirs traités par jour
+  frequence_surveillance_jours: 7        # [H]
+  taux_controle: 0.3                     # [H] probabilité de constater un dépôt en zone surveillée
+  montant_amende_xof: 10000              # [H]
+  effet_dissuasion: 0.3                  # [H] réduction de la probabilité de dépôt sauvage en zone surveillée
+
+mairie:
+  budget_mensuel_xof: 5000000            # [H]

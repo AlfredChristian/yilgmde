@@ -1,0 +1,20 @@
+{
+  "id": 7, "scenario_id": 1, "calcule_le": "2026-11-17T10:00:00Z", "duree_calcul_ms": 840,
+  "points_regroupement": [
+    {"id": 1, "latitude": 12.3690, "longitude": -1.5250, "capacite_kg": 3000, "zone_id": 1,
+     "explication": "Proche de 2 dépotoirs actifs, à moins de 300 m des ménages desservis"}
+  ],
+  "tournees": [
+    {"id": 1, "type": "collecte", "camion_id": "camion_1", "distance_km": 14.2, "duree_min": 95, "cout_xof": 21000,
+     "arrets": [
+       {"ordre": 1, "cible_type": "point_regroupement", "cible_id": 1, "latitude": 12.3690, "longitude": -1.5250, "statut": "a_faire"}
+     ]},
+    {"id": 2, "type": "intervention", "camion_id": null, "distance_km": 6.8, "duree_min": 50, "cout_xof": 0,
+     "arrets": [
+       {"ordre": 1, "cible_type": "depotoir", "cible_id": 1, "latitude": 12.3714, "longitude": -1.5197, "statut": "a_faire"},
+       {"ordre": 2, "cible_type": "depotoir", "cible_id": 2, "latitude": 12.3650, "longitude": -1.5300, "statut": "a_faire"}
+     ]}
+  ],
+  "indicateurs": {"dechets_collectes_pct": 82.5, "depotoirs_actifs": 2, "cout_total_xof": 21000, "distance_totale_km": 21.0},
+  "non_couverts": []
+}
