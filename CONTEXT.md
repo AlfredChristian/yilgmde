@@ -1,9 +1,5 @@
 # CONTEXT — yilgmde
 
-> À coller au début de chaque nouvelle conversation avec une IA.
-> Ce fichier est **stable** (projet, contraintes, stack). Le suivi (fait / en cours / à faire) est **uniquement** dans `TODO.md`.
-> Le texte exact du sujet est dans `docs/enonce.md`. Les détails sont dans `docs/` (voir section 9).
-
 ## 1. Le projet
 
 **yilgmde** est un outil libre d'aide à la décision pour l'assainissement de Ouagadougou. Il va du signalement citoyen des dépotoirs sauvages jusqu'au plan de gestion de la ville (points de regroupement, tournées), avec une simulation des acteurs.
