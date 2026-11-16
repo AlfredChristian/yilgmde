@@ -137,3 +137,63 @@ def test_matrice_symetrique_avec_detour():
     m2 = matrice_distances_m(sites, 1.3)
     assert m1[0][1] == m1[1][0] and m1[0][0] == 0
     assert m2[0][1] == pytest.approx(m1[0][1] * 1.3, abs=1)
+
+
+# --- C7 : tournées Laabal -------------------------------------------------------------
+
+from simulation.tournees import depotoirs_a_traiter, planifier_interventions, priorite_depotoir  # noqa: E402
+
+
+def depotoir(id_, lat, lon, volume="moyen", statut="actif", legalite="illegal", reap=0, sig=1):
+    return {"id": id_, "latitude": lat, "longitude": lon, "volume_estime": volume, "statut": statut,
+            "legalite": legalite, "nb_reapparitions": reap, "nb_signalements": sig}
+
+
+DEPOTOIRS = [
+    depotoir(1, 12.371, -1.521),
+    depotoir(2, 12.372, -1.525, volume="gros"),
+    depotoir(3, 12.375, -1.519, reap=2),                       # revient : prioritaire
+    depotoir(4, 12.369, -1.530, volume="petit"),
+    depotoir(5, 12.380, -1.510, statut="eradique"),            # déjà traité
+    depotoir(6, 12.381, -1.511, legalite="officiel"),          # site officiel : pas d'éradication
+    depotoir(7, 12.374, -1.522, statut="intervention_planifiee"),
+]
+
+
+def test_priorite_et_raison(config):
+    score, raison = priorite_depotoir(DEPOTOIRS[2], config)
+    p = config["laabal"]["priorite"]
+    assert score == p["poids_volume"]["moyen"] + 2 * p["poids_reapparition"] + p["poids_signalement"]
+    assert "2 réapparition(s)" in raison
+
+
+def test_seuls_les_illegaux_actifs_sont_a_traiter(config):
+    ids = [d["id"] for d in depotoirs_a_traiter(DEPOTOIRS, config)]
+    assert set(ids) == {1, 2, 3, 4, 7}
+    assert ids[0] == 3 and ids[-1] == 4                         # réapparition d'abord, petit en dernier
+
+
+def test_capacite_laabal_et_en_attente(config):
+    r = planifier_interventions(DEPOTOIRS, config)
+    capacite = config["laabal"]["nombre_brigades"] * config["laabal"]["capacite_eradication_par_jour"]
+    traites = [a["cible_id"] for t in r["tournees"] for a in t["arrets"]]
+    assert len(traites) == capacite
+    assert set(traites) == {d["id"] for d in depotoirs_a_traiter(DEPOTOIRS, config)[:capacite]}
+    assert {x["depotoir_id"] for x in r["en_attente"]} == {1, 2, 3, 4, 7} - set(traites)
+    assert all("capacité Laabal" in x["motif"] for x in r["en_attente"])
+    t = r["tournees"][0]
+    assert t["type"] == "intervention" and t["camion_id"] is None and t["cout_xof"] == 0
+    assert all(a["cible_type"] == "depotoir" and a["raison"] for a in t["arrets"])
+
+
+def test_plus_de_brigades_traitent_plus(config):
+    deux = appliquer_surcharges(config, {"laabal": {"nombre_brigades": 2, "capacite_eradication_par_jour": 3}})
+    r = planifier_interventions(DEPOTOIRS, deux)
+    assert sum(len(t["arrets"]) for t in r["tournees"]) == 5 and r["en_attente"] == []
+    assert planifier_interventions(DEPOTOIRS, deux) == r          # reproductible
+
+
+def test_sans_brigade(config):
+    zero = appliquer_surcharges(config, {"laabal": {"nombre_brigades": 0}})
+    r = planifier_interventions(DEPOTOIRS, zero)
+    assert r["tournees"] == [] and len(r["en_attente"]) == 5

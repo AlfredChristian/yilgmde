@@ -277,3 +277,113 @@ def planifier_tournees(points: Sequence[dict], config: dict, methode: str = "aut
         non_couverts.append({"point_regroupement_id": p["id"], "raison": raison})
 
     return {"tournees": tournees, "non_couverts": non_couverts, "methode": utilisee}
+
+
+# --- C7 : tournées d'intervention Laabal ----------------------------------------------
+
+STATUTS_A_TRAITER = ("actif", "intervention_planifiee")
+
+
+def priorite_depotoir(depotoir: dict, config: dict) -> tuple[float, str]:
+    """Score de priorité d'un dépotoir illégal et sa raison lisible.
+
+    score = poids_volume[volume] + poids_reapparition × nb_reapparitions
+            + poids_signalement × nb_signalements      (poids [H] dans `laabal.priorite`)
+    """
+    p = config["laabal"].get("priorite", {})
+    volume = depotoir.get("volume_estime") or "moyen"
+    reap = int(depotoir.get("nb_reapparitions") or 0)
+    sig = int(depotoir.get("nb_signalements") or 0)
+    score = (
+        float(p.get("poids_volume", {}).get(volume, 1))
+        + float(p.get("poids_reapparition", 0)) * reap
+        + float(p.get("poids_signalement", 0)) * sig
+    )
+    morceaux = [f"volume {volume}"]
+    if reap:
+        morceaux.append(f"{reap} réapparition(s)")
+    if sig:
+        morceaux.append(f"{sig} signalement(s)")
+    return round(score, 2), ", ".join(morceaux)
+
+
+def depotoirs_a_traiter(depotoirs: Sequence[dict], config: dict) -> list[dict]:
+    """Dépotoirs illégaux actifs, triés par priorité décroissante (puis id) avec leur raison."""
+    resultat = []
+    for d in depotoirs:
+        if d.get("legalite", "illegal") != "illegal" or d.get("statut", "actif") not in STATUTS_A_TRAITER:
+            continue
+        score, raison = priorite_depotoir(d, config)
+        resultat.append(dict(d, priorite=score, raison=raison))
+    return sorted(resultat, key=lambda d: (-d["priorite"], d["id"]))
+
+
+def planifier_interventions(depotoirs: Sequence[dict], config: dict) -> dict:
+    """Tournées du jour des brigades Laabal sur les dépotoirs illégaux.
+
+    Les `nombre_brigades × capacite_eradication_par_jour` dépotoirs les plus
+    prioritaires sont répartis entre les brigades, l'ordre de visite est optimisé
+    (même moteur que C3). Les autres restent `en_attente`, avec leur rang.
+    Renvoie `{"tournees": [...], "en_attente": [...], "methode": str}`.
+    """
+    laabal = config["laabal"]
+    brigades = max(0, int(laabal.get("nombre_brigades", 0)))
+    par_jour = max(0, int(laabal.get("capacite_eradication_par_jour", 0)))
+    base = laabal.get("base") or config["collecte"].get("depot")
+    if not base:
+        raise ValueError("laabal.base ou collecte.depot manquant dans la config")
+    temps_intervention = float(laabal.get("temps_intervention_min", 60))
+    duree = float(laabal.get("duree_max_tournee_min", config["collecte"].get("duree_max_tournee_min", 480)))
+
+    a_traiter = depotoirs_a_traiter(depotoirs, config)
+    retenus = a_traiter[: brigades * par_jour]
+    en_attente = [
+        {"depotoir_id": d["id"], "priorite": d["priorite"], "raison": d["raison"],
+         "motif": f"capacité Laabal atteinte ({brigades} brigade(s) × {par_jour} dépotoir(s)/jour)"}
+        for d in a_traiter[len(retenus):]
+    ]
+
+    vehicules = [{"capacite": par_jour, "duree_max": duree, "cout_fixe": 0} for _ in range(brigades)]
+    sites = [(float(base["latitude"]), float(base["longitude"]))] + [(d["latitude"], d["longitude"]) for d in retenus]
+    demandes = [0] + [1] * len(retenus)
+    service = [0.0] + [temps_intervention] * len(retenus)
+    itineraires, methode, dist = resoudre(
+        sites, demandes, service, vehicules, config, float(config["collecte"].get("temps_calcul_max_s", 5))
+    )
+    vitesse = vitesse_m_par_min(config)
+
+    tournees, faits = [], set()
+    for b, route in enumerate(itineraires, start=1):
+        if not route:
+            continue
+        km, minutes = mesurer(route, dist, service, vitesse)
+        tournees.append(
+            {
+                "type": "intervention",
+                "camion_id": None,
+                "brigade": b,
+                "distance_km": round(km, 2),
+                "duree_min": round(minutes, 1),
+                "cout_xof": 0,
+                "arrets": [
+                    {
+                        "ordre": k,
+                        "cible_type": "depotoir",
+                        "cible_id": retenus[i - 1]["id"],
+                        "latitude": retenus[i - 1]["latitude"],
+                        "longitude": retenus[i - 1]["longitude"],
+                        "priorite": retenus[i - 1]["priorite"],
+                        "raison": retenus[i - 1]["raison"],
+                        "statut": "a_faire",
+                    }
+                    for k, i in enumerate(route, start=1)
+                ],
+            }
+        )
+        faits.update(route)
+    for i, d in enumerate(retenus, start=1):   # retenu mais hors de portée dans la journée
+        if i not in faits:
+            en_attente.append({"depotoir_id": d["id"], "priorite": d["priorite"], "raison": d["raison"],
+                               "motif": "trop loin pour la durée d'une tournée"})
+    en_attente.sort(key=lambda x: (-x["priorite"], x["depotoir_id"]))
+    return {"tournees": tournees, "en_attente": en_attente, "methode": methode}

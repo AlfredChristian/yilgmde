@@ -62,6 +62,12 @@ laabal:
   taux_controle: 0.3                     # [H] probabilité de constater un dépôt en zone surveillée
   montant_amende_xof: 10000              # [H]
   effet_dissuasion: 0.3                  # [H] réduction de la probabilité de dépôt sauvage en zone surveillée
+  temps_intervention_min: 60             # [H] durée d'une éradication sur place
+  # base: {latitude: ..., longitude: ...}  # départ des brigades ; par défaut collecte.depot
+  priorite:                              # [H] ordre de traitement des dépotoirs illégaux
+    poids_volume: {petit: 1, moyen: 2, gros: 3}
+    poids_reapparition: 2                # un dépotoir qui revient est traité en priorité
+    poids_signalement: 0.5
 
 mairie:
   budget_mensuel_xof: 5000000            # [H]
