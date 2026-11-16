@@ -16,10 +16,14 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** : socle du back-end terminé sur la branche `back/socle` (config, SQLite, schémas). Ensuite : signalements (A1, A2).
-- **Fichiers modifiés** : `backend/config.py` (fusion default + ville + surcharges, fusion des camions par `id`), `backend/db.py` (schéma SQLite complet), `backend/schemas.py` (énumérations, signalements, auth), `backend/main.py` (config et base au démarrage), `requirements.txt` (python-multipart, pyjwt, bcrypt, pytest, httpx), `tests/` (16 tests).
-- **Bugs ouverts** : aucun. Avertissement de test sans gravité sur `httpx` et `starlette.testclient`.
-- **Prochaine étape précise** : écrire `backend/verification.py` (A2 : doublon dans `verification.rayon_doublon_m`, hors `zone_etude.bbox`, position incohérente, limite `max_signalements_par_appareil_heure`, score et motif lisible), avec ses tests, puis `POST /signalements` et `GET /depotoirs`.
+- **Objectif en cours** : A2 terminé (branche `back/verification`). Ensuite : `POST /signalements` et `GET /depotoirs` (A1).
+- **Fichiers modifiés** : `backend/verification.py` (`verifier`, `contexte_depuis_db`, `distance_m`), `config/default.yaml` (pénalités de score `[H]`), `tests/test_verification.py` (25 tests), `TODO.md`, `DECISIONS.md` (D19).
+- **Bugs ouverts** : aucun. `fastapi`, `httpx`, `bcrypt`, `shapely` absents de l'environnement de travail de l'IA (réseau coupé) : `tests/test_db.py` n'y a pas été relancé, les tests de vérification et de config passent.
+- **Prochaine étape précise** :
+  1. `backend/routes/signalements.py` : `POST /signalements` (multipart, en-tête `X-Device-Token`). Créer ou retrouver le `contributeur`, appeler `contexte_depuis_db` puis `verifier`, générer `code_suivi` (format `K7M-4QD`), insérer le signalement avec `statut`, `motif`, `score_auto`, `alertes` (JSON), incrémenter `nb_signalements` ;
+  2. `GET /signalements/suivi/{code}` ;
+  3. `GET /depotoirs` en GeoJSON (seuls les `verifie`, contrat d'API) ;
+  4. brancher le routeur dans `main.py`, tests avec `TestClient`.
 
 ## Cramer (docs / données / présentation)
 

@@ -23,7 +23,7 @@
 
 **Signalements**
 - [ ] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
-- [ ] A2 — Vérification automatique : doublon, hors zone, position incohérente, limite par appareil, score + motif (P1)
+- [x] A2 — Vérification automatique : doublon, hors zone, position incohérente, limite par appareil, score + motif (P1)
 - [ ] A3 — Modération : valider, rejeter avec motif, fusionner (P1)
 - [ ] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1)
 - [ ] A4 — Import par lot CSV/GeoJSON pour l'admin (P2)
