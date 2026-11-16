@@ -10,6 +10,11 @@ zone_etude:
   # Rectangle approximatif autour de Ouagadougou [H] — à affiner avec le secteur réel.
   bbox: {min_lat: 12.28, max_lat: 12.50, min_lon: -1.65, max_lon: -1.38}
 
+collecte:
+  # Dépôt / centre de traitement où partent et se vident les camions.
+  # [H] position approximative du centre de traitement de Polesgo (nord-est) : À CONFIRMER avec la mairie.
+  depot: {latitude: 12.43, longitude: -1.47}
+
 secteur_equipe: null              # à renseigner : secteur de collecte attribué à notre équipe
 
 population_totale: null           # à renseigner (source : recensement / mairie)

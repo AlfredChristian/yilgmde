@@ -43,6 +43,12 @@ camions:
 collecte:
   frequence_passages_par_semaine: 2      # [H]
   vitesse_moyenne_kmh: 20                # [H]
+  coef_detour: 1.3                       # [H] distance routière ≈ vol d'oiseau × coef
+  temps_arret_min: 10                    # [H] chargement d'un point de regroupement
+  duree_max_tournee_min: 480             # [H] journée de travail d'un camion
+  rotations_max_par_jour: 2              # [H] allers-retours au dépôt (vidage) par camion et par jour
+  temps_calcul_max_s: 5                  # sécurité : au-delà, meilleure solution trouvée
+  # depot: {latitude: ..., longitude: ...}   # propre à chaque commune : voir <ville>.yaml
 
 precollecteurs:
   nombre: 20                             # [H]
