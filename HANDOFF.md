@@ -16,16 +16,14 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** : A3 terminé (branche `back/moderation`) : le parcours citoyen → modération → carte publique fonctionne de bout en bout. Ensuite : zones, demande, points de regroupement (C1/C2), puis tournées (C3).
-- **Fichiers modifiés** : `backend/routes/admin_signalements.py` (`GET /admin/signalements`, `GET .../photo`, `POST .../valider`, `POST .../rejeter`), `backend/schemas.py` (`ValiderEntree`, `RejeterEntree`, `DepotoirSortie`, `ResultatValidation` ; `SignalementAdmin` gagne `motif` et `depotoir_id`), `backend/main.py`, `docs/api-contract.md`, `tests/test_moderation.py` (29 tests, 120 au total), `TODO.md`, `DECISIONS.md` (D22).
-- **État des PR** : la #8 (auth) a été fusionnée dans `back/signalements`, pas dans `main`. Il faut fusionner la **#7** pour que A1 et l'authentification arrivent dans `main`. La PR de A3 vise `main` : elle contient A1 et l'authentification tant que la #7 n'est pas fusionnée.
-- **Bugs ouverts** : aucun. Pas de limitation des tentatives de connexion. Pas de retrait des métadonnées EXIF des photos (A7, P2). L'alerte `volume_aberrant` n'est pas implémentée. `contributeur.score_confiance` n'est jamais mis à jour : valider ou rejeter pourrait l'ajuster pour que l'alerte `appareil_peu_fiable` serve vraiment.
-- **Pour lancer en local** : `YILGMDE_ADMIN_EMAIL`, `YILGMDE_ADMIN_PASSWORD` (premier admin), `YILGMDE_JWT_SECRET`, puis `uvicorn backend.main:app --reload`. Parcours : `POST /signalements` (en-tête `X-Device-Token`) → `POST /auth/login` → `POST /admin/signalements/{id}/valider` → `GET /depotoirs`.
+- **Objectif en cours** : zones et demande (C1) terminés (branche `back/zones-demande`). `main` contient déjà A1, l'authentification et A3 (PR #7, #8, #9). Ensuite : points de regroupement (C2).
+- **Fichiers modifiés** : `simulation/geometrie.py` (point dans un polygone), `simulation/demande.py` (`estimer_demande`, fonction pure), `backend/zones.py` (lecture, import GeoJSON tout ou rien, `zone_id_pour_point`), `backend/routes/zones.py` (`GET /zones`), `backend/routes/admin_signalements.py` (le dépotoir créé à la validation reçoit son `zone_id`), `backend/exemples.py` et `scripts/charger_exemples.py`, `data/sample/zones_exemple.geojson` (fictif), `docs/api-contract.md`, `tests/test_geometrie.py`, `tests/test_demande.py`, `tests/test_zones.py` (28 nouveaux tests), `TODO.md`, `DECISIONS.md` (D23).
+- **Bugs ouverts** : aucun. Il n'existe **aucune vraie donnée de zone** : polygones et populations réels sont à fournir (Cramer : recensement ou mairie) au format de `zones_exemple.geojson`, via `importer_zones_geojson`. Pas encore de route admin d'import de zones (utile pour D4, nouveau quartier). Pas de limitation des tentatives de connexion. `contributeur.score_confiance` n'est jamais mis à jour. La suite complète n'a pas été relancée sur cette branche après l'ajout de zones (seuls les 28 nouveaux tests l'ont été).
+- **Pour lancer avec des données** : `python scripts/charger_exemples.py`, puis `uvicorn backend.main:app --reload` ; `GET /depotoirs` et `GET /zones` ne sont plus vides. Le front peut quitter le mode mock (`VITE_USE_MOCK=false`).
 - **Prochaine étape précise** :
-  1. zones : chargement des polygones et de la population depuis `data/` (table `zone`), rattachement d'un dépotoir à sa zone à la validation ;
-  2. C1 : estimation de la demande par zone (population × `production_dechets_kg_hab_jour` × coefficient de saison), fonction pure dans `simulation/` ;
-  3. C2 : points de regroupement (scikit-learn, `capacite_kg` et `distance_max_a_pied_m` de la config) ;
-  4. script `scripts/charger_exemples.py` pour remplir `depotoir` avec `data/sample/`.
+  1. installer scikit-learn et OR-Tools dans l'environnement, puis C2 : `simulation/regroupement.py`, fonction pure `placer_points(depotoirs_actifs, zones, config)` avec `points_regroupement.capacite_kg` et `distance_max_a_pied_m`, chaque point avec son `explication` ;
+  2. C3 : tournées OR-Tools avec repli plus proche voisin et temps limite ; `camions_disponibles(config)` pour ne jamais utiliser un camion en panne ;
+  3. C4 : `calculer_plan(donnees, config)` qui assemble C1, C2, C3 ; routes `/scenarios` et `/points-regroupement`.
 
 ## Cramer (docs / données / présentation)
 

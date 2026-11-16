@@ -29,7 +29,7 @@
 - [ ] A4 — Import par lot CSV/GeoJSON pour l'admin (P2)
 
 **Plan**
-- [ ] C1 — Estimation de la demande par zone (P1)
+- [x] C1 — Estimation de la demande par zone (P1) — fonction pure `simulation/demande.py` ; reste à l'intégrer au plan (C4)
 - [ ] C2 — Points de regroupement (P1)
 - [ ] C3 — Tournées de collecte (OR-Tools, repli plus proche voisin) (P1)
 - [ ] C7 — Tournées d'intervention Laabal (P1)
