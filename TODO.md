@@ -30,7 +30,7 @@
 
 **Plan**
 - [x] C1 — Estimation de la demande par zone (P1) — fonction pure `simulation/demande.py` ; reste à l'intégrer au plan (C4)
-- [ ] C2 — Points de regroupement (P1)
+- [x] C2 — Points de regroupement (P1) — fonction pure `simulation/regroupement.py` (D24) ; route `/points-regroupement` avec le plan (C4)
 - [ ] C3 — Tournées de collecte (OR-Tools, repli plus proche voisin) (P1)
 - [ ] C7 — Tournées d'intervention Laabal (P1)
 - [ ] C4 — Recalcul automatique et rapide, plan = fonction pure (P1)
