@@ -147,14 +147,45 @@ _CLES_TOURNEE = ("type", "camion_id", "distance_km", "duree_min", "cout_xof", "a
 _CLES_ARRET = ("ordre", "cible_type", "cible_id", "latitude", "longitude", "statut")
 
 
+def cle_tournee(t: dict) -> tuple:
+    """Identité d'une tournée d'un plan à l'autre : camion et rotation, ou brigade."""
+    return (t["type"], t.get("camion_id"), t.get("rotation"), t.get("brigade"))
+
+
+def cle_arret(a: dict) -> tuple:
+    """Identité d'un arrêt d'un plan à l'autre : position du point, ou id du dépotoir."""
+    if a["cible_type"] == "depotoir":
+        return ("depotoir", a["cible_id"])
+    return ("point_regroupement", round(a["latitude"], 6), round(a["longitude"], 6))
+
+
+def _reprise(conn: sqlite3.Connection, scenario_id: int, jour: str) -> tuple[dict, set]:
+    """Affectations et arrêts effectués du dernier plan du scénario calculé le même jour.
+
+    Un recalcul (signalement validé, panne…) ne doit pas effacer le travail du jour :
+    une tournée garde son chauffeur ou sa brigade, un point déjà vidé reste `effectue`.
+    """
+    dernier = dernier_plan_id(conn, scenario_id)
+    if dernier is None:
+        return {}, set()
+    precedent = lire_plan(conn, dernier[0])
+    if not precedent["calcule_le"].startswith(jour):
+        return {}, set()
+    affectations = {cle_tournee(t): t["affectee_a"] for t in precedent["tournees"] if t.get("affectee_a")}
+    effectues = {cle_arret(a) for t in precedent["tournees"] for a in t["arrets"] if a["statut"] == "effectue"}
+    return affectations, effectues
+
+
 def enregistrer_plan(conn: sqlite3.Connection, scenario_id: int, plan: dict, sig: str, duree_ms: int) -> int:
     """Écrit le plan ; les ids locaux des points (1..n) deviennent des ids de base."""
+    maintenant = datetime.now(timezone.utc).isoformat()
+    affectations, effectues = _reprise(conn, scenario_id, maintenant[:10])
     curseur = conn.execute(
         "INSERT INTO plan (scenario_id, calcule_le, duree_calcul_ms, indicateurs, non_couverts, signature, details)"
         " VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
             scenario_id,
-            datetime.now(timezone.utc).isoformat(),
+            maintenant,
             duree_ms,
             db.en_json(plan["indicateurs"]),
             "[]",   # réécrit plus bas avec les ids de base
@@ -176,9 +207,10 @@ def enregistrer_plan(conn: sqlite3.Connection, scenario_id: int, plan: dict, sig
 
     for t in plan["tournees"]:
         c = conn.execute(
-            "INSERT INTO tournee (plan_id, type, camion_id, distance_km, duree_min, cout_xof, details)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (plan_id, t["type"], t["camion_id"], t["distance_km"], t["duree_min"], t["cout_xof"],
+            "INSERT INTO tournee (plan_id, type, camion_id, affectee_a, distance_km, duree_min, cout_xof, details)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (plan_id, t["type"], t["camion_id"], affectations.get(cle_tournee(t)),
+             t["distance_km"], t["duree_min"], t["cout_xof"],
              db.en_json({k: v for k, v in t.items() if k not in _CLES_TOURNEE})),
         )
         tournee_id = c.lastrowid
@@ -187,7 +219,8 @@ def enregistrer_plan(conn: sqlite3.Connection, scenario_id: int, plan: dict, sig
             conn.execute(
                 "INSERT INTO arret_tournee (tournee_id, ordre, cible_type, cible_id, statut, details)"
                 " VALUES (?, ?, ?, ?, ?, ?)",
-                (tournee_id, a["ordre"], a["cible_type"], cible, a["statut"],
+                (tournee_id, a["ordre"], a["cible_type"], cible,
+                 "effectue" if cle_arret(a) in effectues else a["statut"],
                  db.en_json({k: v for k, v in a.items() if k not in _CLES_ARRET} | {
                      "latitude": a["latitude"], "longitude": a["longitude"]})),
             )

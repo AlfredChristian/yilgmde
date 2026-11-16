@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend import db
 from backend.config import charger_config
 from backend.plans import creer_scenario_base_si_absent
-from backend.routes import admin_signalements, admin_utilisateurs, auth, depotoirs, scenarios, signalements, zones
+from backend.routes import admin_signalements, admin_utilisateurs, auth, depotoirs, scenarios, signalements, terrain, zones
 from backend.utilisateurs import creer_admin_si_absent
 
 
@@ -42,6 +42,7 @@ app.include_router(auth.router)
 app.include_router(admin_utilisateurs.router)
 app.include_router(admin_signalements.router)
 app.include_router(scenarios.router)
+app.include_router(terrain.router)
 
 
 @app.get("/health")
