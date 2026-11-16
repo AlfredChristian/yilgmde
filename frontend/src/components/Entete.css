@@ -73,3 +73,30 @@
     margin-left: auto;
   }
 }
+
+.entete-menu {
+  transition: background var(--transition);
+}
+
+/* Soulignement animé des liens */
+.entete-liens a {
+  position: relative;
+  padding: 6px 0;
+}
+.entete-liens a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--jaune);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition);
+}
+.entete-liens a:hover::after,
+.entete-liens a[aria-current='page']::after {
+  transform: scaleX(1);
+}

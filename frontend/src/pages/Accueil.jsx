@@ -22,7 +22,7 @@ export default function Accueil() {
   return (
     <div>
       <section className="hero">
-        <div className="hero-contenu">
+        <div className="hero-contenu apparait">
           <p className="hero-avant">Bienvenue sur</p>
           <h1 className="hero-nom">{NOM}</h1>
           <p className="hero-slogan">{SLOGAN}</p>
