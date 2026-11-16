@@ -3,7 +3,7 @@
 
 // Attention : les variables Vite sont des chaines, pas des booleens.
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL ?? '/api'
 
 async function getJson(url) {
   const res = await fetch(url)
@@ -18,5 +18,14 @@ export function getDepotoirs() {
   const url = USE_MOCK
     ? '/mock/depotoirs_exemple.geojson'
     : `${API_URL}/depotoirs`
+  return getJson(url)
+}
+
+// Renvoie un GeoJSON FeatureCollection de signalements (bruts, avant moderation).
+// [H] route reelle a confirmer dans docs/api-contract.md
+export function getSignalements() {
+  const url = USE_MOCK
+    ? '/mock/signalements_exemple.geojson'
+    : `${API_URL}/signalements`
   return getJson(url)
 }
