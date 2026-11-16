@@ -158,18 +158,22 @@ def _placer_dans_zone(zone: dict, demande: dict, depotoirs: list[dict], p: dict)
     for pt in points:
         pt["explication"] = _expliquer_zone(pt, zone, demande, p, k_initial, k_capacite, k_marche, len(points), couverture)
 
-    non_couvert = None
+    raisons = []
     if demande["population_connue"] and couverture < p["couverture_cible"]:
-        non_couvert = {
-            "zone_id": zone["id"],
-            "raison": (
-                f"{(1 - couverture) * 100:.0f} % de la zone à plus de {p['distance_m']:.0f} m d'un point "
-                f"(limite de {p['max_points']} points par zone atteinte)"
-            ),
-        }
+        raisons.append(
+            f"{(1 - couverture) * 100:.0f} % de la zone à plus de {p['distance_m']:.0f} m d'un point "
+            f"(limite de {p['max_points']} points par zone atteinte)"
+        )
+    satures = [i for i, pt in enumerate(points) if pt["sature"]]
+    if satures:
+        raisons.append(
+            f"capacité insuffisante : {len(satures)} point(s) débordent entre deux passages "
+            f"({stock_kg:.0f} kg à stocker pour {len(points) * p['capacite_kg']:.0f} kg de capacité)"
+        )
     loin = [depotoirs[j]["id"] for j in range(len(depotoirs)) if dist_depotoirs[j] > p["distance_m"]]
-    if loin and non_couvert is None:
-        non_couvert = {"zone_id": zone["id"], "raison": f"dépotoirs à plus de {p['distance_m']:.0f} m d'un point : {loin}"}
+    if loin:
+        raisons.append(f"dépotoirs à plus de {p['distance_m']:.0f} m d'un point : {loin}")
+    non_couvert = {"zone_id": zone["id"], "raison": " ; ".join(raisons)} if raisons else None
     return points, non_couvert
 
 
