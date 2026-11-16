@@ -23,9 +23,10 @@
 - Orthographe du nom : j'ai mis « Yilgamdé » (confirmer avec l'équipe ; sinon changer `NOM` dans `src/config/projet.js`). Remplacer le nom affiché dans README, DECISIONS, TODO et `frontend/index.html` (`<title>`), sans renommer le dépôt ni les dossiers.
 - Demandes de Christian : pas d'emojis, drapeau du Burkina en haut à droite (fait), style inspiré de Sherbrooke sans copie.
 - TODO : ajouter « Identité visuelle et page d'accueil attrayante » (P1) ; découper la tâche front « framework / Leaflet / proxy » (framework et Leaflet faits).
+- Le remote est passé en HTTPS (le SSH n'arrivait pas à résoudre github.com sur ma machine). Garder HTTPS.
 
 **Prochaine étape précise**
-1. PR `front/init-react` ouverte, en attente de relecture par Faissal ou Cramer. `chore/regles-de-travail` est fusionnée.
+1. PR `front/init-react` ouverte, en attente de relecture par Faissal ou Cramer. `chore/regles-de-travail` est fusionnée, `main` fusionné dans la branche (conflit DECISIONS.md résolu).
 2. Légende de la carte (rouge actif, vert éradiqué ; signalements orange, violet, gris).
 3. Formulaire de signalement mobile (A1) : position GPS ajustable, type, volume, photo ; page `/signaler`.
 4. Vérifier dans `docs/api-contract.md` la route et le droit d'accès pour `GET /signalements` (probablement admin).
