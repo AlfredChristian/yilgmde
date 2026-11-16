@@ -16,14 +16,14 @@
 ## Faissal — back-end et moteur
 
 **Socle**
-- [ ] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
-- [ ] Modèle de données SQLite + schémas Pydantic (P1)
+- [x] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
+- [x] Modèle de données SQLite + schémas Pydantic (P1)
 - [ ] F1/F4 — Connexion (JWT) et création de comptes par l'admin (P1)
 - [ ] F2 — Droits par rôle vérifiés côté serveur (P1)
 
 **Signalements**
 - [ ] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
-- [ ] A2 — Vérification automatique : doublon, hors zone, position incohérente, limite par appareil, score + motif (P1)
+- [x] A2 — Vérification automatique : doublon, hors zone, position incohérente, limite par appareil, score + motif (P1)
 - [ ] A3 — Modération : valider, rejeter avec motif, fusionner (P1)
 - [ ] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1)
 - [ ] A4 — Import par lot CSV/GeoJSON pour l'admin (P2)

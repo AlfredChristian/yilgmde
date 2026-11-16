@@ -25,7 +25,7 @@
 - TODO : ajouter « Identité visuelle et page d'accueil attrayante » (P1) ; découper la tâche front « framework / Leaflet / proxy » (framework et Leaflet faits).
 
 **Prochaine étape précise**
-1. Corriger l'import, vérifier `/` et `/carte`, commit, PR relue par Faissal ou Cramer.
+1. PR `front/init-react` ouverte, en attente de relecture par Faissal ou Cramer. `chore/regles-de-travail` est fusionnée.
 2. Légende de la carte (rouge actif, vert éradiqué ; signalements orange, violet, gris).
 3. Formulaire de signalement mobile (A1) : position GPS ajustable, type, volume, photo ; page `/signaler`.
 4. Vérifier dans `docs/api-contract.md` la route et le droit d'accès pour `GET /signalements` (probablement admin).
@@ -33,10 +33,14 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** :
-- **Fichiers modifiés** :
-- **Bugs ouverts** :
+- **Objectif en cours** : A2 terminé (branche `back/verification`). Ensuite : `POST /signalements` et `GET /depotoirs` (A1).
+- **Fichiers modifiés** : `backend/verification.py` (`verifier`, `contexte_depuis_db`, `distance_m`), `config/default.yaml` (pénalités de score `[H]`), `tests/test_verification.py` (25 tests), `TODO.md`, `DECISIONS.md` (D19).
+- **Bugs ouverts** : aucun. `fastapi`, `httpx`, `bcrypt`, `shapely` absents de l'environnement de travail de l'IA (réseau coupé) : `tests/test_db.py` n'y a pas été relancé, les tests de vérification et de config passent.
 - **Prochaine étape précise** :
+  1. `backend/routes/signalements.py` : `POST /signalements` (multipart, en-tête `X-Device-Token`). Créer ou retrouver le `contributeur`, appeler `contexte_depuis_db` puis `verifier`, générer `code_suivi` (format `K7M-4QD`), insérer le signalement avec `statut`, `motif`, `score_auto`, `alertes` (JSON), incrémenter `nb_signalements` ;
+  2. `GET /signalements/suivi/{code}` ;
+  3. `GET /depotoirs` en GeoJSON (seuls les `verifie`, contrat d'API) ;
+  4. brancher le routeur dans `main.py`, tests avec `TestClient`.
 
 ## Cramer (docs / données / présentation)
 
