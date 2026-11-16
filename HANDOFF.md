@@ -16,14 +16,15 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** : A1 terminé (branche `back/signalements`) : le citoyen peut signaler et suivre. A2 était déjà sur `main` (PR #4). Ensuite : modération admin (A3), avec connexion JWT (F1/F2) en prérequis.
-- **Fichiers modifiés** : `backend/routes/signalements.py` (`POST /signalements`, `GET /signalements/suivi/{code}`), `backend/routes/depotoirs.py` (`GET /depotoirs` en GeoJSON, filtres `statut` et `zone_id`), `backend/deps.py` (verrou d'accès à la base), `backend/main.py` (routeurs branchés), `config/default.yaml` (`photo_taille_max_mo` [H]), `tests/test_routes_publiques.py` (21 tests), `TODO.md`, `DECISIONS.md` (D20).
-- **Bugs ouverts** : aucun. 60 tests passent. Limites connues : les photos sont enregistrées dans `uploads/` mais aucune route ne les sert encore (à faire avec A3, derrière le rôle admin) ; pas de retrait des métadonnées EXIF (A7, P2) ; l'alerte `volume_aberrant` du modèle de données n'est pas implémentée.
+- **Objectif en cours** : F1/F2/F4 terminés (branche `back/auth`, empilée sur `back/signalements` / PR #7). Ensuite : modération admin (A3) et cycle de vie du dépotoir (B5/B6).
+- **Fichiers modifiés** : `backend/securite.py` (bcrypt, JWT, dépendances `utilisateur_courant` et `exiger_role(Role...)`), `backend/utilisateurs.py` (`creer_utilisateur`, `creer_admin_si_absent`, `journaliser`), `backend/routes/auth.py` (`POST /auth/login`, `GET /auth/moi`), `backend/routes/admin_utilisateurs.py` (`POST` et `GET /admin/utilisateurs`), `backend/schemas.py` (`UtilisateurAdmin`, validation email et mot de passe), `config/default.yaml` (`securite.duree_token_min` [H]), `docs/api-contract.md`, `tests/test_auth.py` (31 tests, 91 au total), `TODO.md`, `DECISIONS.md` (D21).
+- **Bugs ouverts** : aucun. Pas de limitation des tentatives de connexion (à faire si le temps le permet). Les photos de signalements ne sont servies par aucune route.
+- **Pour lancer en local** : définir `YILGMDE_ADMIN_EMAIL` et `YILGMDE_ADMIN_PASSWORD` (et `YILGMDE_JWT_SECRET` pour garder les connexions entre redémarrages), puis `uvicorn backend.main:app --reload`.
 - **Prochaine étape précise** :
-  1. F1/F4 : `POST /auth/login` (JWT, `pyjwt` + `bcrypt`), `GET /auth/moi`, `POST /admin/utilisateurs`, et une dépendance qui vérifie le rôle côté serveur (F2) ;
-  2. A3 : `GET /admin/signalements`, `POST /admin/signalements/{id}/valider` (création ou fusion dans un dépotoir, détection de réapparition B5, écriture dans `journal_audit`) et `/rejeter` ;
-  3. servir les photos aux admins ;
-  4. script `scripts/charger_exemples.py` pour remplir `depotoir` avec `data/sample/` (la carte de Christian pourra alors quitter le mode mock).
+  1. A3 : `GET /admin/signalements?statut=` (alertes, score, `photo_url`) protégé par `exiger_role(Role.admin)` ;
+  2. `POST /admin/signalements/{id}/valider` (`fusionner_avec` nul : crée un dépotoir `actif`, sinon fusion dans le dépotoir existant ; si celui-ci est `eradique` ou `sous_surveillance`, repasse à `actif` et `nb_reapparitions` +1, règle B5) et `POST /admin/signalements/{id}/rejeter` (motif obligatoire) ; chaque action écrite via `journaliser` ;
+  3. route admin qui sert les photos ;
+  4. script `scripts/charger_exemples.py` pour remplir `depotoir` avec `data/sample/`.
 
 ## Cramer (docs / données / présentation)
 

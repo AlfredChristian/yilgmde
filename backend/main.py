@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend import db
 from backend.config import charger_config
-from backend.routes import depotoirs, signalements
+from backend.routes import admin_utilisateurs, auth, depotoirs, signalements
+from backend.utilisateurs import creer_admin_si_absent
 
 
 @asynccontextmanager
@@ -15,6 +16,8 @@ async def lifespan(app: FastAPI):
     app.state.config = charger_config("ouagadougou")
     app.state.db = db.connecter()
     db.initialiser(app.state.db)
+    # Premier admin : variables d'environnement, jamais de compte dans le dépôt (D11).
+    creer_admin_si_absent(app.state.db)
     yield
     app.state.db.close()
 
@@ -31,6 +34,8 @@ app.add_middleware(
 
 app.include_router(signalements.router)
 app.include_router(depotoirs.router)
+app.include_router(auth.router)
+app.include_router(admin_utilisateurs.router)
 
 
 @app.get("/health")

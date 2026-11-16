@@ -6,7 +6,9 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+import re
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class TypeDechet(str, Enum):
@@ -125,8 +127,32 @@ class UtilisateurSortie(BaseModel):
     role: Role
 
 
+_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+class UtilisateurAdmin(UtilisateurSortie):
+    """Ligne de GET /admin/utilisateurs (et réponse de la création)."""
+
+    email: str
+    actif: bool
+
+
 class UtilisateurCreation(BaseModel):
     nom: str = Field(min_length=1)
     email: str
     mot_de_passe: str = Field(min_length=8)
     role: Role
+
+    @field_validator("email")
+    @classmethod
+    def _email_valide(cls, v: str) -> str:
+        if not _EMAIL.match(v.strip()):
+            raise ValueError("email invalide")
+        return v
+
+    @field_validator("mot_de_passe")
+    @classmethod
+    def _limite_bcrypt(cls, v: str) -> str:
+        if len(v.encode("utf-8")) > 72:  # bcrypt ignore ou refuse au-delà de 72 octets
+            raise ValueError("mot de passe trop long (72 octets maximum)")
+        return v
