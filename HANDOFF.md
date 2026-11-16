@@ -11,10 +11,10 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** :
-- **Fichiers modifiés** :
-- **Bugs ouverts** :
-- **Prochaine étape précise** :
+- **Objectif en cours** : socle du back-end terminé sur la branche `back/socle` (config, SQLite, schémas). Ensuite : signalements (A1, A2).
+- **Fichiers modifiés** : `backend/config.py` (fusion default + ville + surcharges, fusion des camions par `id`), `backend/db.py` (schéma SQLite complet), `backend/schemas.py` (énumérations, signalements, auth), `backend/main.py` (config et base au démarrage), `requirements.txt` (python-multipart, pyjwt, bcrypt, pytest, httpx), `tests/` (16 tests).
+- **Bugs ouverts** : aucun. Avertissement de test sans gravité sur `httpx` et `starlette.testclient`.
+- **Prochaine étape précise** : écrire `backend/verification.py` (A2 : doublon dans `verification.rayon_doublon_m`, hors `zone_etude.bbox`, position incohérente, limite `max_signalements_par_appareil_heure`, score et motif lisible), avec ses tests, puis `POST /signalements` et `GET /depotoirs`.
 
 ## Cramer (docs / données / présentation)
 

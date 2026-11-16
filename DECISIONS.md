@@ -18,7 +18,7 @@
 | D11 | 2026-11-16 | Pas de secrets, de photos ni de données personnelles réelles dans le dépôt | Dépôt open source | Retenu |
 | D12 | 2026-11-16 | Front en PWA avec Leaflet + tuiles OpenStreetMap | « Mobile » est un tag du sujet ; open source | Proposé |
 | D13 | 2026-11-16 | Une seule application front avec des vues selon le rôle | Moins de code à maintenir que trois applications | Proposé |
-| D14 | 2026-11-16 | Base SQLite pour le MVP (opérations spatiales faites en Python) ; PostGIS écarté pour l'instant | Moins de configuration, pas de Docker obligatoire | Proposé |
+| D14 | 2026-11-16 | Base SQLite pour le MVP (opérations spatiales faites en Python) ; PostGIS écarté pour l'instant | Moins de configuration, pas de Docker obligatoire | Retenu (`backend/db.py`) |
 | D15 | 2026-11-16 | Le constat d'infraction enregistre et trace, il ne décide jamais d'une sanction ; accès réservé à Laabal et admin ; la carte publique montre le dépotoir, pas la personne | Données personnelles sensibles | Proposé |
 | D16 | 2026-11-16 | Licence du code : Apache-2.0 ; données dérivées d'OSM sous ODbL | Réutilisation facile par d'autres communes ; compatibilité OSM | Proposé |
 | D17 | — | Framework front (React, Vue, Angular…) | À choisir selon ce que Christian maîtrise | À décider |

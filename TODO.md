@@ -16,8 +16,8 @@
 ## Faissal — back-end et moteur
 
 **Socle**
-- [ ] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
-- [ ] Modèle de données SQLite + schémas Pydantic (P1)
+- [x] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
+- [x] Modèle de données SQLite + schémas Pydantic (P1)
 - [ ] F1/F4 — Connexion (JWT) et création de comptes par l'admin (P1)
 - [ ] F2 — Droits par rôle vérifiés côté serveur (P1)
 

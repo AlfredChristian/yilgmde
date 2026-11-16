@@ -2,6 +2,9 @@ fastapi
 uvicorn[standard]
 pydantic
 pyyaml
+python-multipart
+pyjwt
+bcrypt
 numpy
 pandas
 shapely
@@ -9,3 +12,5 @@ pyproj
 geopandas
 scikit-learn
 ortools
+pytest
+httpx
