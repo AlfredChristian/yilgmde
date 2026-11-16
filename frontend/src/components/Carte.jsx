@@ -47,7 +47,7 @@ export default function Carte() {
           Erreur : {erreur}
         </div>
       )}
-      <MapContainer center={CENTRE} zoom={ZOOM} style={{ height: '100vh', width: '100%' }}>
+      <MapContainer center={CENTRE} zoom={ZOOM} style={{ height: '100%', width: '100%' }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
