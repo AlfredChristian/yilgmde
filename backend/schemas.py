@@ -197,3 +197,21 @@ class UtilisateurCreation(BaseModel):
         if len(v.encode("utf-8")) > 72:  # bcrypt ignore ou refuse au-delà de 72 octets
             raise ValueError("mot de passe trop long (72 octets maximum)")
         return v
+
+
+# --- Scénarios (C4, D1–D4) -----------------------------------------------------------
+
+class ScenarioCreation(BaseModel):
+    nom: str = Field(min_length=1, max_length=100)
+    base_sur: int | None = None          # copie les paramètres de ce scénario
+    parametres: dict = Field(default_factory=dict)
+    activer: bool = False                # devient le scénario du « plan courant »
+
+
+class ScenarioSortie(BaseModel):
+    id: int
+    nom: str
+    parametres: dict
+    actif: bool
+    cree_par: int | None
+    cree_le: str

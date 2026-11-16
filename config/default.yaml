@@ -29,6 +29,11 @@ verification:
 points_regroupement:
   capacite_kg: 3000                      # [H]
   distance_max_a_pied_m: 300             # [H]
+  couverture_cible: 0.95                 # [H] part de la zone à moins de distance_max_a_pied_m d'un point
+  max_points_par_zone: 60                # [H] borne le calcul ; au-delà, la zone est signalée mal couverte
+  poids_depotoir: 5                      # [H] attraction d'un dépotoir actif sur le placement (1 = un échantillon de ménages)
+  pas_echantillonnage_m: 100             # résolution de la grille des ménages (agrandie si > max_echantillons_par_zone)
+  max_echantillons_par_zone: 2000        # borne le temps de calcul
 
 camions:
   - {id: camion_1, capacite_kg: 6000, cout_km_xof: 400, cout_jour_xof: 15000, disponible: true}   # [H]
@@ -38,6 +43,12 @@ camions:
 collecte:
   frequence_passages_par_semaine: 2      # [H]
   vitesse_moyenne_kmh: 20                # [H]
+  coef_detour: 1.3                       # [H] distance routière ≈ vol d'oiseau × coef
+  temps_arret_min: 10                    # [H] chargement d'un point de regroupement
+  duree_max_tournee_min: 480             # [H] journée de travail d'un camion
+  rotations_max_par_jour: 2              # [H] allers-retours au dépôt (vidage) par camion et par jour
+  temps_calcul_max_s: 5                  # sécurité : au-delà, meilleure solution trouvée
+  # depot: {latitude: ..., longitude: ...}   # propre à chaque commune : voir <ville>.yaml
 
 precollecteurs:
   nombre: 20                             # [H]
@@ -51,6 +62,12 @@ laabal:
   taux_controle: 0.3                     # [H] probabilité de constater un dépôt en zone surveillée
   montant_amende_xof: 10000              # [H]
   effet_dissuasion: 0.3                  # [H] réduction de la probabilité de dépôt sauvage en zone surveillée
+  temps_intervention_min: 60             # [H] durée d'une éradication sur place
+  # base: {latitude: ..., longitude: ...}  # départ des brigades ; par défaut collecte.depot
+  priorite:                              # [H] ordre de traitement des dépotoirs illégaux
+    poids_volume: {petit: 1, moyen: 2, gros: 3}
+    poids_reapparition: 2                # un dépotoir qui revient est traité en priorité
+    poids_signalement: 0.5
 
 mairie:
   budget_mensuel_xof: 5000000            # [H]

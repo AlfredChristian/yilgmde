@@ -34,13 +34,15 @@ Toute modification d'API passe par une PR qui met à jour ce fichier. La documen
 | GET | `/health` | → `{"status": "ok"}` |
 | GET | `/depotoirs?statut=&zone_id=` | Dépotoirs **vérifiés** en GeoJSON (`FeatureCollection`, propriétés : `id`, `statut`, `legalite`, `volume_estime`, `nb_signalements`, `zone_id`, `derniere_maj`) |
 | GET | `/zones` | Zones (quartiers ou secteurs) en GeoJSON, avec la demande de déchets estimée (C1) |
-| GET | `/points-regroupement` | Points du plan courant, GeoJSON |
+| GET | `/points-regroupement` | Points du plan courant (scénario actif), GeoJSON |
 | POST | `/signalements` | Créer un signalement (anonyme) |
 | GET | `/signalements/suivi/{code_suivi}` | Statut d'un signalement |
 
 **GET `/zones`** → `FeatureCollection` de `Polygon` (ou `MultiPolygon`), propriétés : `id`, `nom`, `population` (peut être `null`), `densite`, `demande_kg_jour`. La demande vaut `population × production_dechets_kg_hab_jour × coef_production(saison)` selon la config courante ; elle vaut `0` si la population est inconnue. Vide tant qu'aucune zone n'est chargée.
 
 À la validation d'un signalement, le nouveau dépotoir est rattaché à la zone qui le contient (`zone_id`), ou `null` si aucune zone ne le contient.
+
+**GET `/points-regroupement`** → `FeatureCollection` de `Point` + `plan_id` et `scenario_id` du plan courant. Propriétés : `id`, `capacite_kg`, `zone_id` (`null` hors zone ; peut être une zone ajoutée par le scénario), `explication`, `charge_kg_jour` (`null` si inconnue), `stock_entre_passages_kg`, `sature`, `depotoirs_desservis` (ids). Le plan est recalculé d'abord si les dépotoirs, les zones ou les paramètres ont changé. Vide s'il n'y a pas de scénario actif.
 
 **POST `/signalements`** — `multipart/form-data` : `latitude`, `longitude`, `type_dechet`, `volume_estime`, `description` (optionnel), `photo` (fichier, optionnel).
 Réponse `201` :
@@ -86,32 +88,62 @@ Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d
 - `POST /admin/tournees/{id}/affecter` (P2) : `{"utilisateur_id": 4}`
 
 **Scénarios et plan**
-- `GET /scenarios` · `POST /scenarios` : `{"nom": "2 camions en moins", "base_sur": 1, "parametres": {}}`
-- `GET /scenarios/{id}`
-- `PUT /scenarios/{id}/parametres` : modification **partielle**, fusionnée sur la config ; renvoie le **plan recalculé**.
-  Exemples : `{"saison": "pluies"}` · `{"camions": [{"id": "camion_2", "disponible": false}]}` · `{"zones_ajoutees": ["<GeoJSON de la zone>"]}`
-- `POST /scenarios/{id}/calculer` → Plan
-- `GET /scenarios/{id}/plan` → dernier Plan
-- `POST /scenarios/{id}/simuler` : `{"jours": 30, "graine": 42}` → `{"indicateurs": [{"jour": 1, "pct_collecte": 61.2, "depotoirs_actifs": 14, "cout_xof": 140000, "distance_km": 12.4}]}`
-- `GET /scenarios/comparer?ids=1,2` (P2)
 
-**Plan (réponse type)**
+Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au démarrage, un scénario `base` (sans surcharge) est créé et **actif** s'il n'en existe aucun ; le scénario actif donne le « plan courant ». Chaque création, modification et activation est écrite dans `journal_audit`.
+
+- `GET /scenarios` → `[{"id": 1, "nom": "base", "parametres": {}, "actif": true, "cree_par": null, "cree_le": "..."}]`
+- `POST /scenarios` : `{"nom": "2 camions en moins", "base_sur": 1, "parametres": {}, "activer": false}` → `201` scénario. `base_sur` (optionnel) copie les paramètres d'un scénario puis applique `parametres`. `404` si `base_sur` est inconnu, `422` si les paramètres sont invalides.
+- `GET /scenarios/{id}` → scénario ; `404` s'il est inconnu.
+- `PUT /scenarios/{id}/parametres` : modification **partielle**, fusionnée sur les paramètres du scénario ; renvoie le **plan recalculé**. `422` (et rien n'est enregistré) si la config devient invalide.
+  - `{"saison": "pluies"}` (raccourci de `{"scenario": {"saison": "pluies"}}`) : production × `coef_production`, vitesse × `coef_vitesse_camion` (D3).
+  - `{"camions": [{"id": "camion_2", "disponible": false}]}` : fusion par `id` ; un camion indisponible n'est jamais utilisé (D2).
+  - `{"zones_ajoutees": [<Feature ou géométrie GeoJSON, ou sa chaîne JSON>]}` : nouveau quartier (D4), propriétés `nom`, `population` (sans population : seuls ses dépotoirs reçoivent un point). Les zones **s'ajoutent** à celles déjà ajoutées. Les dépotoirs sans zone qu'elles contiennent leur sont rattachés.
+  - tout autre paramètre de la config : `{"collecte": {"frequence_passages_par_semaine": 3}}`, `{"points_regroupement": {"distance_max_a_pied_m": 200}}`, `{"laabal": {"nombre_brigades": 2}}`, `{"mairie": {"budget_mensuel_xof": 4000000}}`…
+- `POST /scenarios/{id}/activer` → scénario, devenu le seul actif.
+- `POST /scenarios/{id}/calculer` → Plan, calcul forcé.
+- `GET /scenarios/{id}/plan` → dernier Plan, **recalculé d'abord si les entrées ont changé** (dépotoirs, zones, paramètres) ; sinon le même plan est renvoyé.
+- `POST /scenarios/{id}/simuler` : `{"jours": 30, "graine": 42}` → `{"indicateurs": [{"jour": 1, "pct_collecte": 61.2, "depotoirs_actifs": 14, "cout_xof": 140000, "distance_km": 12.4}]}` (à faire, E1–E3)
+- `GET /scenarios/comparer?ids=1,2` (P2, à faire)
+
+**Plan (réponse)**
 ```json
 {
-  "id": 7, "scenario_id": 1, "calcule_le": "2026-11-17T10:00:00Z", "duree_calcul_ms": 840,
+  "id": 7, "scenario_id": 1, "calcule_le": "2026-11-17T10:00:00+00:00", "duree_calcul_ms": 840,
   "points_regroupement": [
     { "id": 1, "latitude": 12.37, "longitude": -1.52, "capacite_kg": 3000, "zone_id": 2,
-      "explication": "Centre de gravité de 5 dépotoirs, à moins de 300 m des ménages desservis" }
+      "charge_kg_jour": 174, "stock_entre_passages_kg": 607, "sature": false, "depotoirs_desservis": [1],
+      "explication": "Zone exemple A : 6000 kg/jour, 33 point(s) (capacité : 7, marche ≤ 300 m : 26, ...) ; couverture 96 %. ..." }
   ],
   "tournees": [
-    { "id": 1, "type": "collecte", "camion_id": "camion_1", "distance_km": 14.2, "duree_min": 95, "cout_xof": 21000,
-      "arrets": [{ "ordre": 1, "cible_type": "point_regroupement", "cible_id": 1,
-                   "latitude": 12.37, "longitude": -1.52, "statut": "a_faire" }] }
+    { "id": 1, "type": "collecte", "camion_id": "camion_1", "rotation": 1, "affectee_a": null,
+      "distance_km": 14.2, "duree_min": 95, "cout_xof": 21000, "charge_kg": 5930,
+      "arrets": [{ "id": 31, "ordre": 1, "cible_type": "point_regroupement", "cible_id": 1,
+                   "latitude": 12.37, "longitude": -1.52, "charge_kg": 607, "statut": "a_faire" }] },
+    { "id": 2, "type": "intervention", "camion_id": null, "brigade": 1, "distance_km": 6.8, "duree_min": 150, "cout_xof": 0,
+      "arrets": [{ "id": 40, "ordre": 1, "cible_type": "depotoir", "cible_id": 3, "latitude": 12.37, "longitude": -1.52,
+                   "priorite": 7.5, "raison": "volume moyen, 2 réapparition(s), 1 signalement(s)", "statut": "a_faire" }] }
   ],
-  "indicateurs": { "dechets_collectes_pct": 82.5, "depotoirs_actifs": 14, "cout_total_xof": 4200000, "distance_totale_km": 310.4 },
-  "non_couverts": [{ "depotoir_id": 5, "raison": "capacité insuffisante (camion_2 indisponible)" }]
+  "indicateurs": {
+    "demande_totale_kg_jour": 10000, "zones_population_inconnue": [], "nb_points_regroupement": 66,
+    "stock_a_collecter_kg": 35000, "dechets_collectes_pct": 100.0, "depotoirs_actifs": 2,
+    "depotoirs_planifies_laabal": 2, "depotoirs_en_attente_laabal": 0,
+    "camions_utilises": ["camion_1", "camion_2", "camion_3"], "camions_indisponibles": [],
+    "distance_totale_km": 145.1, "cout_total_xof": 100000, "cout_mensuel_estime_xof": 866667,
+    "budget_mensuel_xof": 5000000, "budget_depasse": false, "saison": "seche", "methode_tournees": "ortools"
+  },
+  "non_couverts": [
+    { "zone_id": 3, "raison": "population inconnue et aucun dépotoir actif : besoin non estimable" },
+    { "point_regroupement_id": 12, "raison": "capacité ou temps de collecte insuffisants (camion_2 indisponible)" },
+    { "depotoir_id": 5, "raison": "capacité ou temps de collecte insuffisants (camion_2 indisponible)" }
+  ],
+  "laabal_en_attente": [{ "depotoir_id": 4, "priorite": 2.5, "raison": "volume moyen, 1 signalement(s)",
+                          "motif": "capacité Laabal atteinte (1 brigade(s) × 2 dépotoir(s)/jour)" }],
+  "zones_ajoutees": []
 }
 ```
+- Une tournée de collecte = une **rotation** (dépôt → points → dépôt) d'un camion ; `cout_xof` inclut le coût journalier du camion sur sa 1re rotation. `cout_total_xof` = coût d'un passage de collecte ; `cout_mensuel_estime_xof` = ce coût × passages par mois.
+- `dechets_collectes_pct` = part du stock des points effectivement chargée dans les tournées.
+- `cible_id` d'un arrêt de collecte = `id` du point de regroupement de ce plan ; d'un arrêt d'intervention = `id` du dépotoir.
 
 ## Chauffeur
 

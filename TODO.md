@@ -29,13 +29,13 @@
 - [ ] A4 — Import par lot CSV/GeoJSON pour l'admin (P2)
 
 **Plan**
-- [x] C1 — Estimation de la demande par zone (P1) — fonction pure `simulation/demande.py` ; reste à l'intégrer au plan (C4)
-- [ ] C2 — Points de regroupement (P1)
-- [ ] C3 — Tournées de collecte (OR-Tools, repli plus proche voisin) (P1)
-- [ ] C7 — Tournées d'intervention Laabal (P1)
-- [ ] C4 — Recalcul automatique et rapide, plan = fonction pure (P1)
-- [ ] D1–D4 — Scénarios : paramètres, camion en panne, saison des pluies, nouveau quartier (P1)
-- [ ] C5 — Explication des choix (P2)
+- [x] C1 — Estimation de la demande par zone (P1) — fonction pure `simulation/demande.py`, intégrée au plan (C4)
+- [x] C2 — Points de regroupement (P1) — fonction pure `simulation/regroupement.py` (D24) ; route `/points-regroupement` avec le plan (C4)
+- [x] C3 — Tournées de collecte (OR-Tools, repli plus proche voisin) (P1) — `simulation/tournees.py` (D25) ; dépôt de Ouaga à confirmer
+- [x] C7 — Tournées d'intervention Laabal (P1) — `planifier_interventions` (D26) ; routes `/laabal/*` à faire
+- [x] C4 — Recalcul automatique et rapide, plan = fonction pure (P1) — `simulation/plan.py`, routes `/scenarios/*` et `/points-regroupement` (D27)
+- [x] D1–D4 — Scénarios : paramètres, camion en panne, saison des pluies, nouveau quartier (P1) — côté back ; reste l'incident chauffeur qui déclenche la panne
+- [ ] C5 — Explication des choix (P2) — `explication` par point (C2), `raison` des arrêts Laabal et des non couverts ; reste la vue front
 
 **Simulation et export**
 - [ ] E1–E3 — Moteur journalier, 4 agents, indicateurs (P1)
