@@ -12,8 +12,7 @@
 - Proxy Vite `/api` vers `http://localhost:8000` ; testé avec `uvicorn backend.main:app --reload` (lancé depuis la racine).
 - Identité : palette verte (variables dans `src/index.css`), police Poppins via `@fontsource`, routage `react-router-dom`.
 - Composants : `Entete`, `Icone` (SVG au trait), `DrapeauBF` ; pages : `Accueil` ; config : `src/config/projet.js` (nom + slogan).
-- Branche `front/legende-carte` (créée depuis `front/init-react`) : `config/couleurs.js`, `Legende.jsx` et `Legende.css` créés, pas encore branchés dans `Carte.jsx`.
-
+- Légende branchée dans Carte.jsx, couleurs lues depuis config/couleurs.js (vérifié sur /carte).
 **Bugs ouverts**: aucun
 
 **Décisions à noter dans DECISIONS.md (si pas déjà fait)**
@@ -28,7 +27,7 @@
 
 **Prochaine étape précise**
 1. PR `front/init-react` ouverte, en attente de relecture par Faissal ou Cramer. `chore/regles-de-travail` est fusionnée, `main` fusionné dans la branche (conflit DECISIONS.md résolu).
-2. Brancher la légende et les couleurs partagées dans Carte.jsx (étape en cours).
+2. Ouvrir la PR front/legende-carte une fois front/init-react fusionnée.
 3. Formulaire de signalement mobile (A1) : position GPS ajustable, type, volume, photo ; page `/signaler`.
 4. Vérifier dans `docs/api-contract.md` la route et le droit d'accès pour `GET /signalements` (probablement admin).
 5. Plus tard : connexion et vues par rôle, panneau de paramètres, tournées sur la carte.

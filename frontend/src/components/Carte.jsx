@@ -9,21 +9,18 @@ import {
 } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getDepotoirs, getSignalements } from '../api/client'
+import { COULEURS_DEPOTOIR, COULEURS_SIGNALEMENT } from '../config/couleurs'
+import Legende from './Legende'
 
 // Centre de Ouagadougou [latitude, longitude]. [H] sera deplace dans la config.
 const CENTRE = [12.3714, -1.5197]
 const ZOOM = 13
 
-const COULEURS_DEPOTOIR = {
-  actif: '#d62828',
-  eradique: '#2a9d8f',
-}
-
 // Couleur d'un signalement selon le resultat attendu de la verification.
 function couleurSignalement(attendu = '') {
-  if (attendu.startsWith('rejete')) return '#6c757d' // gris : rejete
-  if (attendu.startsWith('alerte')) return '#7b2cbf' // violet : alerte
-  return '#f77f00' // orange : en attente de revue
+  if (attendu.startsWith('rejete')) return COULEURS_SIGNALEMENT.rejete
+  if (attendu.startsWith('alerte')) return COULEURS_SIGNALEMENT.alerte
+  return COULEURS_SIGNALEMENT.enAttente
 }
 
 export default function Carte() {
@@ -41,7 +38,7 @@ export default function Carte() {
   }, [])
 
   return (
-    <>
+    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
       {erreur && (
         <div style={{ position: 'absolute', zIndex: 1000, background: 'white', padding: 8 }}>
           Erreur : {erreur}
@@ -109,6 +106,7 @@ export default function Carte() {
           </LayersControl.Overlay>
         </LayersControl>
       </MapContainer>
-    </>
+    <Legende />
+  </div>
   )
 }
