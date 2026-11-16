@@ -16,14 +16,16 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** : A2 terminé (branche `back/verification`). Ensuite : `POST /signalements` et `GET /depotoirs` (A1).
-- **Fichiers modifiés** : `backend/verification.py` (`verifier`, `contexte_depuis_db`, `distance_m`), `config/default.yaml` (pénalités de score `[H]`), `tests/test_verification.py` (25 tests), `TODO.md`, `DECISIONS.md` (D19).
-- **Bugs ouverts** : aucun. `fastapi`, `httpx`, `bcrypt`, `shapely` absents de l'environnement de travail de l'IA (réseau coupé) : `tests/test_db.py` n'y a pas été relancé, les tests de vérification et de config passent.
+- **Objectif en cours** : A3 terminé (branche `back/moderation`) : le parcours citoyen → modération → carte publique fonctionne de bout en bout. Ensuite : zones, demande, points de regroupement (C1/C2), puis tournées (C3).
+- **Fichiers modifiés** : `backend/routes/admin_signalements.py` (`GET /admin/signalements`, `GET .../photo`, `POST .../valider`, `POST .../rejeter`), `backend/schemas.py` (`ValiderEntree`, `RejeterEntree`, `DepotoirSortie`, `ResultatValidation` ; `SignalementAdmin` gagne `motif` et `depotoir_id`), `backend/main.py`, `docs/api-contract.md`, `tests/test_moderation.py` (29 tests, 120 au total), `TODO.md`, `DECISIONS.md` (D22).
+- **État des PR** : la #8 (auth) a été fusionnée dans `back/signalements`, pas dans `main`. Il faut fusionner la **#7** pour que A1 et l'authentification arrivent dans `main`. La PR de A3 vise `main` : elle contient A1 et l'authentification tant que la #7 n'est pas fusionnée.
+- **Bugs ouverts** : aucun. Pas de limitation des tentatives de connexion. Pas de retrait des métadonnées EXIF des photos (A7, P2). L'alerte `volume_aberrant` n'est pas implémentée. `contributeur.score_confiance` n'est jamais mis à jour : valider ou rejeter pourrait l'ajuster pour que l'alerte `appareil_peu_fiable` serve vraiment.
+- **Pour lancer en local** : `YILGMDE_ADMIN_EMAIL`, `YILGMDE_ADMIN_PASSWORD` (premier admin), `YILGMDE_JWT_SECRET`, puis `uvicorn backend.main:app --reload`. Parcours : `POST /signalements` (en-tête `X-Device-Token`) → `POST /auth/login` → `POST /admin/signalements/{id}/valider` → `GET /depotoirs`.
 - **Prochaine étape précise** :
-  1. `backend/routes/signalements.py` : `POST /signalements` (multipart, en-tête `X-Device-Token`). Créer ou retrouver le `contributeur`, appeler `contexte_depuis_db` puis `verifier`, générer `code_suivi` (format `K7M-4QD`), insérer le signalement avec `statut`, `motif`, `score_auto`, `alertes` (JSON), incrémenter `nb_signalements` ;
-  2. `GET /signalements/suivi/{code}` ;
-  3. `GET /depotoirs` en GeoJSON (seuls les `verifie`, contrat d'API) ;
-  4. brancher le routeur dans `main.py`, tests avec `TestClient`.
+  1. zones : chargement des polygones et de la population depuis `data/` (table `zone`), rattachement d'un dépotoir à sa zone à la validation ;
+  2. C1 : estimation de la demande par zone (population × `production_dechets_kg_hab_jour` × coefficient de saison), fonction pure dans `simulation/` ;
+  3. C2 : points de regroupement (scikit-learn, `capacite_kg` et `distance_max_a_pied_m` de la config) ;
+  4. script `scripts/charger_exemples.py` pour remplir `depotoir` avec `data/sample/`.
 
 ## Cramer (docs / données / présentation)
 

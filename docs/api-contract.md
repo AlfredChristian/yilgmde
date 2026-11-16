@@ -50,23 +50,32 @@ Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d
 
 - `POST /auth/login` : `{"email": "...", "mot_de_passe": "..."}` → `{"access_token": "...", "token_type": "bearer", "role": "admin"}`
 - `GET /auth/moi` → `{"id": 1, "nom": "...", "role": "admin"}`
+- Identifiants faux, email inconnu ou compte désactivé : même réponse `401 {"detail": "identifiants invalides"}`.
+- Jeton absent, invalide ou expiré : `401`. Rôle insuffisant : `403`. Le rôle et l'état du compte sont relus en base à chaque requête.
+- Durée du jeton : `securite.duree_token_min` (config). Le premier admin est créé au démarrage depuis `YILGMDE_ADMIN_EMAIL` et `YILGMDE_ADMIN_PASSWORD` (jamais dans le dépôt).
 
 ## Administrateur
 
 **Modération**
-- `GET /admin/signalements?statut=en_attente_revue` →
+- `GET /admin/signalements?statut=en_attente_revue` : file de modération, **les plus anciens d'abord** ; sans `statut`, tous les signalements. `422` si le statut est inconnu.
 ```json
 [{ "id": 12, "latitude": 12.3714, "longitude": -1.5197, "type_dechet": "menager",
-   "volume_estime": "moyen", "photo_url": "/uploads/12.jpg", "statut": "en_attente_revue",
-   "score_auto": 0.82, "alertes": ["doublon_probable:3"], "cree_le": "2026-11-17T09:30:00Z" }]
+   "volume_estime": "moyen", "photo_url": "/admin/signalements/12/photo", "statut": "en_attente_revue",
+   "score_auto": 0.82, "alertes": ["doublon_probable:3"], "motif": null, "depotoir_id": null,
+   "cree_le": "2026-11-17T09:30:00+00:00" }]
 ```
-- `POST /admin/signalements/{id}/valider` : `{"fusionner_avec": null}` (ou l'id d'un dépotoir existant) → `{"signalement": {...}, "depotoir": {...}}`
-- `POST /admin/signalements/{id}/rejeter` : `{"motif": "photo sans rapport"}`
+- `GET /admin/signalements/{id}/photo` : la photo (`image/jpeg`, `image/png` ou `image/webp`), **admin seulement** ; `404` s'il n'y en a pas. Aucune photo n'est servie publiquement.
+- `POST /admin/signalements/{id}/valider` : `{"fusionner_avec": null}` (ou l'id d'un dépotoir existant ; le corps peut être omis) → `{"signalement": {...}, "depotoir": {...}}`.
+  - `fusionner_avec` nul : crée un dépotoir `actif`, `illegal`, `nb_signalements` 1.
+  - sinon : fusion (`nb_signalements` + 1, jamais de doublon). Si le dépotoir est `eradique`, `sous_surveillance` ou `classe`, c'est une **réapparition** : il repasse `actif` et `nb_reapparitions` + 1. Dans les autres statuts, son statut ne change pas.
+  - `404` si le signalement ou le dépotoir est inconnu ; `409` si le signalement n'est plus `en_attente_revue`.
+- `POST /admin/signalements/{id}/rejeter` : `{"motif": "photo sans rapport"}` (motif obligatoire, 1 à 300 caractères) → le signalement, statut `rejete`. `404`, `409` comme ci-dessus ; `422` si le motif est vide.
+- Chaque validation et chaque rejet est écrit dans `journal_audit` ; un échec n'écrit rien.
 - `POST /admin/signalements/import` (P2) : GeoJSON `FeatureCollection` de `Point`, propriétés `type_dechet`, `volume_estime`, `description`.
 
 **Comptes et suivi**
-- `POST /admin/utilisateurs` : `{"nom": "...", "email": "...", "mot_de_passe": "...", "role": "chauffeur"}`
-- `GET /admin/utilisateurs`
+- `POST /admin/utilisateurs` : `{"nom": "...", "email": "...", "mot_de_passe": "...", "role": "chauffeur"}` → `201` `{"id": 4, "nom": "...", "email": "...", "role": "chauffeur", "actif": true}`. `409` si l'email existe, `422` si mot de passe < 8 caractères ou > 72 octets, email invalide ou rôle inconnu.
+- `GET /admin/utilisateurs` → liste de `{id, nom, email, role, actif}` (jamais de mot de passe)
 - `GET /admin/journal?limit=50`
 - `GET /admin/export/depotoirs.geojson` : dépotoirs vérifiés, prêt pour OSM
 - `POST /admin/tournees/{id}/affecter` (P2) : `{"utilisateur_id": 4}`

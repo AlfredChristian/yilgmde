@@ -18,14 +18,14 @@
 **Socle**
 - [x] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
 - [x] Modèle de données SQLite + schémas Pydantic (P1)
-- [ ] F1/F4 — Connexion (JWT) et création de comptes par l'admin (P1)
-- [ ] F2 — Droits par rôle vérifiés côté serveur (P1)
+- [x] F1/F4 — Connexion (JWT) et création de comptes par l'admin (P1)
+- [x] F2 — Droits par rôle vérifiés côté serveur (P1)
 
 **Signalements**
-- [ ] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
+- [x] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
 - [x] A2 — Vérification automatique : doublon, hors zone, position incohérente, limite par appareil, score + motif (P1)
-- [ ] A3 — Modération : valider, rejeter avec motif, fusionner (P1)
-- [ ] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1)
+- [x] A3 — Modération : valider, rejeter avec motif, fusionner (P1)
+- [ ] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1) — réapparition faite à la validation (A3) ; reste les transitions Laabal et la distinction illégal/officiel
 - [ ] A4 — Import par lot CSV/GeoJSON pour l'admin (P2)
 
 **Plan**
