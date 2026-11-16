@@ -5,7 +5,7 @@ import './Accueil.css'
 
 const SERVICES = [
   { icone: 'carte', titre: 'Carte des dépotoirs', lien: '/carte' },
-  { icone: 'alerte', titre: 'Signaler un dépotoir' },
+  { icone: 'alerte', titre: 'Signaler un dépotoir', lien: '/signaler' },
   { icone: 'suivi', titre: 'Suivre mon signalement' },
   { icone: 'mairie', titre: 'Espace mairie' },
   { icone: 'camion', titre: 'Espace chauffeur' },

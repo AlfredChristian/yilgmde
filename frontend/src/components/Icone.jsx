@@ -39,6 +39,39 @@ const FORMES = {
       <path d="M8 18h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7" />
     </>
   ),
+    micro: (
+    <>
+      <rect x="9" y="3" width="6" height="12" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </>
+  ),
+    tas_petit: <path d="M4 19h16M8 19c0-3 2-4 4-4s4 1 4 4" />,
+  tas_moyen: <path d="M3 19h18M5 19c0-4 3-7 7-7s7 3 7 7" />,
+  tas_gros: (
+    <>
+      <path d="M2 19h22M3 19c0-6 4-12 9-12s9 6 9 12" />
+      <path d="M9 11l1 1M14 9l1 1M12 14l1 1" />
+    </>
+  ),
+  sac: (
+    <>
+      <path d="M8 6h8l2 4v9a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-9l2-4z" />
+      <path d="M10 6c0-2 1-3 2-3s2 1 2 3" />
+    </>
+  ),
+  gravats: (
+    <>
+      <rect x="3" y="13" width="8" height="5" />
+      <rect x="13" y="13" width="8" height="5" />
+      <rect x="8" y="7" width="8" height="5" />
+    </>
+  ),
+  bouteille: (
+    <>
+      <path d="M10 3h4v3l2 3v11a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V9l2-3V3z" />
+      <path d="M8 13h8" />
+    </>
+  ),
 }
 
 export default function Icone({ nom, taille = 24 }) {

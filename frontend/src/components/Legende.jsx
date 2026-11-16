@@ -1,29 +1,29 @@
-import { COULEURS_DEPOTOIR, COULEURS_SIGNALEMENT } from '../config/couleurs'
 import './Legende.css'
 
-function Ligne({ couleur, libelle }) {
-  return (
-    <li>
-      <span className="legende-pastille" style={{ background: couleur }} />
-      {libelle}
-    </li>
-  )
-}
+// Les couleurs doivent rester identiques à celles de Carte.jsx.
+const ELEMENTS = [
+  { couleur: '#d62828', texte: 'Dépotoir actif' },
+  { couleur: '#2a9d8f', texte: 'Dépotoir éradiqué' },
+  { couleur: '#f77f00', texte: 'Signalement en attente', petit: true },
+  { couleur: '#7b2cbf', texte: 'Signalement avec alerte', petit: true },
+  { couleur: '#6c757d', texte: 'Signalement rejeté', petit: true },
+]
 
 export default function Legende() {
   return (
-    <div className="legende" role="region" aria-label="Légende de la carte">
-      <h3>Dépotoirs</h3>
+    <aside className="legende">
+      <h3>Légende</h3>
       <ul>
-        <Ligne couleur={COULEURS_DEPOTOIR.actif} libelle="Actif" />
-        <Ligne couleur={COULEURS_DEPOTOIR.eradique} libelle="Éradiqué" />
+        {ELEMENTS.map((e) => (
+          <li key={e.texte}>
+            <span
+              className={e.petit ? 'point point-petit' : 'point'}
+              style={{ background: e.couleur }}
+            />
+            {e.texte}
+          </li>
+        ))}
       </ul>
-      <h3>Signalements (test)</h3>
-      <ul>
-        <Ligne couleur={COULEURS_SIGNALEMENT.enAttente} libelle="En attente de revue" />
-        <Ligne couleur={COULEURS_SIGNALEMENT.alerte} libelle="Alerte automatique" />
-        <Ligne couleur={COULEURS_SIGNALEMENT.rejete} libelle="Rejeté" />
-      </ul>
-    </div>
+    </aside>
   )
 }
