@@ -54,3 +54,6 @@ laabal:
 
 mairie:
   budget_mensuel_xof: 5000000            # [H]
+
+securite:
+  duree_token_min: 480                   # [H] durée de validité d'une connexion (8 h)
