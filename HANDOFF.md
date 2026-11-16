@@ -16,14 +16,15 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** : F1/F2/F4 terminés (branche `back/auth`, empilée sur `back/signalements` / PR #7). Ensuite : modération admin (A3) et cycle de vie du dépotoir (B5/B6).
-- **Fichiers modifiés** : `backend/securite.py` (bcrypt, JWT, dépendances `utilisateur_courant` et `exiger_role(Role...)`), `backend/utilisateurs.py` (`creer_utilisateur`, `creer_admin_si_absent`, `journaliser`), `backend/routes/auth.py` (`POST /auth/login`, `GET /auth/moi`), `backend/routes/admin_utilisateurs.py` (`POST` et `GET /admin/utilisateurs`), `backend/schemas.py` (`UtilisateurAdmin`, validation email et mot de passe), `config/default.yaml` (`securite.duree_token_min` [H]), `docs/api-contract.md`, `tests/test_auth.py` (31 tests, 91 au total), `TODO.md`, `DECISIONS.md` (D21).
-- **Bugs ouverts** : aucun. Pas de limitation des tentatives de connexion (à faire si le temps le permet). Les photos de signalements ne sont servies par aucune route.
-- **Pour lancer en local** : définir `YILGMDE_ADMIN_EMAIL` et `YILGMDE_ADMIN_PASSWORD` (et `YILGMDE_JWT_SECRET` pour garder les connexions entre redémarrages), puis `uvicorn backend.main:app --reload`.
+- **Objectif en cours** : A3 terminé (branche `back/moderation`) : le parcours citoyen → modération → carte publique fonctionne de bout en bout. Ensuite : zones, demande, points de regroupement (C1/C2), puis tournées (C3).
+- **Fichiers modifiés** : `backend/routes/admin_signalements.py` (`GET /admin/signalements`, `GET .../photo`, `POST .../valider`, `POST .../rejeter`), `backend/schemas.py` (`ValiderEntree`, `RejeterEntree`, `DepotoirSortie`, `ResultatValidation` ; `SignalementAdmin` gagne `motif` et `depotoir_id`), `backend/main.py`, `docs/api-contract.md`, `tests/test_moderation.py` (29 tests, 120 au total), `TODO.md`, `DECISIONS.md` (D22).
+- **État des PR** : la #8 (auth) a été fusionnée dans `back/signalements`, pas dans `main`. Il faut fusionner la **#7** pour que A1 et l'authentification arrivent dans `main`. La PR de A3 vise `main` : elle contient A1 et l'authentification tant que la #7 n'est pas fusionnée.
+- **Bugs ouverts** : aucun. Pas de limitation des tentatives de connexion. Pas de retrait des métadonnées EXIF des photos (A7, P2). L'alerte `volume_aberrant` n'est pas implémentée. `contributeur.score_confiance` n'est jamais mis à jour : valider ou rejeter pourrait l'ajuster pour que l'alerte `appareil_peu_fiable` serve vraiment.
+- **Pour lancer en local** : `YILGMDE_ADMIN_EMAIL`, `YILGMDE_ADMIN_PASSWORD` (premier admin), `YILGMDE_JWT_SECRET`, puis `uvicorn backend.main:app --reload`. Parcours : `POST /signalements` (en-tête `X-Device-Token`) → `POST /auth/login` → `POST /admin/signalements/{id}/valider` → `GET /depotoirs`.
 - **Prochaine étape précise** :
-  1. A3 : `GET /admin/signalements?statut=` (alertes, score, `photo_url`) protégé par `exiger_role(Role.admin)` ;
-  2. `POST /admin/signalements/{id}/valider` (`fusionner_avec` nul : crée un dépotoir `actif`, sinon fusion dans le dépotoir existant ; si celui-ci est `eradique` ou `sous_surveillance`, repasse à `actif` et `nb_reapparitions` +1, règle B5) et `POST /admin/signalements/{id}/rejeter` (motif obligatoire) ; chaque action écrite via `journaliser` ;
-  3. route admin qui sert les photos ;
+  1. zones : chargement des polygones et de la population depuis `data/` (table `zone`), rattachement d'un dépotoir à sa zone à la validation ;
+  2. C1 : estimation de la demande par zone (population × `production_dechets_kg_hab_jour` × coefficient de saison), fonction pure dans `simulation/` ;
+  3. C2 : points de regroupement (scikit-learn, `capacite_kg` et `distance_max_a_pied_m` de la config) ;
   4. script `scripts/charger_exemples.py` pour remplir `depotoir` avec `data/sample/`.
 
 ## Cramer (docs / données / présentation)

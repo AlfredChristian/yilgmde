@@ -94,6 +94,8 @@ class SignalementAdmin(Position):
     statut: StatutSignalement
     score_auto: float | None = None
     alertes: list[str] = []
+    motif: str | None = None
+    depotoir_id: int | None = None
     cree_le: datetime
 
 
@@ -104,6 +106,45 @@ class Verdict(BaseModel):
     motif: str | None = None           # toujours renseigné en cas de rejet
     score_auto: float = Field(ge=0, le=1)
     alertes: list[str] = []
+
+
+# ---------- Modération (A3) ----------
+
+class ValiderEntree(BaseModel):
+    """Corps de POST /admin/signalements/{id}/valider."""
+
+    fusionner_avec: int | None = None   # id d'un dépotoir existant, sinon on en crée un
+
+
+class RejeterEntree(BaseModel):
+    """Corps de POST /admin/signalements/{id}/rejeter : le motif est obligatoire."""
+
+    motif: str = Field(min_length=1, max_length=300)
+
+    @field_validator("motif")
+    @classmethod
+    def _motif_non_vide(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("le motif ne peut pas être vide")
+        return v
+
+
+class DepotoirSortie(Position):
+    id: int
+    statut: StatutDepotoir
+    legalite: Legalite
+    volume_estime: VolumeEstime
+    zone_id: int | None = None
+    nb_signalements: int
+    nb_reapparitions: int
+    premiere_detection: datetime
+    derniere_maj: datetime
+
+
+class ResultatValidation(BaseModel):
+    signalement: SignalementAdmin
+    depotoir: DepotoirSortie
 
 
 # ---------- Authentification ----------

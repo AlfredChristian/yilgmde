@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend import db
 from backend.config import charger_config
-from backend.routes import admin_utilisateurs, auth, depotoirs, signalements
+from backend.routes import admin_signalements, admin_utilisateurs, auth, depotoirs, signalements
 from backend.utilisateurs import creer_admin_si_absent
 
 
@@ -36,6 +36,7 @@ app.include_router(signalements.router)
 app.include_router(depotoirs.router)
 app.include_router(auth.router)
 app.include_router(admin_utilisateurs.router)
+app.include_router(admin_signalements.router)
 
 
 @app.get("/health")

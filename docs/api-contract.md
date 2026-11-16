@@ -57,14 +57,20 @@ Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d
 ## Administrateur
 
 **Modération**
-- `GET /admin/signalements?statut=en_attente_revue` →
+- `GET /admin/signalements?statut=en_attente_revue` : file de modération, **les plus anciens d'abord** ; sans `statut`, tous les signalements. `422` si le statut est inconnu.
 ```json
 [{ "id": 12, "latitude": 12.3714, "longitude": -1.5197, "type_dechet": "menager",
-   "volume_estime": "moyen", "photo_url": "/uploads/12.jpg", "statut": "en_attente_revue",
-   "score_auto": 0.82, "alertes": ["doublon_probable:3"], "cree_le": "2026-11-17T09:30:00Z" }]
+   "volume_estime": "moyen", "photo_url": "/admin/signalements/12/photo", "statut": "en_attente_revue",
+   "score_auto": 0.82, "alertes": ["doublon_probable:3"], "motif": null, "depotoir_id": null,
+   "cree_le": "2026-11-17T09:30:00+00:00" }]
 ```
-- `POST /admin/signalements/{id}/valider` : `{"fusionner_avec": null}` (ou l'id d'un dépotoir existant) → `{"signalement": {...}, "depotoir": {...}}`
-- `POST /admin/signalements/{id}/rejeter` : `{"motif": "photo sans rapport"}`
+- `GET /admin/signalements/{id}/photo` : la photo (`image/jpeg`, `image/png` ou `image/webp`), **admin seulement** ; `404` s'il n'y en a pas. Aucune photo n'est servie publiquement.
+- `POST /admin/signalements/{id}/valider` : `{"fusionner_avec": null}` (ou l'id d'un dépotoir existant ; le corps peut être omis) → `{"signalement": {...}, "depotoir": {...}}`.
+  - `fusionner_avec` nul : crée un dépotoir `actif`, `illegal`, `nb_signalements` 1.
+  - sinon : fusion (`nb_signalements` + 1, jamais de doublon). Si le dépotoir est `eradique`, `sous_surveillance` ou `classe`, c'est une **réapparition** : il repasse `actif` et `nb_reapparitions` + 1. Dans les autres statuts, son statut ne change pas.
+  - `404` si le signalement ou le dépotoir est inconnu ; `409` si le signalement n'est plus `en_attente_revue`.
+- `POST /admin/signalements/{id}/rejeter` : `{"motif": "photo sans rapport"}` (motif obligatoire, 1 à 300 caractères) → le signalement, statut `rejete`. `404`, `409` comme ci-dessus ; `422` si le motif est vide.
+- Chaque validation et chaque rejet est écrit dans `journal_audit` ; un échec n'écrit rien.
 - `POST /admin/signalements/import` (P2) : GeoJSON `FeatureCollection` de `Point`, propriétés `type_dechet`, `volume_estime`, `description`.
 
 **Comptes et suivi**
