@@ -1,0 +1,16 @@
+{
+  "type": "FeatureCollection",
+  "_note": "Données FICTIVES pour développer et tester. La propriété 'attendu' indique le résultat attendu de la vérification automatique.",
+  "features": [
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-1.5197, 12.3714]},
+     "properties": {"id": 1, "type_dechet": "menager", "volume_estime": "moyen", "description": "Tas d'ordures au bord de la route", "attendu": "en_attente_revue"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-1.5300, 12.3650]},
+     "properties": {"id": 2, "type_dechet": "gravats", "volume_estime": "gros", "description": "Gravats sur terrain vague", "attendu": "en_attente_revue"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-1.51972, 12.37142]},
+     "properties": {"id": 3, "type_dechet": "menager", "volume_estime": "moyen", "description": "Même endroit que le n°1 (piège : doublon)", "attendu": "alerte doublon_probable:1"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-4.0083, 5.3600]},
+     "properties": {"id": 4, "type_dechet": "menager", "volume_estime": "petit", "description": "Position hors de Ouagadougou (piège : hors zone)", "attendu": "rejete_auto: hors_zone"}},
+    {"type": "Feature", "geometry": {"type": "Point", "coordinates": [-1.5000, 12.4000]},
+     "properties": {"id": 5, "type_dechet": "plastiques", "volume_estime": "petit", "description": "Plastiques près d'un marché", "attendu": "en_attente_revue"}}
+  ]
+}
