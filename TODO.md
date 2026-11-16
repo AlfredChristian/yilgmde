@@ -25,16 +25,17 @@
 - [x] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
 - [x] A2 — Vérification automatique : doublon, hors zone, position incohérente, limite par appareil, score + motif (P1)
 - [x] A3 — Modération : valider, rejeter avec motif, fusionner (P1)
-- [ ] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1) — réapparition faite à la validation (A3) ; reste les transitions Laabal et la distinction illégal/officiel
+- [x] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1) — réapparition (A3), transitions Laabal (D28) ; reste le passage `classe` et la saisie d'un site officiel par l'admin
 - [ ] A4 — Import par lot CSV/GeoJSON pour l'admin (P2)
 
 **Plan**
 - [x] C1 — Estimation de la demande par zone (P1) — fonction pure `simulation/demande.py`, intégrée au plan (C4)
 - [x] C2 — Points de regroupement (P1) — fonction pure `simulation/regroupement.py` (D24) ; route `/points-regroupement` avec le plan (C4)
 - [x] C3 — Tournées de collecte (OR-Tools, repli plus proche voisin) (P1) — `simulation/tournees.py` (D25) ; dépôt de Ouaga à confirmer
-- [x] C7 — Tournées d'intervention Laabal (P1) — `planifier_interventions` (D26) ; routes `/laabal/*` à faire
+- [x] C7 — Tournées d'intervention Laabal (P1) — `planifier_interventions` (D26)
+- [x] C6/H1–H3 (back) — Routes `/chauffeur/*`, `/laabal/*`, `POST /admin/tournees/{id}/affecter` (D28)
 - [x] C4 — Recalcul automatique et rapide, plan = fonction pure (P1) — `simulation/plan.py`, routes `/scenarios/*` et `/points-regroupement` (D27)
-- [x] D1–D4 — Scénarios : paramètres, camion en panne, saison des pluies, nouveau quartier (P1) — côté back ; reste l'incident chauffeur qui déclenche la panne
+- [x] D1–D4 — Scénarios : paramètres, camion en panne, saison des pluies, nouveau quartier (P1) — côté back, panne aussi déclarable par le chauffeur (D28)
 - [ ] C5 — Explication des choix (P2) — `explication` par point (C2), `raison` des arrêts Laabal et des non couverts ; reste la vue front
 
 **Simulation et export**

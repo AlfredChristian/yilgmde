@@ -85,7 +85,7 @@ Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d
 - `GET /admin/utilisateurs` → liste de `{id, nom, email, role, actif}` (jamais de mot de passe)
 - `GET /admin/journal?limit=50`
 - `GET /admin/export/depotoirs.geojson` : dépotoirs vérifiés, prêt pour OSM
-- `POST /admin/tournees/{id}/affecter` (P2) : `{"utilisateur_id": 4}`
+- `POST /admin/tournees/{id}/affecter` : `{"utilisateur_id": 4}` → la tournée avec `affectee_a`. Collecte → compte `chauffeur`, intervention → compte `laabal` (`422` sinon) ; `404` si la tournée n'est pas dans le plan courant ou si le compte est inconnu ou désactivé. Tracé dans le journal.
 
 **Scénarios et plan**
 
@@ -147,14 +147,20 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
 
 ## Chauffeur
 
-- `GET /chauffeur/tournee` → Tournée du jour avec ses arrêts.
-- `POST /chauffeur/arrets/{arret_id}/effectue`
-- `POST /chauffeur/incidents` : `{"type": "panne", "description": "..."}` (`panne` ou `route_impraticable`). Une `panne` marque le camion indisponible et déclenche le recalcul du scénario actif.
+Tout porte sur le **plan courant** (scénario actif, recalculé si les entrées ont changé). Un recalcul du même jour **garde** les affectations (même camion et rotation, même brigade) et les arrêts déjà `effectue` (même point ou même dépotoir).
+
+- `GET /chauffeur/tournee` → `{"plan_id": 7, "tournees": [<tournées de collecte affectées à ce chauffeur, avec arrêts>]}` (liste vide si rien n'est affecté).
+- `POST /chauffeur/arrets/{arret_id}/effectue` → l'arrêt, `statut: "effectue"`. `403` si l'arrêt n'est pas dans une de ses tournées, `404` s'il n'est pas dans le plan courant.
+- `POST /chauffeur/incidents` : `{"type": "panne", "description": "...", "camion_id": null}` (`panne` ou `route_impraticable`).
+  - `panne` : le camion (par défaut celui de sa tournée ; `422` s'il n'en a pas et n'en donne pas, `404` si inconnu) devient `disponible: false` dans les paramètres du scénario actif → `{"type": "panne", "camion_id": "camion_2", "enregistre": true, "plan": <plan recalculé>}`.
+  - `route_impraticable` : tracé dans le journal → `{"type": "route_impraticable", "enregistre": true, "plan": null}`.
 
 ## Brigade Laabal
 
-- `GET /laabal/depotoirs-a-traiter` → liste triée par `priorite` (avec `raison`).
-- `GET /laabal/tournee` → tournée d'intervention du jour.
-- `POST /laabal/depotoirs/{id}/intervention` : `{"statut": "en_cours"}` ou `{"statut": "eradique"}` (photo optionnelle, multipart).
-- `POST /laabal/depotoirs/{id}/surveillance` : met le dépotoir `sous_surveillance`.
-- `POST /laabal/constats` (P2) : `{"depotoir_id": 3, "description": "...", "montant_xof": 10000}` (preuves en multipart).
+- `GET /laabal/depotoirs-a-traiter` → dépotoirs `illegal` en statut `actif` ou `intervention_planifiee`, triés par `priorite` décroissante : `[{"id", "latitude", "longitude", "zone_id", "statut", "volume_estime", "nb_signalements", "nb_reapparitions", "priorite", "raison"}]`.
+- `GET /laabal/tournee` → `{"plan_id", "tournees": [<tournées d'intervention affectées à ce compte>], "en_attente": [...]}`.
+- `POST /laabal/arrets/{arret_id}/effectue` : comme pour le chauffeur.
+- `POST /laabal/depotoirs/{id}/intervention` : `multipart/form-data`, `statut` = `en_cours` (dépotoir → `intervention_planifiee`) ou `eradique` (dépotoir → `eradique`), `photo` optionnelle (JPEG/PNG/WebP, jamais publique) → `{"intervention_id", "depotoir_id", "statut_depotoir", "photo": true}`. `409` si site officiel ou dépotoir ni `actif` ni `intervention_planifiee` ; `404`, `413`, `422` (photo).
+- `POST /laabal/depotoirs/{id}/surveillance` : `eradique` → `sous_surveillance` ; `409` sinon.
+- Chaque intervention et mise sous surveillance est tracée dans le journal. Un signalement validé ensuite près du dépotoir le fait réapparaître (A3).
+- `POST /laabal/constats` (P2, à faire) : `{"depotoir_id": 3, "description": "...", "montant_xof": 10000}` (preuves en multipart).
