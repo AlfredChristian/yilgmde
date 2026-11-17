@@ -570,6 +570,25 @@ export async function getArrondissements() {
   return getJson(`${API_URL}/arrondissements`)
 }
 
+// ---- Suivi de la flotte (admin, D51) ----
+// Avancement reel du plan courant : arrets coches (avec l'heure) et agent affecte.
+export async function getSuiviFlotte() {
+  if (USE_MOCK) {
+    const plan = planMock(MOCK_PARAMS)
+    const tournees = plan.tournees.map((t, i) => ({
+      ...t, type: 'collecte', jour: 1, rotation: 1, affectee_a: i === 0 ? 11 : null, affectee_nom: i === 0 ? 'Issa chauffeur' : null,
+      arrets: t.arrets.map((a, k) => ({ ...a, id: i * 100 + k, cible_id: a.ordre, statut: i === 0 && k === 0 ? 'effectue' : 'a_faire',
+        effectue_le: i === 0 && k === 0 ? new Date().toISOString() : null })),
+    })).map((t) => ({ ...t, arrets_total: t.arrets.length, arrets_effectues: t.arrets.filter((a) => a.statut === 'effectue').length,
+      derniere_activite: t.arrets.find((a) => a.effectue_le)?.effectue_le ?? null }))
+    return {
+      plan_id: 1, depot: { latitude: 12.43, longitude: -1.47 }, jours: [1], tournees,
+      resume: { arrets_total: tournees.reduce((s, t) => s + t.arrets_total, 0), arrets_effectues: 1, tournees_affectees: 1, tournees_terminees: 0 },
+    }
+  }
+  return appelAuth('/admin/suivi')
+}
+
 // ---- Comptes (admin, D49) ----
 let MOCK_UTILISATEURS = [
   { id: 1, nom: 'Administrateur', email: 'admin@test', role: 'admin', actif: true },

@@ -17,6 +17,7 @@
 | 1:05–1:35 | `/admin/plan` : choisir arrondissement 9 | « À partir des dépotoirs vérifiés et de la population, le moteur propose des points, des tournées et distingue capacité des camions et part de déchets réellement captée. » |
 | 1:35–1:55 | Modifier « saison des pluies » ou pannes | « Le jury peut changer un paramètre en direct. Le plan se recalcule ; on voit immédiatement l'effet sur les tournées, le coût et le budget. » |
 | 1:55–2:20 | Lancer simulation 30 jours, graine 42 | « La simulation rend visible l'évolution quotidienne : part captée, déchets sauvages, dépotoirs actifs et coût. Même graine, mêmes résultats : la comparaison est juste. » |
+| (option) | `/admin/plan` → « Suivi de la flotte » ; un équipier coche un arrêt sur le téléphone chauffeur | « Sur le terrain, le chauffeur coche ses arrêts : la mairie voit l'avancement réel en moins de 15 secondes. Les camions affichés suivent l'horaire prévu par le plan ; un traceur GPS pourra le remplacer. » |
 | 2:20–2:40 | Comparer base et variante | « Ici, nous comparons deux décisions à hasard identique. La meilleure valeur est mise en évidence, avec l'écart à la référence. » |
 | 2:40–3:00 | Données ouvertes / conclusion | « Le code est MIT, les données de démonstration ODbL et le moteur est réutilisable par une autre commune. La prochaine étape est de remplacer les hypothèses par les données officielles. » |
 
