@@ -117,7 +117,7 @@ def test_zones_avec_demande_selon_la_saison(client):
     par_hab = app.state.config["population"]["production_dechets_kg_hab_jour"]
     f = client.get("/zones").json()["features"][0]
     assert f["geometry"]["type"] == "Polygon"
-    assert set(f["properties"]) == {"id", "nom", "population", "densite", "demande_kg_jour"}
+    assert set(f["properties"]) == {"id", "nom", "population", "densite", "arrondissement", "demande_kg_jour"}
     assert f["properties"]["demande_kg_jour"] == pytest.approx(10000 * par_hab)
     app.state.config["scenario"]["saison"] = "pluies"
     coef = app.state.config["saisons"]["pluies"]["coef_production"]

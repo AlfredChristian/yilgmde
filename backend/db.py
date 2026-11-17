@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS zone (
     nom TEXT NOT NULL,
     geometrie TEXT NOT NULL,          -- polygone GeoJSON
     population INTEGER,
-    densite REAL
+    densite REAL,
+    arrondissement INTEGER            -- arrondissement de la commune (plan d'un arrondissement, livrable 3)
 );
 
 CREATE TABLE IF NOT EXISTS depotoir (
@@ -198,6 +199,7 @@ COLONNES_AJOUTEES = [
     ("point_regroupement", "details", "TEXT NOT NULL DEFAULT '{}'"),
     ("tournee", "details", "TEXT NOT NULL DEFAULT '{}'"),
     ("arret_tournee", "details", "TEXT NOT NULL DEFAULT '{}'"),
+    ("zone", "arrondissement", "INTEGER"),
     ("signalement", "capture_le", "TEXT"),
     ("signalement", "id_client", "TEXT"),
     ("signalement", "note_vocale", "TEXT"),

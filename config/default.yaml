@@ -95,6 +95,12 @@ export_osm:                              # G1, voir backend/export_osm.py
   source: "survey;YilGmdé"
   licence: null                          # à décider (D16 proposé : ODbL pour les données) ; requis avant tout versement OSM
 
+# Livrable 3 : limiter plan, tournées et simulation à un arrondissement (ou à des zones).
+# Vide = toute la commune. Se règle surtout par scénario : {"perimetre": {"arrondissements": [4]}}.
+perimetre:
+  arrondissements: []
+  zones: []
+
 simulation:                              # E1–E4, voir simulation/agents.py
   prob_apport_volontaire: 0.6            # [H] un ménage non abonné à distance de marche apporte ses déchets au point
   seuil_nouveau_depotoir_kg: 1500        # [H] dépôts sauvages du jour dans une zone pour qu'un dépotoir apparaisse à coup sûr

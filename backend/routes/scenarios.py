@@ -9,15 +9,18 @@ Chaque création, modification ou activation est écrite dans `journal_audit` (r
 from __future__ import annotations
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from fastapi.responses import PlainTextResponse
 
 from backend import db, plans
 from backend.config import ConfigError
 from backend.deps import acces_db
+from backend.synthese import synthese_markdown
+from backend.zones import lire_zones
 from backend.schemas import Role, ScenarioCreation, ScenarioSortie, SimulationEntree
 from backend.securite import exiger_role
 from backend.utilisateurs import journaliser
 from simulation.agents import simuler
-from simulation.plan import zones_du_scenario
+from simulation.plan import restreindre_perimetre, zones_du_scenario
 
 router = APIRouter(tags=["scenarios"])
 admin = exiger_role(Role.admin)
@@ -44,10 +47,13 @@ def _scenario_ou_404(conn, scenario_id: int) -> dict:
 
 
 def _valider(request: Request, parametres: dict) -> None:
-    """422 si la config effective ou un nouveau quartier est invalide (rien n'est enregistré)."""
+    """422 si la config effective, un nouveau quartier ou le périmètre est invalide (rien n'est enregistré)."""
     try:
         config = plans.config_effective(request.app.state.config, {"parametres": parametres})
         zones_du_scenario([], config)
+        if config.get("perimetre"):
+            with acces_db(request) as conn:
+                restreindre_perimetre(plans.lire_donnees(conn), config)
     except (ConfigError, ValueError) as e:
         raise HTTPException(422, f"paramètres invalides : {e}")
 
@@ -195,6 +201,19 @@ def calculer(request: Request, scenario_id: int, _=Depends(admin)):
 def plan_du_scenario(request: Request, scenario_id: int, _=Depends(admin)):
     """Dernier plan, recalculé d'abord si les données ou les paramètres ont changé."""
     return _plan(request, scenario_id)
+
+
+@router.get("/scenarios/{scenario_id}/plan/synthese", response_class=PlainTextResponse)
+def synthese(request: Request, scenario_id: int, _=Depends(admin)):
+    """Livrable 3 : plan de gestion lisible (Markdown), pour l'arrondissement du scénario ou la commune."""
+    plan = _plan(request, scenario_id)
+    with acces_db(request) as conn:
+        scenario = plans.lire_scenario(conn, scenario_id)
+        zones = lire_zones(conn)
+    config = plans.config_effective(request.app.state.config, scenario)
+    texte = synthese_markdown(plan, scenario, zones, config)
+    return PlainTextResponse(texte, media_type="text/markdown; charset=utf-8",
+                             headers={"Content-Disposition": f'inline; filename="plan_scenario_{scenario_id}.md"'})
 
 
 @router.post("/scenarios/{scenario_id}/simuler")

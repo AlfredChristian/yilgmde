@@ -39,7 +39,7 @@ from typing import Sequence
 
 from simulation.demande import estimer_demande
 from simulation.geometrie import distance_m, echantillonner
-from simulation.plan import calculer_plan, zones_du_scenario
+from simulation.plan import calculer_plan, preparer
 from simulation.regroupement import jours_entre_passages
 from simulation.tournees import priorite_depotoir
 
@@ -100,23 +100,20 @@ def simuler(donnees: dict, config: dict, jours: int = 30, graine: int | None = N
     p = _parametres(config)
     if plan is None:
         plan = calculer_plan(donnees, config)
-
-    zones = zones_du_scenario(donnees.get("zones", []), config)
+    # Mêmes zones et dépotoirs que le plan : nouveaux quartiers rattachés, périmètre appliqué (livrable 3).
+    zones, depotoirs_scenario, _ = preparer(donnees, config)
     demandes = {d["zone_id"]: d["demande_kg_jour"] for d in estimer_demande(zones, config)}
-    ids_zones = {z["id"] for z in zones}
 
     # État : copies, l'entrée n'est jamais modifiée.
     depotoirs = []
-    for d in donnees.get("depotoirs", []):
+    for d in depotoirs_scenario:
         d = dict(d)
         d.setdefault("statut", "actif")
         d.setdefault("legalite", "illegal")
         d["kg"] = 0.0
-        if d.get("zone_id") not in ids_zones:   # rattachement à un nouveau quartier (D4)
-            d["zone_id"] = next((pt["zone_id"] for pt in plan["points_regroupement"]
-                                 if d["id"] in pt.get("depotoirs_desservis", [])), d.get("zone_id"))
         depotoirs.append(d)
-    prochain_id = max((d["id"] for d in depotoirs), default=0) + 1
+    # Les nouveaux dépotoirs prennent des ids libres dans toute la commune, pas seulement le périmètre.
+    prochain_id = max((d["id"] for d in donnees.get("depotoirs", [])), default=0) + 1
 
     points = [dict(pt, stock=0.0) for pt in plan["points_regroupement"]]
     desservis = {a["cible_id"] for t in plan["tournees"] if t["type"] == "collecte" for a in t["arrets"]}

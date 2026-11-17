@@ -34,11 +34,14 @@ Toute modification d'API passe par une PR qui met à jour ce fichier. La documen
 | GET | `/health` | → `{"status": "ok"}` |
 | GET | `/depotoirs?statut=&zone_id=` | Dépotoirs **vérifiés** en GeoJSON (`FeatureCollection`, propriétés : `id`, `statut`, `legalite`, `volume_estime`, `nb_signalements`, `zone_id`, `derniere_maj`) |
 | GET | `/zones` | Zones (quartiers ou secteurs) en GeoJSON, avec la demande de déchets estimée (C1) |
+| GET | `/arrondissements` | Arrondissements, leurs zones, population et demande (choix du périmètre d'un plan) |
 | GET | `/points-regroupement` | Points du plan courant (scénario actif), GeoJSON |
 | POST | `/signalements` | Créer un signalement (anonyme) |
 | GET | `/signalements/suivi/{code_suivi}` | Statut d'un signalement |
 
-**GET `/zones`** → `FeatureCollection` de `Polygon` (ou `MultiPolygon`), propriétés : `id`, `nom`, `population` (peut être `null`), `densite`, `demande_kg_jour`. La demande vaut `population × production_dechets_kg_hab_jour × coef_production(saison)` selon la config courante ; elle vaut `0` si la population est inconnue. Vide tant qu'aucune zone n'est chargée.
+**GET `/zones`** → `FeatureCollection` de `Polygon` (ou `MultiPolygon`), propriétés : `id`, `nom`, `population` (peut être `null`), `densite`, `arrondissement` (entier ou `null`), `demande_kg_jour`. La demande vaut `population × production_dechets_kg_hab_jour × coef_production(saison)` selon la config courante ; elle vaut `0` si la population est inconnue. Vide tant qu'aucune zone n'est chargée.
+
+**GET `/arrondissements`** → `[{"arrondissement": 4, "zones": [12, 13], "population": 180000, "population_inconnue": false, "demande_kg_jour": 108000.0}]`, trié par numéro ; seules les zones qui ont un `arrondissement` comptent.
 
 À la validation d'un signalement, le nouveau dépotoir est rattaché à la zone qui le contient (`zone_id`), ou `null` si aucune zone ne le contient.
 
@@ -144,7 +147,9 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
   - `{"zones_ajoutees": [<Feature ou géométrie GeoJSON, ou sa chaîne JSON>]}` : nouveau quartier (D4), propriétés `nom`, `population` (sans population : seuls ses dépotoirs reçoivent un point). Les zones **s'ajoutent** à celles déjà ajoutées. Les dépotoirs sans zone qu'elles contiennent leur sont rattachés.
   - tout autre paramètre de la config : `{"collecte": {"frequence_passages_par_semaine": 3}}`, `{"points_regroupement": {"distance_max_a_pied_m": 200}}`, `{"laabal": {"nombre_brigades": 2}}`, `{"mairie": {"budget_mensuel_xof": 4000000}}`…
 - `POST /scenarios/{id}/activer` → scénario, devenu le seul actif.
+- **Plan d'un arrondissement** (livrable 3) : `{"perimetre": {"arrondissements": [4]}}` (ou `{"zones": [12, 13]}`, ou les deux : union ; listes vides = toute la commune). Plan, tournées, Laabal, simulation et comparaison se limitent aux zones choisies et à leurs dépotoirs ; les nouveaux quartiers du scénario sont toujours gardés. `422` (rien n'est enregistré) si le périmètre ne contient aucune zone. `indicateurs.perimetre` = `{"arrondissements": [4], "zones": [12, 13], "population": 180000}` (`null` sans périmètre).
 - `POST /scenarios/{id}/calculer` → Plan, calcul forcé.
+- `GET /scenarios/{id}/plan/synthese` → **plan de gestion lisible** en Markdown (`text/markdown`) : en bref, points par zone avec une explication, tournées par camion et rotation, brigade Laabal, ce qui n'est pas couvert. Pour le tableau de bord, le rapport ou l'impression.
 - `GET /scenarios/{id}/plan` → dernier Plan, **recalculé d'abord si les entrées ont changé** (dépotoirs, zones, paramètres) ; sinon le même plan est renvoyé.
 - `POST /scenarios/{id}/simuler` : `{"jours": 30, "graine": 42}` (corps optionnel ; `jours` de 1 à 365, défaut 30 ; `graine` par défaut celle de la config). Simule sur le plan à jour du scénario ; **même graine = mêmes résultats**. `422` si `jours` hors bornes, `404` si scénario inconnu. Les colonnes `pct_collecte`, `depotoirs_actifs`, `cout_xof`, `distance_km` sont enregistrées dans `indicateur_simulation` (la simulation précédente du même plan est remplacée).
 ```json
