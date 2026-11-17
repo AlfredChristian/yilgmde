@@ -7,9 +7,9 @@ crs_geographique: EPSG:4326       # latitude / longitude
 crs_metrique: EPSG:32630          # UTM 30N, pour calculer des distances en mètres
 
 zone_etude:
-  # Emprise de la commune : 551 km² (RGPH 2019 : 2 415 266 hab., 4 385,5 hab./km²) autour du
-  # centre-ville, avec une marge ; couvre les secteurs de data/ouaga/zones.geojson.
-  bbox: {min_lat: 12.24, max_lat: 12.50, min_lon: -1.65, max_lon: -1.39}
+  # Emprise du contour réel de la commune (OpenStreetMap, data/ouaga/commune_ouagadougou.geojson :
+  # lat 12,251 à 12,491, lon -1,654 à -1,408), avec une marge.
+  bbox: {min_lat: 12.24, max_lat: 12.50, min_lon: -1.66, max_lon: -1.39}
 
 # Données fictives mais réalistes autorisées par les organisateurs : chaque valeur réelle a sa
 # source, chaque valeur inventée est marquée [H]. Sources détaillées : data/ouaga/LISEZMOI.md.
