@@ -43,10 +43,38 @@ export default function Signaler() {
   const [type, setType] = useState('menager')
   const [volume, setVolume] = useState('moyen')
   const [description, setDescription] = useState('')
+  const [photo, setPhoto] = useState(null)
+  const [photoUrl, setPhotoUrl] = useState(null)
   const [audio, setAudio] = useState(null)
   const [message, setMessage] = useState(null)
   const [envoiEnCours, setEnvoiEnCours] = useState(false)
   const [confirmation, setConfirmation] = useState(null)
+
+  useEffect(() => {
+    if (!photo) {
+      setPhotoUrl(null)
+      return undefined
+    }
+    const url = URL.createObjectURL(photo)
+    setPhotoUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [photo])
+
+  function choisirPhoto(e) {
+    const fichier = e.target.files?.[0]
+    e.target.value = ''
+    if (!fichier) return
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(fichier.type)) {
+      setMessage('Format non accepté. Utilisez une image JPEG, PNG ou WebP.')
+      return
+    }
+    if (fichier.size > 5 * 1024 * 1024) {
+      setMessage('Image trop volumineuse. La taille maximale est de 5 Mo.')
+      return
+    }
+    setMessage(null)
+    setPhoto(fichier)
+  }
 
   function utiliserMaPosition() {
     if (!navigator.geolocation) {
@@ -79,6 +107,7 @@ export default function Signaler() {
         description,
         latitude: Number(position[0].toFixed(6)),
         longitude: Number(position[1].toFixed(6)),
+        photo,
         audio,
       })
       setConfirmation(
@@ -97,6 +126,7 @@ export default function Signaler() {
     setConfirmation(null)
     setPosition(null)
     setDescription('')
+    setPhoto(null)
     setAudio(null)
     setType('menager')
     setVolume('moyen')
@@ -233,6 +263,29 @@ if (confirmation) {
 
           <div className="description">
             <p className="description-titre">Décrivez en quelques mots (facultatif)</p>
+            <div className="photo-signalement">
+              <div>
+                <p className="description-titre">Ajoutez une photo (facultatif)</p>
+                <p className="signaler-aide">Prenez une photo sur place ou choisissez une image dans votre appareil.</p>
+              </div>
+              <div className="photo-actions">
+                <label className="btn-contour photo-bouton">
+                  <Icone nom="carte" taille={18} /> Prendre une photo
+                  <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={choisirPhoto} />
+                </label>
+                <label className="btn-contour photo-bouton">
+                  <Icone nom="suivi" taille={18} /> Choisir une image
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={choisirPhoto} />
+                </label>
+              </div>
+              {photo && (
+                <div className="photo-apercu">
+                  {photoUrl && <img src={photoUrl} alt="Aperçu du dépotoir signalé" />}
+                  <div className="photo-apercu-info"><strong>{photo.name}</strong><span>{(photo.size / 1024 / 1024).toFixed(2)} Mo</span></div>
+                  <button type="button" className="photo-supprimer" onClick={() => setPhoto(null)}>Supprimer</button>
+                </div>
+              )}
+            </div>
             <EnregistreurVocal onChange={setAudio} />
             <label>
               Ou écrivez

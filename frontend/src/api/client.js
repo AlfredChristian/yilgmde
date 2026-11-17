@@ -49,7 +49,7 @@ function jetonAppareil() {
 }
 
 // Envoie un signalement. [H] format a confirmer dans docs/api-contract.md
-export async function postSignalement({ type_dechet, volume_estime, description, latitude, longitude, audio, id_client, capture_le }) {
+export async function postSignalement({ type_dechet, volume_estime, description, latitude, longitude, photo, audio, id_client, capture_le }) {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 800))
     const bloc = () => Math.random().toString(36).slice(2, 5).toUpperCase()
@@ -70,6 +70,7 @@ export async function postSignalement({ type_dechet, volume_estime, description,
 
   if (id_client) form.append('id_client', id_client)
   if (capture_le) form.append('capture_le', capture_le)
+  if (photo) form.append('photo', photo, photo.name || 'photo.jpg')
   if (audio) {
     const ext = audio.blob.type.includes('mp4') ? 'mp4' : 'webm'
     form.append('note_vocale', audio.blob, `note.${ext}`)
