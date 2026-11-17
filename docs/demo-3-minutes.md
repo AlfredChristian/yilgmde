@@ -2,10 +2,10 @@
 
 ## Préparation (avant de parler)
 
-1. Base de démonstration chargée : `python scripts/charger_exemples.py --ouaga`.
+1. Base de démonstration neuve chargée : `python scripts/charger_exemples.py --ouaga --demo` (comptes chauffeur et Laabal, scénarios base / pluies / panne / sensibilisation sur l'arrondissement 9, tournées affectées ; identifiants affichés par le script).
 2. API ouverte sur `http://localhost:8000` et front sur Vite.
 3. Administrateur connecté ; ouvrir `/admin/plan` dans un onglet et `/signaler` dans un autre.
-4. Garder une variante « pluies » ou « panne » disponible pour la comparaison.
+4. Les variantes « pluies », « panne » et « sensibilisation » existent déjà : à 2:20, choisir la variante comme scénario de travail et comparer avec « base ». Pour en créer une en direct, la nommer : elle devient le scénario de travail et la référence reste intacte.
 
 ## Script chronométré
 

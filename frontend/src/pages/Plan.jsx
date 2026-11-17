@@ -31,11 +31,15 @@ const LIBELLES_COMPARAISON = {
   passages_suspendus_budget: 'Passages suspendus par le budget',
 }
 
-// Valeur affichée d'un indicateur : les kg en tonnes, les parts avec « % ».
-function valeurIndicateur(cle, n) {
+// Le meme nom d'indicateur peut venir du plan et de la simulation (cout_total_xof).
+const LIBELLES_SIMULATION = { cout_total_xof: 'Coût simulé sur la période (XOF)' }
+
+// Valeur affichée d'un indicateur : les kg en tonnes, les parts avec « % » ;
+// un écart de parts se lit en points (« +4 pts »), pas en pourcentage.
+function valeurIndicateur(cle, n, ecart = false) {
   if (n == null) return '—'
   if (cle.endsWith('_kg')) return fmt(n / 1000)
-  return fmtNombre(n) + (cle.endsWith('_pct') ? ' %' : '')
+  return fmtNombre(n) + (cle.endsWith('_pct') ? (ecart ? ' pts' : ' %') : '')
 }
 
 // Recadre la carte sur les points du plan quand le perimetre change.
@@ -377,10 +381,10 @@ export default function Plan() {
                     <thead><tr><th>Indicateur</th>{comparaison.scenarios.map((s) => <th key={s.id}>{s.nom}</th>)}</tr></thead>
                     <tbody>{comparaison.indicateurs.map((ligne) => (
                       <tr key={`${ligne.source}-${ligne.indicateur}`}>
-                        <th>{LIBELLES_COMPARAISON[ligne.indicateur] ?? ligne.indicateur}</th>
+                        <th>{(ligne.source === 'simulation' && LIBELLES_SIMULATION[ligne.indicateur]) || LIBELLES_COMPARAISON[ligne.indicateur] || ligne.indicateur}</th>
                         {ligne.valeurs.map((valeur, i) => (
                           <td key={comparaison.scenarios[i].id} className={ligne.meilleur?.includes(comparaison.scenarios[i].id) ? 'plan-meilleur' : ''}>
-                            {valeurIndicateur(ligne.indicateur, valeur)}{i > 0 && ligne.ecart_a_la_reference[i] != null && <small> ({ligne.ecart_a_la_reference[i] > 0 ? '+' : ''}{valeurIndicateur(ligne.indicateur, ligne.ecart_a_la_reference[i])})</small>}
+                            {valeurIndicateur(ligne.indicateur, valeur)}{i > 0 && ligne.ecart_a_la_reference[i] != null && <small> ({ligne.ecart_a_la_reference[i] > 0 ? '+' : ''}{valeurIndicateur(ligne.indicateur, ligne.ecart_a_la_reference[i], true)})</small>}
                           </td>
                         ))}
                       </tr>

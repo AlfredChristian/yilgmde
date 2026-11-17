@@ -16,7 +16,7 @@ Set-Location C:\Users\HP\HACK_MIN\yilgmde
 $env:YILGMDE_ADMIN_EMAIL = "admin@ouaga.bf"
 $env:YILGMDE_ADMIN_PASSWORD = "mot-de-passe-de-demo"
 $env:YILGMDE_JWT_SECRET = "secret-de-demo-long-et-aleatoire"
-python scripts/charger_exemples.py --ouaga
+python scripts/charger_exemples.py --ouaga --demo
 uvicorn backend.main:app
 ```
 
