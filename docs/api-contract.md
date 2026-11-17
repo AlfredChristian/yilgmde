@@ -115,6 +115,7 @@ Réponse `201` :
 **Comptes et suivi**
 - `POST /admin/utilisateurs` : `{"nom": "...", "email": "...", "mot_de_passe": "...", "role": "chauffeur"}` → `201` `{"id": 4, "nom": "...", "email": "...", "role": "chauffeur", "actif": true}`. `409` si l'email existe, `422` si mot de passe < 8 caractères ou > 72 octets, email invalide ou rôle inconnu.
 - `GET /admin/utilisateurs` → liste de `{id, nom, email, role, actif}` (jamais de mot de passe)
+- `GET /admin/suivi` (admin) → avancement réel du plan courant (D51) : `{plan_id, depot: {latitude, longitude}, jours: [1, 2, 3], resume: {arrets_total, arrets_effectues, tournees_affectees, tournees_terminees}, tournees: [{id, type, camion_id, brigade, jour, rotation, distance_km, duree_min, affectee_a, affectee_nom, arrets_effectues, arrets_total, derniere_activite, arrets: [{id, ordre, latitude, longitude, cible_type, cible_id, statut, effectue_le}]}]}`. `effectue_le` : heure où l'agent a coché l'arrêt (journal d'audit). Pas de position GPS.
 - `PATCH /admin/utilisateurs/{id}` : `{"nom"?, "role"?, "actif"?}` (seuls les champs fournis changent) → `200` le compte. Désactiver un compte bloque sa connexion et son jeton en cours ; désactiver ou changer de rôle retire ses tournées affectées. `409` si un admin se désactive ou se retire son rôle, ou s'il ne resterait aucun admin actif ; `404` compte inconnu. Pas de suppression (D49).
 - `POST /admin/utilisateurs/{id}/mot-de-passe` : `{"mot_de_passe": "..."}` (8 caractères minimum) → `200` le compte ; l'ancien mot de passe ne marche plus.
 
