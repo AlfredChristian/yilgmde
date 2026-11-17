@@ -27,7 +27,8 @@ Chaque jour, zone par zone :
    la probabilité `simulation.prob_reapparition × (1 − effet_dissuasion)` ; les
    contrôles (`taux_controle`) donnent des amendes (`montant_amende_xof`).
 6. **Mairie** paie les tournées les jours de passage tant que le budget le permet
-   (`budget_mensuel_xof` réparti sur `simulation.jours_par_mois`, plus les
+   (`budget_mensuel_xof`, ou sa part pour le périmètre au prorata de la population,
+   réparti sur `simulation.jours_par_mois`, plus les
    amendes) ; sinon la collecte est suspendue ce jour-là.
 """
 
@@ -39,7 +40,7 @@ from typing import Sequence
 
 from simulation.demande import estimer_demande
 from simulation.geometrie import distance_m, echantillonner
-from simulation.plan import calculer_plan, preparer
+from simulation.plan import budget_du_perimetre, calculer_plan, preparer
 from simulation.regroupement import jours_entre_passages
 from simulation.tournees import priorite_depotoir
 
@@ -101,7 +102,8 @@ def simuler(donnees: dict, config: dict, jours: int = 30, graine: int | None = N
     if plan is None:
         plan = calculer_plan(donnees, config)
     # Mêmes zones et dépotoirs que le plan : nouveaux quartiers rattachés, périmètre appliqué (livrable 3).
-    zones, depotoirs_scenario, _ = preparer(donnees, config)
+    zones, depotoirs_scenario, perimetre = preparer(donnees, config)
+    p["budget_mensuel"] = budget_du_perimetre(config, perimetre)   # part du périmètre (D39)
     demandes = {d["zone_id"]: d["demande_kg_jour"] for d in estimer_demande(zones, config)}
 
     # État : copies, l'entrée n'est jamais modifiée.
