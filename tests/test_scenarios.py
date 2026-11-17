@@ -171,3 +171,28 @@ def test_scenarios_independants(client):
     p1 = client.get("/scenarios/1/plan", headers=h).json()
     p2 = client.get(f"/scenarios/{s2['id']}/plan", headers=h).json()
     assert p1["indicateurs"]["saison"] == "seche" and p2["indicateurs"]["saison"] == "pluies"
+
+
+def test_simuler(client):
+    h = entetes(client)
+    r = client.post("/scenarios/1/simuler", json={"jours": 10, "graine": 42}, headers=h)
+    assert r.status_code == 200, r.text
+    corps = r.json()
+    assert corps["graine"] == 42 and len(corps["indicateurs"]) == 10
+    assert {"jour", "pct_collecte", "depotoirs_actifs", "cout_xof", "distance_km"} <= set(corps["indicateurs"][0])
+    assert client.post("/scenarios/1/simuler", json={"jours": 10, "graine": 42}, headers=h).json() == corps
+    lignes = app.state.db.execute("SELECT COUNT(*) FROM indicateur_simulation WHERE plan_id = ?", (corps["plan_id"],)).fetchone()[0]
+    assert lignes == 10                                                  # remplacée, pas doublée
+    defaut = client.post("/scenarios/1/simuler", headers=h).json()
+    assert len(defaut["indicateurs"]) == 30
+    assert client.post("/scenarios/1/simuler", json={"jours": 0}, headers=h).status_code == 422
+    assert client.post("/scenarios/99/simuler", json={}, headers=h).status_code == 404
+    assert client.post("/scenarios/1/simuler", json={}, headers=entetes(client, Role.chauffeur)).status_code == 403
+
+
+def test_comparer_deux_scenarios_par_simulation(client):
+    h = entetes(client)
+    s2 = client.post("/scenarios", json={"nom": "pluies", "parametres": {"saison": "pluies"}}, headers=h).json()
+    base = client.post("/scenarios/1/simuler", json={"jours": 30, "graine": 1}, headers=h).json()["resume"]
+    pluies = client.post(f"/scenarios/{s2['id']}/simuler", json={"jours": 30, "graine": 1}, headers=h).json()["resume"]
+    assert pluies["dechets_sauvages_kg"] > base["dechets_sauvages_kg"]

@@ -9,7 +9,7 @@
 - [x] Dépôt créé, structure en place, API `/health` qui tourne (Christian)
 - [ ] Faissal et Cramer ont cloné le dépôt et lancé l'API
 - [ ] Contrat d'API (`docs/api-contract.md`) relu et validé par Christian et Faissal
-- [ ] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence)
+- [ ] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence) — simulation tranchée (D18)
 - [ ] Jeux de données d'exemple dans `data/sample/` utilisés par le front et le back
 - [ ] Questions ouvertes de `CONTEXT.md` posées aux organisateurs (Cramer)
 
@@ -39,8 +39,8 @@
 - [ ] C5 — Explication des choix (P2) — `explication` par point (C2), `raison` des arrêts Laabal et des non couverts ; reste la vue front
 
 **Simulation et export**
-- [ ] E1–E3 — Moteur journalier, 4 agents, indicateurs (P1)
-- [ ] E4 — Reproductibilité par graine aléatoire (P2)
+- [x] E1–E3 — Moteur journalier, 4 agents, indicateurs (P1) — `simulation/agents.py`, `POST /scenarios/{id}/simuler` (D29)
+- [x] E4 — Reproductibilité par graine aléatoire (P2)
 - [ ] G1 — Export GeoJSON des dépotoirs vérifiés (P1)
 - [ ] H4/H5 — Constats d'infraction, détection de réapparition (P2)
 

@@ -13,9 +13,10 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from backend import db, plans
 from backend.config import ConfigError
 from backend.deps import acces_db
-from backend.schemas import Role, ScenarioCreation, ScenarioSortie
+from backend.schemas import Role, ScenarioCreation, ScenarioSortie, SimulationEntree
 from backend.securite import exiger_role
 from backend.utilisateurs import journaliser
+from simulation.agents import simuler
 from simulation.plan import zones_du_scenario
 
 router = APIRouter(tags=["scenarios"])
@@ -125,6 +126,32 @@ def calculer(request: Request, scenario_id: int, _=Depends(admin)):
 def plan_du_scenario(request: Request, scenario_id: int, _=Depends(admin)):
     """Dernier plan, recalculé d'abord si les données ou les paramètres ont changé."""
     return _plan(request, scenario_id)
+
+
+@router.post("/scenarios/{scenario_id}/simuler")
+def simuler_scenario(request: Request, scenario_id: int, entree: SimulationEntree | None = None, _=Depends(admin)):
+    """E1–E3 : simule `jours` jours sur le plan à jour du scénario (même graine = mêmes résultats).
+
+    Les indicateurs journaliers sont enregistrés dans `indicateur_simulation` (une
+    simulation par plan : la précédente est remplacée).
+    """
+    entree = entree or SimulationEntree()
+    plan = _plan(request, scenario_id)
+    with acces_db(request) as conn:
+        scenario = plans.lire_scenario(conn, scenario_id)
+        donnees = plans.lire_donnees(conn)
+    config = plans.config_effective(request.app.state.config, scenario)
+    resultat = simuler(donnees, config, entree.jours, entree.graine, plan=plan)
+    with acces_db(request) as conn:
+        with db.transaction(conn):
+            conn.execute("DELETE FROM indicateur_simulation WHERE plan_id = ?", (plan["id"],))
+            conn.executemany(
+                "INSERT INTO indicateur_simulation (plan_id, jour, pct_collecte, depotoirs_actifs, cout_xof, distance_km)"
+                " VALUES (?, ?, ?, ?, ?, ?)",
+                [(plan["id"], i["jour"], i["pct_collecte"], i["depotoirs_actifs"], i["cout_xof"], i["distance_km"])
+                 for i in resultat["indicateurs"]],
+            )
+    return {"scenario_id": scenario_id, "plan_id": plan["id"], **resultat}
 
 
 @router.get("/points-regroupement")

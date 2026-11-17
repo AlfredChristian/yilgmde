@@ -215,3 +215,8 @@ class ScenarioSortie(BaseModel):
     actif: bool
     cree_par: int | None
     cree_le: str
+
+
+class SimulationEntree(BaseModel):
+    jours: int = Field(default=30, ge=1, le=365)
+    graine: int | None = None          # par défaut : scenario.graine_aleatoire de la config
