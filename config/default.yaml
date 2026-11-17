@@ -69,6 +69,11 @@ laabal:
     poids_reapparition: 2                # un dépotoir qui revient est traité en priorité
     poids_signalement: 0.5
 
+export_osm:                              # G1, voir backend/export_osm.py
+  min_signalements: 1                    # [H] signalements vérifiés minimum pour exporter un dépotoir
+  source: "survey;YilGmdé"
+  licence: null                          # à décider (D16 proposé : ODbL pour les données) ; requis avant tout versement OSM
+
 simulation:                              # E1–E4, voir simulation/agents.py
   prob_apport_volontaire: 0.6            # [H] un ménage non abonné à distance de marche apporte ses déchets au point
   seuil_nouveau_depotoir_kg: 1500        # [H] dépôts sauvages du jour dans une zone pour qu'un dépotoir apparaisse à coup sûr
