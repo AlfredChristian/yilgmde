@@ -124,7 +124,7 @@ export default function Chauffeur() {
               />
               <RecalculerTailleCarte />
               <RecadrerTournee arrets={tournee.arrets} />
-              {positions.length > 1 && <Polyline positions={positions} pathOptions={{ color: '#1b6b4a', weight: 5, opacity: 0.85 }} />}
+              {positions.length > 1 && <Polyline positions={tournee.trace?.length ? tournee.trace : positions} pathOptions={{ color: '#1b6b4a', weight: 5, opacity: 0.85 }} />}
               {tournee.arrets.map((a) => {
                 const fait = a.statut === 'effectue'
                 return (

@@ -22,31 +22,49 @@ function distanceKm([la1, lo1], [la2, lo2]) {
 const heure = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, '0')}:${String(Math.round(min % 60)).padStart(2, '0')}`
 const heureReelle = (iso) => (iso ? new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null)
 
+const longueurKm = (geom) => geom.slice(1).reduce((s, p, i) => s + distanceKm(geom[i], p), 0)
+
 // Horaire prévu d'un camion pour un jour : ses rotations bout à bout depuis le dépôt.
-// Chaque segment : [début, fin] en minutes, de A vers B.
+// Chaque segment est un trajet (dépôt → arrêt 1, …, dernier arrêt → dépôt) : [début, fin] en minutes
+// et sa géométrie, celle des voies quand le plan a été calculé sur le réseau routier (D52).
 function horaire(rotations, depot) {
   const segments = []
   let t = DEBUT_JOURNEE_MIN
   for (const rot of rotations) {
     const sites = [depot, ...rot.arrets.map((a) => [a.latitude, a.longitude]), depot]
-    const longueurs = sites.slice(1).map((p, i) => distanceKm(sites[i], p))
+    const geoms = rot.trace?.length === sites.length - 1 ? rot.trace : sites.slice(1).map((p, i) => [sites[i], p])
+    const longueurs = geoms.map(longueurKm)
     const total = longueurs.reduce((s, l) => s + l, 0) || 1
     longueurs.forEach((l, i) => {
       const duree = (rot.duree_min * l) / total
-      segments.push({ debut: t, fin: t + duree, de: sites[i], vers: sites[i + 1], tournee: rot, arret: rot.arrets[i] ?? null })
+      segments.push({ debut: t, fin: t + duree, geom: geoms[i], longueur: l, arret: rot.arrets[i] ?? null })
       t += duree
     })
   }
   return { segments, fin: t }
 }
 
+// Point situé à la fraction f (0–1) du trajet, en suivant sa géométrie.
+function pointSurTrajet(geom, longueur, f) {
+  let reste = f * longueur
+  for (let i = 1; i < geom.length; i++) {
+    const l = distanceKm(geom[i - 1], geom[i])
+    if (reste <= l && l > 0) {
+      const g = reste / l
+      return [geom[i - 1][0] + (geom[i][0] - geom[i - 1][0]) * g, geom[i - 1][1] + (geom[i][1] - geom[i - 1][1]) * g]
+    }
+    reste -= l
+  }
+  return geom.at(-1)
+}
+
 function positionPrevue(plan, minute) {
-  if (minute <= DEBUT_JOURNEE_MIN || !plan.segments.length) return { pos: plan.segments[0]?.de, etat: 'Au dépôt' }
-  if (minute >= plan.fin) return { pos: plan.segments.at(-1).vers, etat: 'Rentré au dépôt' }
+  if (minute <= DEBUT_JOURNEE_MIN || !plan.segments.length) return { pos: plan.segments[0]?.geom[0], etat: 'Au dépôt' }
+  if (minute >= plan.fin) return { pos: plan.segments.at(-1).geom.at(-1), etat: 'Rentré au dépôt' }
   const s = plan.segments.find((x) => minute < x.fin)
   const f = s.fin > s.debut ? (minute - s.debut) / (s.fin - s.debut) : 1
   return {
-    pos: [s.de[0] + (s.vers[0] - s.de[0]) * f, s.de[1] + (s.vers[1] - s.de[1]) * f],
+    pos: pointSurTrajet(s.geom, s.longueur, f),
     etat: s.arret ? `Vers le point n°${s.arret.cible_id}` : 'Retour au dépôt',
   }
 }
@@ -165,7 +183,7 @@ function VueSuivi({ onRetourCarte }) {
             <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <Recadrer positions={positions} />
             {camions.map((c) => c.rotations.map((t) => (
-              <Polyline key={`l${t.id}`} positions={[depot, ...t.arrets.map((a) => [a.latitude, a.longitude]), depot]}
+              <Polyline key={`l${t.id}`} positions={t.trace ? t.trace.flat() : [depot, ...t.arrets.map((a) => [a.latitude, a.longitude]), depot]}
                 pathOptions={{ color: t.affectee_a ? '#1b6b4a' : '#8fa89a', weight: t.affectee_a ? 3 : 1.5, opacity: t.affectee_a ? 0.9 : 0.55 }} />
             )))}
             {tousLesArrets.map((a) => (

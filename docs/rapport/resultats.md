@@ -20,23 +20,23 @@ Généré par `scripts/resultats_scenarios.py` le 2026-11-17 : jeu `data/ouaga/`
 
 | Scénario | Capacité de collecte | Part captée estimée | Points | Camions utilisés | Distance (km) | Coût mensuel (M XOF) | Budget de l'arr. (M XOF) | Calcul |
 |---|---|---|---|---|---|---|---|---|
-| Base | 100,0 % | 60,2 % | 240 | 13 | 2 497 | 18,8 | 25,1 | 0,5 s |
-| Pluies | 100,0 % | 55,2 % | 240 | 15 | 2 767 | 21,2 | 25,1 | 0,4 s |
-| Panne | 77,5 % | 60,2 % | 240 | 10 | 1 750 | 13,6 | 25,1 | 0,5 s |
-| Sensibilisation | 100,0 % | 70,3 % | 240 | 13 | 2 497 | 18,8 | 25,1 | 0,5 s |
-| Abonnements | 100,0 % | 71,6 % | 240 | 13 | 2 497 | 18,8 | 25,1 | 0,5 s |
-| Budget ÷ 2 | 100,0 % | 60,2 % | 240 | 13 | 2 497 | 18,8 | 12,5 | 0,4 s |
+| Base | 100,0 % | 60,2 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 6,6 s |
+| Pluies | 100,0 % | 55,2 % | 240 | 15 | 2 904 | 21,8 | 25,1 | 3,8 s |
+| Panne | 77,4 % | 60,2 % | 240 | 10 | 1 863 | 14,1 | 25,1 | 3,6 s |
+| Sensibilisation | 100,0 % | 70,3 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 3,9 s |
+| Abonnements | 100,0 % | 71,6 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 3,8 s |
+| Budget ÷ 2 | 100,0 % | 60,2 % | 240 | 13 | 2 591 | 19,2 | 12,5 | 3,8 s |
 
 ## Simulation sur 30 jours
 
 | Scénario | Part captée moyenne | Déchets sauvages | Nouveaux dépotoirs | Dépotoirs actifs (début → fin) | Éradications (cumul) | Passages faits / annulés | Coût (M XOF) | Amendes (XOF) |
 |---|---|---|---|---|---|---|---|---|
-| Base | 68,3 % | 1 921 t | 21 | 25 → 6 | 73 | 8 / 0 | 17,3 | 290 k |
-| Pluies | 64,1 % | 2 390 t | 24 | 25 → 7 | 84 | 8 / 0 | 19,6 | 270 k |
-| Panne | 59,4 % | 2 462 t | 25 | 25 → 6 | 78 | 8 / 0 | 12,5 | 300 k |
-| Sensibilisation | 75,6 % | 1 475 t | 10 | 25 → 5 | 56 | 8 / 0 | 17,3 | 240 k |
-| Abonnements | 76,4 % | 1 427 t | 10 | 25 → 5 | 56 | 8 / 0 | 17,3 | 240 k |
-| Budget ÷ 2 | 60,2 % | 2 409 t | 27 | 25 → 6 | 84 | 5 / 3 | 10,8 | 370 k |
+| Base | 68,3 % | 1 921 t | 21 | 25 → 6 | 73 | 8 / 0 | 17,7 | 290 k |
+| Pluies | 64,1 % | 2 390 t | 24 | 25 → 7 | 84 | 8 / 0 | 20,2 | 270 k |
+| Panne | 59,0 % | 2 480 t | 20 | 25 → 6 | 76 | 8 / 0 | 13,0 | 370 k |
+| Sensibilisation | 75,6 % | 1 475 t | 10 | 25 → 5 | 56 | 8 / 0 | 17,7 | 240 k |
+| Abonnements | 76,4 % | 1 427 t | 10 | 25 → 5 | 56 | 8 / 0 | 17,7 | 240 k |
+| Budget ÷ 2 | 60,2 % | 2 409 t | 27 | 25 → 6 | 84 | 5 / 3 | 11,1 | 370 k |
 
 Lecture : plus il reste de déchets sauvages, plus il apparaît de **nouveaux dépotoirs** (probabilité lissée et plafonnée, D48, calibrée pour Ouaga en D50). Le nombre de dépotoirs **actifs** en fin de période varie peu : les brigades Laabal de la commune (12 éradications par jour) suffisent à traiter un arrondissement. Sur toute la commune, elles deviendraient la contrainte.
 

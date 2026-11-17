@@ -236,8 +236,11 @@ def carte(donnees, resultats, arrondissement) -> None:
     for t in plan["tournees"]:
         if t["type"] != "collecte" or not t["arrets"]:
             continue
-        xs = [a["longitude"] for a in t["arrets"]]
-        ys = [a["latitude"] for a in t["arrets"]]
+        # D52 : tracé sur les voies quand le plan a été calculé sur le réseau routier
+        chemin = [p for troncon in t["trace"] for p in troncon] if t.get("trace") else [
+            (a["latitude"], a["longitude"]) for a in t["arrets"]]
+        xs = [p[1] for p in chemin]
+        ys = [p[0] for p in chemin]
         ax.plot(xs, ys, color=COULEURS[(t.get("jour", 1) - 1) % 3], linewidth=0.9, alpha=0.75, zorder=2)
     ax.scatter([p["longitude"] for p in plan["points_regroupement"]], [p["latitude"] for p in plan["points_regroupement"]],
                s=9, color=ENCRE, zorder=3, label="point de regroupement")

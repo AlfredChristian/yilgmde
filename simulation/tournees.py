@@ -17,7 +17,8 @@ Modèle [H] :
 - à chaque passage, un point contient le stock accumulé depuis le passage
   précédent (`stock_entre_passages_kg`, C2) ; s'il est inconnu (point hors zone),
   on suppose le point plein (`capacite_kg`) ;
-- distance routière = vol d'oiseau × `collecte.coef_detour` ; vitesse =
+- distance routière : sur le réseau OSM si `collecte.reseau_routier` (D52, `simulation/routes.py`),
+  sinon vol d'oiseau × `collecte.coef_detour` ; vitesse =
   `vitesse_moyenne_kmh × coef_vitesse_camion(saison)` ; `temps_arret_min` par arrêt ;
 - coût = `cout_km_xof × km + cout_jour_xof` par camion et par jour travaillé.
 
@@ -30,6 +31,7 @@ import math
 from typing import Sequence
 
 from simulation.geometrie import distance_m
+from simulation.routes import Itineraires, reseau_de
 
 try:   # OR-Tools est une dépendance (D08), mais le repli doit marcher sans lui.
     from ortools.constraint_solver import pywrapcp, routing_enums_pb2
@@ -99,11 +101,21 @@ def vitesse_m_par_min(config: dict) -> float:
 
 
 def matrice_distances_m(sites: Sequence[tuple[float, float]], coef_detour: float) -> list[list[int]]:
-    """Distances routières estimées (m, entiers pour OR-Tools)."""
+    """Distances routières estimées (m, entiers pour OR-Tools) : ligne droite × coef_detour."""
     return [
         [int(round(distance_m(a[0], a[1], b[0], b[1]) * coef_detour)) for b in sites]
         for a in sites
     ]
+
+
+def distances(sites: Sequence[tuple[float, float]], config: dict):
+    """(matrice en m, itinéraires ou None). Sur le réseau routier si `collecte.reseau_routier`
+    est configuré (D52), sinon ligne droite × `coef_detour`."""
+    reseau = reseau_de(config, len(sites))
+    if reseau is not None:
+        itin = Itineraires(reseau, sites)
+        return itin.matrice_entiers(), itin
+    return matrice_distances_m(sites, float(config["collecte"].get("coef_detour", 1.0))), None
 
 
 def _depot(config: dict) -> tuple[float, float]:
@@ -195,7 +207,7 @@ def _resoudre_plus_proche_voisin(dist, demandes, temps_service, vehicules, vites
     return itineraires
 
 
-def resoudre(sites, demandes_kg, temps_service_min, vehicules, config, temps_max_s):
+def resoudre(sites, demandes_kg, temps_service_min, vehicules, config, temps_max_s, matrice=None):
     """Moteur commun C3 / C7.
 
     - `sites` : [(lat, lon)], l'indice 0 est le dépôt ;
@@ -203,9 +215,8 @@ def resoudre(sites, demandes_kg, temps_service_min, vehicules, config, temps_max
     - `vehicules` : dicts `capacite`, `duree_max` (min), `cout_fixe`.
     Renvoie `(itineraires, methode, matrice)` ; `methode` vaut `ortools` ou `plus_proche_voisin`.
     """
-    coef = float(config["collecte"].get("coef_detour", 1.0))
     vitesse = vitesse_m_par_min(config)
-    dist = matrice_distances_m(sites, coef)
+    dist = matrice if matrice is not None else matrice_distances_m(sites, float(config["collecte"].get("coef_detour", 1.0)))
     demandes = [int(math.ceil(d)) for d in demandes_kg]
     service = [float(t) for t in temps_service_min]
     vehs = [dict(v, capacite=int(v["capacite"]), duree_max=int(v["duree_max"])) for v in vehicules]
@@ -268,15 +279,14 @@ def planifier_tournees(points: Sequence[dict], config: dict, methode: str = "aut
     ]
     service = [0.0] + [temps_arret] * len(points)
 
+    dist, itin = distances(sites, config)
     if methode == "plus_proche_voisin":
-        coef = float(collecte.get("coef_detour", 1.0))
-        dist = matrice_distances_m(sites, coef)
         vit = vitesse_m_par_min(config)
         vehs = [dict(v, capacite=int(v["capacite"]), duree_max=int(v["duree_max"])) for v in vehicules]
         itineraires = _resoudre_plus_proche_voisin(dist, [int(math.ceil(d)) for d in demandes], service, vehs, vit)
         utilisee = "plus_proche_voisin"
     elif methode == "auto":
-        itineraires, utilisee, dist = resoudre(sites, demandes, service, vehicules, config, temps_max_s)
+        itineraires, utilisee, dist = resoudre(sites, demandes, service, vehicules, config, temps_max_s, matrice=dist)
     else:
         raise ValueError(f"méthode inconnue : {methode!r}")
     vitesse = vitesse_m_par_min(config)
@@ -309,6 +319,8 @@ def planifier_tournees(points: Sequence[dict], config: dict, methode: str = "aut
                     }
                     for k, i in enumerate(route, start=1)
                 ],
+                # D52 : un tronçon par trajet (dépôt → arrêt 1, …, dernier arrêt → dépôt) qui suit les voies.
+                **({"trace": itin.trace_tournee(route)} if itin is not None else {}),
             }
         )
         desservis.update(route)
@@ -409,8 +421,9 @@ def planifier_interventions(depotoirs: Sequence[dict], config: dict) -> dict:
     sites = [(float(base["latitude"]), float(base["longitude"]))] + [(d["latitude"], d["longitude"]) for d in retenus]
     demandes = [0] + [1] * len(retenus)
     service = [0.0] + [temps_intervention] * len(retenus)
+    dist, itin = distances(sites, config)
     itineraires, methode, dist = resoudre(
-        sites, demandes, service, vehicules, config, float(config["collecte"].get("temps_calcul_max_s", 5))
+        sites, demandes, service, vehicules, config, float(config["collecte"].get("temps_calcul_max_s", 5)), matrice=dist
     )
     vitesse = vitesse_m_par_min(config)
 
@@ -440,6 +453,7 @@ def planifier_interventions(depotoirs: Sequence[dict], config: dict) -> dict:
                     }
                     for k, i in enumerate(route, start=1)
                 ],
+                **({"trace": itin.trace_tournee(route)} if itin is not None else {}),
             }
         )
         faits.update(route)

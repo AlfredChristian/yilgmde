@@ -656,6 +656,8 @@ export async function getTournee() {
     camion_id: [...new Set(tournees.map((t) => t.camion_id))].join(', '),
     distance_km: Math.round(tournees.reduce((s, t) => s + t.distance_km, 0) * 10) / 10,
     duree_min: Math.round(tournees.reduce((s, t) => s + t.duree_min, 0)),
+    // tracé sur les voies (D52) : toutes les rotations bout à bout, dépôt compris
+    trace: tournees.every((t) => t.trace) ? tournees.flatMap((t) => t.trace.flat()) : null,
     arrets: tournees.flatMap((t) =>
       t.arrets.map((a) => ({
         ...a,
