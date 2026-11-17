@@ -13,7 +13,8 @@ def carre(lat, lon, cote):
 
 @pytest.fixture
 def config():
-    return charger_config("ouagadougou", surcharges={"collecte": {"depot": {"latitude": 12.37, "longitude": -1.52}}})
+    # Configuration générique : on teste le moteur, pas les valeurs de Ouaga (70 camions, etc.).
+    return charger_config(None, surcharges={"collecte": {"depot": {"latitude": 12.37, "longitude": -1.52}}})
 
 
 DONNEES = {
@@ -137,7 +138,7 @@ def test_plan_d_un_arrondissement(config):
     arr4 = appliquer_surcharges(config, {"perimetre": {"arrondissements": [4]}})
     plan = calculer_plan(PAR_ARR, arr4)
     assert {p["zone_id"] for p in plan["points_regroupement"]} == {1}
-    assert plan["indicateurs"]["perimetre"] == {"arrondissements": [4], "zones": [1], "population": 6000}
+    assert plan["indicateurs"]["perimetre"] == {"arrondissements": [4], "zones": [1], "population": 6000, "part_budget": 0.6}
     assert plan["indicateurs"]["demande_totale_kg_jour"] == pytest.approx(6000 * config["population"]["production_dechets_kg_hab_jour"])
     # les dépotoirs hors périmètre (zone 2, hors zone) ne sont ni desservis ni traités par Laabal
     assert plan["indicateurs"]["depotoirs_actifs"] == 1
@@ -174,3 +175,15 @@ def test_simulation_d_un_arrondissement(config):
     r = simuler(PAR_ARR, arr7, 5, 1)
     assert r["indicateurs"][0]["production_kg"] == pytest.approx(4000 * config["population"]["production_dechets_kg_hab_jour"])
     assert r["resume"]["depotoirs_actifs_debut"] == 0          # le seul dépotoir de la zone 2 est éradiqué
+
+
+def test_budget_au_prorata_du_perimetre(config):
+    """Plan d'un arrondissement : sa part du budget communal, au prorata de la population (D39)."""
+    from simulation.agents import simuler
+    arr4 = appliquer_surcharges(config, {"perimetre": {"arrondissements": [4]}})
+    ind = calculer_plan(PAR_ARR, arr4)["indicateurs"]
+    assert ind["perimetre"]["part_budget"] == pytest.approx(6000 / 10000)
+    assert ind["budget_mensuel_xof"] == round(config["mairie"]["budget_mensuel_xof"] * 0.6)
+    commune = simuler(PAR_ARR, config, 1, 1)["indicateurs"][0]["budget_restant_xof"]
+    arr = simuler(PAR_ARR, arr4, 1, 1)["indicateurs"][0]["budget_restant_xof"]
+    assert arr < commune

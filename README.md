@@ -13,7 +13,7 @@ Projet du **Hackathon des Universités 2026 — Finale**, Challenge 01 « Assain
 | Éradiquer les dépotoirs illégaux | Tournées de la **brigade Laabal** par priorité, intervention, surveillance, réapparition | `/laabal/*` |
 | Guider le terrain | Tournée du chauffeur, arrêts à cocher, déclaration de panne (le plan se recalcule) | `/chauffeur/*` |
 | Décider | **Scénarios** (camion en panne, saison des pluies, nouveau quartier, budget…), **simulation multi-agents** sur 30 jours, **comparaison** côte à côte | `/scenarios/*` |
-| Partager | **Export GeoJSON** des dépotoirs vérifiés, prêt pour OpenStreetMap, sans donnée personnelle | `GET /admin/export/depotoirs.geojson` |
+| Partager | **Jeu ouvert** des signalements vérifiés (ODbL, anonymisé) ; **export GeoJSON** des dépotoirs prêt pour OpenStreetMap | `GET /donnees/signalements.geojson`, `GET /admin/export/depotoirs.geojson` |
 
 Chaque choix du moteur est **expliqué** (pourquoi ce point, pourquoi ce dépotoir d'abord, pourquoi une zone n'est pas couverte), et **reproductible** : mêmes données et mêmes paramètres donnent le même plan ; même graine donne la même simulation.
 
@@ -64,12 +64,13 @@ export YILGMDE_ADMIN_PASSWORD=un-mot-de-passe-solide
 export YILGMDE_JWT_SECRET=une-longue-chaine-aleatoire
 ```
 
-### 2. Charger les données d'exemple (facultatif)
+### 2. Charger des données (facultatif)
 
 ```bash
-python scripts/charger_exemples.py
+python scripts/charger_exemples.py --ouaga   # démo : 12 arrondissements de Ouaga, 215 dépotoirs, 930 signalements
+python scripts/charger_exemples.py           # ou le petit jeu de data/sample/ (2 zones)
 ```
-Ajoute les zones et dépotoirs **fictifs** de `data/sample/` (sans effet si la base est déjà remplie).
+Le jeu de Ouaga (`data/ouaga/`, licence ODbL) est **fictif mais réaliste** : population réelle par arrondissement (recensement 2019), contours schématiques, dépotoirs et signalements inventés. Sources et limites : `data/ouaga/LISEZMOI.md`. Sans effet si la base est déjà remplie.
 
 ### 3. Démarrer
 
@@ -82,11 +83,12 @@ cd frontend && npm run dev                 # interface : http://localhost:5173
 
 Depuis http://localhost:8000/docs, après `POST /auth/login` avec le compte admin (bouton « Authorize ») :
 
-1. `GET /points-regroupement` : les points du plan courant, chacun avec son explication.
-2. `PUT /scenarios/1/parametres` avec `{"camions": [{"id": "camion_2", "disponible": false}]}` : le plan est recalculé sans ce camion ; ce qui n'est plus desservi est listé avec la raison.
-3. `PUT /scenarios/1/parametres` avec `{"saison": "pluies"}` : plus de déchets, camions plus lents.
-4. `POST /scenarios/1/simuler` avec `{"jours": 30, "graine": 42}` : évolution jour par jour (% collecté, dépotoirs actifs, coût).
-5. `POST /scenarios` avec `{"nom": "budget serré", "parametres": {"mairie": {"budget_mensuel_xof": 300000}}}`, puis `GET /scenarios/comparer?ids=1,2` : comparaison côte à côte.
+1. `PUT /scenarios/1/parametres` avec `{"perimetre": {"arrondissements": [9]}}` : plan de l'arrondissement 9 (336 000 habitants) en moins d'une seconde ; `GET /scenarios/1/plan/synthese` le donne en texte lisible.
+2. `GET /points-regroupement` : les points du plan courant, chacun avec son explication.
+3. `PUT /scenarios/1/parametres` avec `{"camions": [{"id": "camion_2", "disponible": false}]}` : le plan est recalculé sans ce camion ; ce qui n'est plus desservi est listé avec la raison.
+4. `PUT /scenarios/1/parametres` avec `{"saison": "pluies"}` : plus de déchets, camions plus lents ; le budget de l'arrondissement est dépassé.
+5. `POST /scenarios/1/simuler` avec `{"jours": 30, "graine": 42}` : évolution jour par jour (% collecté, dépotoirs actifs, coût).
+6. `POST /scenarios` avec `{"nom": "budget serré", "parametres": {"mairie": {"budget_mensuel_xof": 300000}}}`, puis `GET /scenarios/comparer?ids=1,2` : comparaison côte à côte.
 
 ### Tests
 
@@ -148,7 +150,7 @@ Pour aller plus loin : `CONTEXT.md` (vue d'ensemble et règles de cohérence), `
 
 Code : **MIT** (voir `LICENSE`, décision D16). Réutilisable librement, y compris par d'autres communes.
 
-Données dérivées d'OpenStreetMap : **ODbL**. Licence des données de signalement (`export_osm.licence` dans la config) : à décider, compatible ODbL pour pouvoir les verser dans OSM.
+Données (signalements publiés, jeu de démonstration `data/ouaga/`, données dérivées d'OpenStreetMap) : **ODbL 1.0** (D40).
 
 ## Équipe
 

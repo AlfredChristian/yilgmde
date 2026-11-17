@@ -110,12 +110,24 @@ def preparer(donnees: dict, config: dict) -> tuple[list[dict], list[dict], dict 
         )
     gardees = [z for z in zones if z in choisies or z.get("ajoutee")]
     ids = {z["id"] for z in gardees}
+    population = sum(z.get("population") or 0 for z in choisies)
+    population_commune = sum(z.get("population") or 0 for z in zones if not z.get("ajoutee"))
     resume = {
         "arrondissements": sorted(arrondissements),
         "zones": sorted(z["id"] for z in choisies),
-        "population": sum(z.get("population") or 0 for z in choisies),
+        "population": population,
+        # Part du budget communal revenant au périmètre, au prorata de la population (D39).
+        "part_budget": round(population / population_commune, 4) if population_commune else 1.0,
     }
     return gardees, [d for d in depotoirs if d.get("zone_id") in ids], resume
+
+
+def budget_du_perimetre(config: dict, perimetre: dict | None) -> float | None:
+    """Budget mensuel de la commune, ou sa part pour le périmètre (au prorata de la population)."""
+    budget = config.get("mairie", {}).get("budget_mensuel_xof")
+    if budget is None or not perimetre:
+        return budget
+    return round(budget * perimetre["part_budget"])
 
 
 def restreindre_perimetre(donnees: dict, config: dict) -> dict | None:
@@ -150,7 +162,7 @@ def calculer_plan(donnees: dict, config: dict) -> dict:
     cout_passage = sum(t["cout_xof"] for t in collecte["tournees"])
     passages_mois = config["collecte"]["frequence_passages_par_semaine"] * SEMAINES_PAR_MOIS
     cout_mensuel = cout_passage * passages_mois
-    budget = config.get("mairie", {}).get("budget_mensuel_xof")
+    budget = budget_du_perimetre(config, perimetre)
 
     indicateurs = {
         "demande_totale_kg_jour": round(sum(d["demande_kg_jour"] for d in demandes), 1),

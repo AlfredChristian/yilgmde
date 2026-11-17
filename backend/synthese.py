@@ -46,7 +46,8 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
           "| Indicateur | Valeur |", "|---|---|",
           f"| Déchets produits | {_nb(ind['demande_totale_kg_jour'])} kg/jour |",
           f"| Points de regroupement | {ind['nb_points_regroupement']} |",
-          f"| Collecte | {freq} passage(s) par semaine, {len(collecte)} rotation(s) par passage |",
+          f"| Collecte | {freq} passage(s) par semaine, {len(collecte)} rotation(s) sur"
+          f" {max((t.get('jour', 1) for t in collecte), default=0)} jour(s) par passage |",
           f"| Part du stock collectée à chaque passage | {_nb(ind['dechets_collectes_pct'], 1)} % |",
           f"| Camions utilisés | {', '.join(ind['camions_utilises']) or 'aucun'} |",
           f"| Camions indisponibles | {', '.join(ind['camions_indisponibles']) or 'aucun'} |",
@@ -77,10 +78,11 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
     # Tournées
     l += ["## Tournées de collecte (un passage)", ""]
     if collecte:
-        l += ["| Camion | Rotation | Arrêts | Charge (kg) | Distance (km) | Durée (min) | Coût |",
-              "|---|---|---|---|---|---|---|"]
-        for t in collecte:
-            l.append(f"| {t['camion_id']} | {t.get('rotation', 1)} | {len(t['arrets'])} | {_nb(t.get('charge_kg', 0))}"
+        l += ["| Jour | Camion | Rotation | Arrêts | Charge (kg) | Distance (km) | Durée (min) | Coût |",
+              "|---|---|---|---|---|---|---|---|"]
+        for t in sorted(collecte, key=lambda t: (t.get("jour", 1), t["camion_id"], t.get("rotation", 1))):
+            l.append(f"| {t.get('jour', 1)} | {t['camion_id']} | {t.get('rotation', 1)} | {len(t['arrets'])}"
+                     f" | {_nb(t.get('charge_kg', 0))}"
                      f" | {_nb(t['distance_km'], 1)} | {_nb(t['duree_min'])} | {_xof(t['cout_xof'])} |")
     else:
         l.append("Aucune tournée de collecte possible (aucun camion disponible).")

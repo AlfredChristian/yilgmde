@@ -84,8 +84,8 @@ def test_zone_id_pour_point(conn):
 # ---------- données d'exemple ----------
 
 def test_charger_exemples_est_idempotent(conn):
-    assert charger_exemples(conn) == {"zones": 2, "depotoirs": 3}
-    assert charger_exemples(conn) == {"zones": 0, "depotoirs": 0}
+    assert charger_exemples(conn) == {"zones": 2, "depotoirs": 3, "signalements": 0}
+    assert charger_exemples(conn) == {"zones": 0, "depotoirs": 0, "signalements": 0}
     assert conn.execute("SELECT COUNT(*) FROM depotoir").fetchone()[0] == 3
 
 

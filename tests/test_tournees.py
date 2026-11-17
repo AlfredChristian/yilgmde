@@ -10,7 +10,8 @@ from simulation.tournees import matrice_distances_m, planifier_tournees, vitesse
 
 @pytest.fixture
 def config():
-    return charger_config("ouagadougou", surcharges={"collecte": {"depot": {"latitude": 12.37, "longitude": -1.52}}})
+    # Configuration générique : on teste le moteur, pas les valeurs de Ouaga (70 camions, etc.).
+    return charger_config(None, surcharges={"collecte": {"depot": {"latitude": 12.37, "longitude": -1.52}}})
 
 
 def point(id_, lat, lon, stock=1000.0, capacite=3000.0):
@@ -197,3 +198,33 @@ def test_sans_brigade(config):
     zero = appliquer_surcharges(config, {"laabal": {"nombre_brigades": 0}})
     r = planifier_interventions(DEPOTOIRS, zero)
     assert r["tournees"] == [] and len(r["en_attente"]) == 5
+
+
+def test_grande_instance_solution_de_depart_deterministe(config):
+    """Au-delà de max_arrets_recherche_locale : solution de départ seule, rapide et reproductible (D38)."""
+    petit_seuil = appliquer_surcharges(config, {"collecte": {"max_arrets_recherche_locale": 3}})
+    a = planifier_tournees(POINTS, petit_seuil)
+    assert a["methode"] == "ortools_rapide"
+    assert ids_desservis(a) == [p["id"] for p in POINTS]
+    assert planifier_tournees(POINTS, petit_seuil) == a
+    complet = planifier_tournees(POINTS, config)
+    total = lambda r: sum(t["distance_km"] for t in r["tournees"])
+    assert total(complet) <= total(a) + 0.01                      # la recherche locale ne fait pas pire
+
+
+def test_passage_etale_sur_plusieurs_jours(config):
+    """Collecte 2 fois par semaine sur 6 jours ouvrés : 3 jours pour faire le tour des points (D39)."""
+    from simulation.tournees import jours_par_passage
+    assert jours_par_passage(config) == 1                                      # sans le paramètre
+    six = appliquer_surcharges(config, {"collecte": {"jours_ouvres_par_semaine": 6}})
+    assert jours_par_passage(six) == 3
+    assert jours_par_passage(appliquer_surcharges(six, {"collecte": {"frequence_passages_par_semaine": 7}})) == 1
+    gros = [point(i, 12.37 + 0.002 * i, -1.52, stock=5000) for i in range(1, 7)]   # 30 t, 1 camion de 6 t
+    un_camion = appliquer_surcharges(six, {"camions": [{"id": "camion_2", "disponible": False},
+                                                       {"id": "camion_3", "disponible": False}]})
+    r = planifier_tournees(gros, un_camion)
+    assert len(ids_desservis(r)) == 6 and r["non_couverts"] == []               # 3 jours × 2 rotations
+    assert sorted({t["jour"] for t in r["tournees"]}) == [1, 2, 3]
+    c = next(x for x in config["camions"] if x["id"] == "camion_1")
+    km = sum(t["distance_km"] for t in r["tournees"])
+    assert sum(t["cout_xof"] for t in r["tournees"]) == pytest.approx(km * c["cout_km_xof"] + 3 * c["cout_jour_xof"], abs=10)

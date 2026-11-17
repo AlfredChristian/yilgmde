@@ -7,20 +7,119 @@ crs_geographique: EPSG:4326       # latitude / longitude
 crs_metrique: EPSG:32630          # UTM 30N, pour calculer des distances en mètres
 
 zone_etude:
-  # Rectangle approximatif autour de Ouagadougou [H] — à affiner avec le secteur réel.
-  bbox: {min_lat: 12.28, max_lat: 12.50, min_lon: -1.65, max_lon: -1.38}
+  # Emprise de la commune : 551 km² (RGPH 2019 : 2 415 266 hab., 4 385,5 hab./km²) autour du
+  # centre-ville, avec une marge ; couvre les secteurs de data/ouaga/zones.geojson.
+  bbox: {min_lat: 12.24, max_lat: 12.50, min_lon: -1.65, max_lon: -1.39}
+
+# Données fictives mais réalistes autorisées par les organisateurs : chaque valeur réelle a sa
+# source, chaque valeur inventée est marquée [H]. Sources détaillées : data/ouaga/LISEZMOI.md.
+
+population_totale: 2415266        # INSD, RGPH 2019 (monographie de Ouagadougou, tableau 2.2)
+
+population:
+  production_dechets_kg_hab_jour: 0.60   # DGEP, cité par Sidwaya ; la mairie donne 0,57 (0,21 t/hab/an)
+  taux_abonnement_precollecteurs: 0.3    # [H]
 
 collecte:
-  # Dépôt / centre de traitement où partent et se vident les camions.
-  # [H] position approximative du centre de traitement de Polesgo (nord-est) : À CONFIRMER avec la mairie.
+  # Centre de traitement et de valorisation des déchets (CTVD) de Polesgo, nord-est de la ville.
+  # [H] position approximative.
   depot: {latitude: 12.43, longitude: -1.47}
+  frequence_passages_par_semaine: 2      # UN-Habitat : 2 fois/semaine en quartier résidentiel (3 au centre)
+  jours_ouvres_par_semaine: 6            # [H] un passage s'étale sur 6 / 2 = 3 jours (D39)
+
+precollecteurs:                          # [H] associations de pré-collecte (charrettes, tricycles)
+  nombre: 1000
+  capacite_kg_jour: 300
+  abonnement_mensuel_xof: 1000
+
+laabal:
+  nombre_brigades: 3                     # [H]
+  capacite_eradication_par_jour: 4       # [H]
+
+mairie:
+  budget_mensuel_xof: 180000000          # [H] ≈ 2,2 milliards XOF/an : collecte complète ≈ 137 M/mois (90 camions) + marge ; arrondissement : sa part (D39)
+
+# [H] 70 bennes de 10 t (ids camion_1 à camion_70, qui remplacent les 3 camions de default.yaml).
+# Avec 70 camions, la commune entière est collectée à ~79 % ; 90 camions donnent 100 %.
+# Coût au km : carburant et entretien ; coût journalier : équipage de 3 personnes.
+camions:
+  - {id: camion_1, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_2, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_3, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_4, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_5, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_6, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_7, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_8, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_9, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_10, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_11, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_12, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_13, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_14, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_15, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_16, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_17, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_18, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_19, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_20, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_21, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_22, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_23, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_24, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_25, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_26, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_27, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_28, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_29, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_30, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_31, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_32, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_33, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_34, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_35, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_36, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_37, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_38, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_39, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_40, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_41, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_42, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_43, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_44, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_45, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_46, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_47, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_48, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_49, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_50, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_51, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_52, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_53, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_54, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_55, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_56, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_57, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_58, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_59, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_60, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_61, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_62, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_63, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_64, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_65, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_66, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_67, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_68, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_69, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
+  - {id: camion_70, capacite_kg: 10000, cout_km_xof: 500, cout_jour_xof: 25000, disponible: true}
 
 secteur_equipe: null              # à renseigner : secteur de collecte attribué à notre équipe
-
-population_totale: null           # à renseigner (source : recensement / mairie)
 
 sources_donnees:
   - OpenStreetMap (ODbL)
   - Open Buildings
   - Signalements collectés par l'équipe dans son secteur
-  - Paramètres de départ fixés avec la mairie (à obtenir)
+  - INSD, RGPH 2019 (population par arrondissement)
+  - UN-Habitat, profil déchets de Ouagadougou (fréquences, composition, centres de collecte)
+  - Données fictives réalistes générées par scripts/generer_donnees_ouaga.py (data/ouaga/, ODbL)

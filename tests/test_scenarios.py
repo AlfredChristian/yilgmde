@@ -146,9 +146,9 @@ def test_parametres_invalides_rien_n_est_enregistre(client):
 def test_creer_base_sur_et_activer(client):
     h = entetes(client)
     client.put("/scenarios/1/parametres", json={"saison": "pluies"}, headers=h)
-    r = client.post("/scenarios", json={"nom": "2 camions en moins", "base_sur": 1,
-                                         "parametres": {"camions": [{"id": "camion_1", "disponible": False},
-                                                                    {"id": "camion_2", "disponible": False}]}},
+    sauf_camion_3 = [{"id": c["id"], "disponible": False} for c in app.state.config["camions"] if c["id"] != "camion_3"]
+    r = client.post("/scenarios", json={"nom": "un seul camion", "base_sur": 1,
+                                         "parametres": {"camions": sauf_camion_3}},
                     headers=h)
     assert r.status_code == 201, r.text
     s = r.json()
@@ -200,8 +200,10 @@ def test_comparer_deux_scenarios_par_simulation(client):
 
 def test_comparer(client):
     h = entetes(client)
-    s2 = client.post("/scenarios", json={"nom": "2 camions en moins", "parametres": {
-        "camions": [{"id": "camion_1", "disponible": False}, {"id": "camion_2", "disponible": False}]}}, headers=h).json()
+    sauf_camion_3 = [{"id": c["id"], "disponible": False} for c in app.state.config["camions"] if c["id"] != "camion_3"]
+    # Un seul camion, et un passage en une journée : la capacité manque pour les zones d'exemple.
+    s2 = client.post("/scenarios", json={"nom": "un seul camion", "parametres": {
+        "camions": sauf_camion_3, "collecte": {"jours_ouvres_par_semaine": 2}}}, headers=h).json()
     r = client.get("/scenarios/comparer", params={"ids": f"1,{s2['id']}", "jours": 30, "graine": 3}, headers=h)
     assert r.status_code == 200, r.text
     corps = r.json()
