@@ -25,9 +25,17 @@ const LIBELLES_COMPARAISON = {
   cout_total_xof: 'Coût d’un passage (XOF)',
   cout_mensuel_estime_xof: 'Coût mensuel estimé (XOF)',
   part_captee_moyenne_pct: 'Part captée moyenne',
+  nouveaux_depotoirs: 'Nouveaux dépotoirs',
   depotoirs_actifs_fin: 'Dépotoirs actifs en fin de période',
-  dechets_sauvages_kg: 'Déchets sauvages cumulés (kg)',
+  dechets_sauvages_kg: 'Déchets sauvages cumulés (t)',
   passages_suspendus_budget: 'Passages suspendus par le budget',
+}
+
+// Valeur affichée d'un indicateur : les kg en tonnes, les parts avec « % ».
+function valeurIndicateur(cle, n) {
+  if (n == null) return '—'
+  if (cle.endsWith('_kg')) return fmt(n / 1000)
+  return fmtNombre(n) + (cle.endsWith('_pct') ? ' %' : '')
 }
 
 // Recadre la carte sur les points du plan quand le perimetre change.
@@ -127,6 +135,7 @@ export default function Plan() {
   const [jours, setJours] = useState(30)
   const [graine, setGraine] = useState(42)
   const [scenarioCompare, setScenarioCompare] = useState('')
+  const [nomVariante, setNomVariante] = useState('')
   const [utilisateurs, setUtilisateurs] = useState([])
   const [affectations, setAffectations] = useState({})
   const [flotteOuverte, setFlotteOuverte] = useState(false)
@@ -194,9 +203,13 @@ export default function Plan() {
     setCalcul(true)
     setErreur(null)
     try {
-      const copie = await creerScenario(`${actif.nom} — variante`, actif.id)
-      setScenarios(await getScenarios())
-      setScenarioCompare(String(copie.id))
+      // La variante devient le scénario de travail : les réglages suivants ne touchent plus la référence,
+      // qui est présélectionnée pour la comparaison.
+      const nom = nomVariante.trim() || `variante ${scenarios.length + 1}`
+      await creerScenario(nom, actif.id, true)
+      setNomVariante('')
+      await rafraichirScenario()
+      setScenarioCompare(String(actif.id))
     } catch (e) {
       setErreur(`Création du scénario impossible : ${e.message}`)
     } finally {
@@ -308,10 +321,15 @@ export default function Plan() {
                 {scenarios.map((s) => <option key={s.id} value={s.id}>{s.nom}</option>)}
               </select>
             </label>
+            <label className="plan-select">
+              <span>Nom de la variante</span>
+              <input type="text" value={nomVariante} placeholder="ex. pluies, panne, sensibilisation" maxLength={100}
+                onChange={(e) => setNomVariante(e.target.value)} />
+            </label>
             <button className="btn-contour plan-bouton" onClick={dupliquerScenario} disabled={calcul || !actif}>
-              Créer une variante du scénario actif
+              Créer une variante et la modifier
             </button>
-            <p className="carte-texte">Une variante copie les paramètres actuels. Activez-la ensuite pour la modifier sans toucher à la référence.</p>
+            <p className="carte-texte">La variante copie les paramètres actuels et devient le scénario de travail : la référence reste intacte pour la comparaison.</p>
           </div>
         </section>
 
@@ -328,7 +346,8 @@ export default function Plan() {
             {resume && (
               <div className="plan-resultat">
                 <p><strong>{fmtNombre(resume.part_captee_moyenne_pct)} %</strong> part captée moyenne</p>
-                <p><strong>{fmtNombre(resume.dechets_sauvages_kg)} kg</strong> de déchets sauvages</p>
+                <p><strong>{fmt(resume.dechets_sauvages_kg / 1000)} t</strong> de déchets sauvages</p>
+                {resume.nouveaux_depotoirs != null && <p><strong>{resume.nouveaux_depotoirs}</strong> nouveaux dépotoirs</p>}
                 <p><strong>{resume.depotoirs_actifs_debut} → {resume.depotoirs_actifs_fin}</strong> dépotoirs actifs</p>
                 <p><strong>{fmtNombre(resume.cout_total_xof)} XOF</strong> de coût simulé</p>
                 <Courbe indicateurs={simulation.indicateurs} />
@@ -361,7 +380,7 @@ export default function Plan() {
                         <th>{LIBELLES_COMPARAISON[ligne.indicateur] ?? ligne.indicateur}</th>
                         {ligne.valeurs.map((valeur, i) => (
                           <td key={comparaison.scenarios[i].id} className={ligne.meilleur?.includes(comparaison.scenarios[i].id) ? 'plan-meilleur' : ''}>
-                            {fmtNombre(valeur)}{i > 0 && ligne.ecart_a_la_reference[i] != null && <small> ({ligne.ecart_a_la_reference[i] > 0 ? '+' : ''}{fmtNombre(ligne.ecart_a_la_reference[i])})</small>}
+                            {valeurIndicateur(ligne.indicateur, valeur)}{i > 0 && ligne.ecart_a_la_reference[i] != null && <small> ({ligne.ecart_a_la_reference[i] > 0 ? '+' : ''}{valeurIndicateur(ligne.indicateur, ligne.ecart_a_la_reference[i])})</small>}
                           </td>
                         ))}
                       </tr>

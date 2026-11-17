@@ -94,6 +94,7 @@ INDICATEURS_COMPARES = [
     ("plan", "cout_total_xof", "moins"),
     ("plan", "cout_mensuel_estime_xof", "moins"),
     ("simulation", "part_captee_moyenne_pct", "plus"),
+    ("simulation", "nouveaux_depotoirs", "moins"),
     ("simulation", "depotoirs_actifs_fin", "moins"),
     ("simulation", "dechets_sauvages_kg", "moins"),
     ("simulation", "cout_total_xof", "moins"),

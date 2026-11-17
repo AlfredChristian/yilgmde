@@ -488,17 +488,20 @@ export async function activerScenario(id) {
   return scenario
 }
 
-export async function creerScenario(nom, baseSur) {
+// activer = true : la copie devient le scenario de travail (celui que le formulaire modifie).
+export async function creerScenario(nom, baseSur, activer = false) {
   if (USE_MOCK) {
     const base = MOCK_SCENARIOS.find((scenario) => scenario.id === baseSur)
-    const scenario = { id: PROCHAIN_MOCK_SCENARIO_ID++, nom, parametres: { ...(base?.parametres ?? {}) }, actif: false }
-    MOCK_SCENARIOS = [...MOCK_SCENARIOS, scenario]
+    const scenario = { id: PROCHAIN_MOCK_SCENARIO_ID++, nom, parametres: { ...(base?.parametres ?? {}) }, actif: activer }
+    MOCK_SCENARIOS = [...MOCK_SCENARIOS.map((sc) => (activer ? { ...sc, actif: false } : sc)), scenario]
     return scenario
   }
-  return appelAuth('/scenarios', {
+  const scenario = await appelAuth('/scenarios', {
     method: 'POST',
-    body: JSON.stringify({ nom, base_sur: baseSur, parametres: {}, activer: false }),
+    body: JSON.stringify({ nom, base_sur: baseSur, parametres: {}, activer }),
   })
+  if (activer) SCENARIO_ID = scenario.id
+  return scenario
 }
 
 function simulationMock(jours, graine) {

@@ -178,7 +178,7 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
                     "ecart_a_la_reference": [0, 26379], "sens": "moins", "meilleur": [1] }],
   "details": [{ "scenario_id": 1, "plan": { <indicateurs du plan> }, "simulation": { <résumé de /simuler> } }] }
 ```
-  Le premier scénario est la référence des écarts. `sens` : `plus` ou `moins` est meilleur, `null` si ça dépend ; `meilleur` liste le ou les scénarios gagnants, `null` si égalité ou sans sens. Indicateurs comparés : plan (`dechets_collectes_pct`, `nb_points_regroupement`, `distance_totale_km`, `cout_total_xof`, `cout_mensuel_estime_xof`) et simulation (`pct_collecte_moyen`, `depotoirs_actifs_fin`, `dechets_sauvages_kg`, `cout_total_xof`, `passages_suspendus_budget`).
+  Le premier scénario est la référence des écarts. `sens` : `plus` ou `moins` est meilleur, `null` si ça dépend ; `meilleur` liste le ou les scénarios gagnants, `null` si égalité ou sans sens. Indicateurs comparés : plan (`capacite_collecte_pct`, `part_captee_estimee_pct`, `nb_points_regroupement`, `distance_totale_km`, `cout_total_xof`, `cout_mensuel_estime_xof`) et simulation (`part_captee_moyenne_pct`, `nouveaux_depotoirs`, `depotoirs_actifs_fin`, `dechets_sauvages_kg`, `cout_total_xof`, `passages_suspendus_budget`).
 
 **Plan (réponse)**
 ```json
