@@ -228,3 +228,18 @@ def test_passage_etale_sur_plusieurs_jours(config):
     c = next(x for x in config["camions"] if x["id"] == "camion_1")
     km = sum(t["distance_km"] for t in r["tournees"])
     assert sum(t["cout_xof"] for t in r["tournees"]) == pytest.approx(km * c["cout_km_xof"] + 3 * c["cout_jour_xof"], abs=10)
+
+
+def test_journees_etalees_pour_mobiliser_peu_de_camions(config):
+    """Des camions identiques : les journées sont remplies jour après jour avant d'en mobiliser un autre (D43)."""
+    identiques = [{"id": f"camion_{i}", "capacite_kg": 6000, "cout_km_xof": 400, "cout_jour_xof": 20000}
+                  for i in range(1, 7)]
+    six = appliquer_surcharges(config, {"collecte": {"jours_ouvres_par_semaine": 6}})
+    six["camions"] = identiques
+    points = [point(i, 12.37 + 0.003 * (i % 5), -1.52 + 0.003 * (i // 5), stock=5500) for i in range(1, 7)]
+    r = planifier_tournees(points, six)
+    assert len(ids_desservis(r)) == 6
+    journees = {(t["camion_id"], t["jour"]) for t in r["tournees"]}
+    camions = {c for c, _ in journees}
+    assert len(camions) == -(-len(journees) // 3)                 # le moins de camions possible sur 3 jours
+    assert planifier_tournees(points, six) == r                   # toujours déterministe

@@ -41,6 +41,41 @@ PENALITE_ABANDON = 10_000_000   # coût d'un arrêt non desservi : on ne l'aband
 
 # --- Données d'entrée ----------------------------------------------------------------
 
+def _repartir_sur_les_jours(tournees: list[dict], camions: list[dict], jours: int) -> None:
+    """Étale les journées de travail sur les jours du passage pour mobiliser le moins de camions (D43).
+
+    Le solveur traite les véhicules (camion, jour) comme interchangeables : il peut tout mettre
+    le même jour et mobiliser 39 camions là où 13 suffisent sur 3 jours. Une journée (toutes
+    les rotations d'un camion un jour donné) peut passer à un autre camion identique (mêmes
+    capacité, coûts, vitesse) ou à un autre jour sans changer ni distance ni coût. On remplit
+    donc chaque camion jour après jour avant d'en prendre un nouveau. Modifie `tournees` sur place.
+    """
+    if jours <= 1:
+        return
+    par_id = {c["id"]: c for c in camions}
+
+    def modele(c):
+        return tuple(sorted((k, repr(v)) for k, v in c.items() if k not in ("id", "nom", "disponible")))
+
+    groupes: dict[tuple, list[str]] = {}
+    for c in camions:
+        groupes.setdefault(modele(c), []).append(c["id"])
+    journees: dict[tuple, list[tuple[str, int]]] = {}
+    for t in tournees:
+        cle = (t["camion_id"], t["jour"])
+        journees.setdefault(modele(par_id[t["camion_id"]]), [])
+        if cle not in journees[modele(par_id[t["camion_id"]])]:
+            journees[modele(par_id[t["camion_id"]])].append(cle)
+    nouvelle = {}
+    for m, liste in journees.items():
+        ids = groupes[m]
+        for k, cle in enumerate(sorted(liste, key=lambda j: (ids.index(j[0]), j[1]))):
+            nouvelle[cle] = (ids[k // jours], k % jours + 1)
+    for t in tournees:
+        t["camion_id"], t["jour"] = nouvelle[(t["camion_id"], t["jour"])]
+    tournees.sort(key=lambda t: (t["jour"], t["camion_id"], t["rotation"]))
+
+
 def jours_par_passage(config: dict) -> int:
     """Jours dont disposent les camions pour faire le tour des points entre deux passages.
 
@@ -277,6 +312,8 @@ def planifier_tournees(points: Sequence[dict], config: dict, methode: str = "aut
             }
         )
         desservis.update(route)
+
+    _repartir_sur_les_jours(tournees, camions, jours)
 
     # Coût journalier : une fois par camion et par jour réellement travaillé, sur sa première tournée du jour.
     vus = set()
