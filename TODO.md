@@ -84,7 +84,7 @@
 
 - [x] L1 (back) — Signalement hors connexion : `id_client`, `capture_le`, plafond de réception, note vocale ; masquage serveur des visages et plaques (D36)
 - [ ] L1 (front) — File d'attente : envoyer `id_client` et `capture_le`, garder l'élément sur `429`/`503` ; masquage sur le téléphone avant envoi (Christian)
-- [ ] L2 — Fichier de paramètres documenté (`docs/parametres.md`)
+- [x] L2 — Fichier de paramètres documenté (`docs/parametres.md`, test de complétude `tests/test_parametres_doc.py`)
 - [x] L3 (back) — Plan, simulation et comparaison d'un arrondissement (`perimetre`), `GET /arrondissements`, synthèse Markdown du plan (D37)
 - [ ] L3 (front) — Tableau de bord des scénarios : choix de l'arrondissement, plan sur la carte, indicateurs, simulation, comparaison, synthèse (Christian)
 - [x] L4 — Données réalistes de Ouaga (12 arrondissements, paramètres sourcés) et jeu de signalements GeoJSON sous ODbL — `data/ouaga/`, `GET /donnees/signalements.geojson` (D38–D40)

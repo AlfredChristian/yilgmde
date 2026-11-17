@@ -223,5 +223,5 @@ class ScenarioSortie(BaseModel):
 
 
 class SimulationEntree(BaseModel):
-    jours: int = Field(default=30, ge=1, le=365)
+    jours: int | None = Field(default=None, ge=1, le=365)   # par défaut : scenario.horizon_jours de la config
     graine: int | None = None          # par défaut : scenario.graine_aleatoire de la config

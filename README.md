@@ -105,7 +105,7 @@ Tous les paramètres sont dans `config/`, **aucun n'est écrit dans le code** :
 - `ouagadougou.yaml` : ce qui est propre à Ouaga (nom, dépôt des camions…), fusionné par-dessus ;
 - un **scénario** surcharge ensuite quelques valeurs, sans modifier les fichiers.
 
-Les valeurs marquées **`[H]`** sont des **hypothèses de départ**, sans source établie : à ajuster avec la mairie ou des données réelles.
+Les valeurs marquées **`[H]`** sont des **hypothèses de départ**, sans source établie : à ajuster avec la mairie ou des données réelles. **Chaque paramètre** (rôle, unité, valeur, source ou hypothèse) est expliqué dans [`docs/parametres.md`](docs/parametres.md).
 
 | Variable d'environnement | Rôle | Par défaut |
 |---|---|---|

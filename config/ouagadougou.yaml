@@ -1,3 +1,4 @@
+# Chaque paramètre est documenté dans docs/parametres.md (rôle, unité, source ou hypothèse [H]).
 # Paramètres PROPRES à Ouagadougou. [H] = hypothèse / à affiner.
 
 ville: Ouagadougou
