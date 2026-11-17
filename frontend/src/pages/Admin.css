@@ -1,0 +1,24 @@
+.admin { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+.admin h1 { margin: 0 0 4px; font-family: var(--serif); color: var(--vert-fonce); }
+.admin-intro { color: var(--gris); margin: 0 0 24px; }
+.mod-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
+.mod-photo { width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 12px; }
+.mod-alerte {
+  margin: 0 0 12px;
+  background: #f3e8fb;
+  border: 1px solid #dcc3f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: #5a1d8c;
+}
+.mod-rejet { display: grid; gap: 12px; }
+.mod-rejet label { display: grid; gap: 6px; font-weight: 700; font-size: 0.9rem; color: var(--vert-fonce); }
+.mod-rejet select {
+  font: inherit;
+  padding: 11px 12px;
+  border: 1.5px solid #d5dde0;
+  border-radius: 12px;
+  background: #fbfcfc;
+}
+.mod-erreur { padding: 10px 14px; background: #fde8e8; border-radius: 10px; border: 1px solid #f3b9b9; }

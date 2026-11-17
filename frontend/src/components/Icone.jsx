@@ -1,4 +1,8 @@
 const FORMES = {
+  fleche: <path d="M5 12h14M13 6l6 6-6 6" />,
+  check: <path d="M5 12.5l4.5 4.5L19 7" />,
+  croix: <path d="M6 6l12 12M18 6L6 18" />,
+  fusion: <path d="M6 4v6a6 6 0 0 0 6 6M18 4v6a6 6 0 0 1-6 6M12 16v5" />,
   menu: <path d="M3 6h18M3 12h18M3 18h18" />,
   carte: (
     <>

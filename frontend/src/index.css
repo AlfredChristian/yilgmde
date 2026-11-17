@@ -13,6 +13,8 @@
   --gris: #5b6b63;
   --rayon: 16px;
   --ombre: 0 8px 24px rgba(18, 74, 52, 0.12);
+  --bordure: #e3e8ec;
+  --serif: Georgia, 'Times New Roman', serif;
 }
 
 * {
@@ -109,3 +111,83 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Modèle de carte ---------- */
+.carte {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px 20px;
+  align-items: start;
+  background: white;
+  border: 1px solid var(--bordure);
+  border-radius: 14px;
+  padding: 20px 64px 20px 20px;
+  box-shadow: 0 1px 2px rgba(16, 40, 30, 0.05);
+}
+.carte-gauche {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 84px;
+  text-align: center;
+}
+.tuile {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--vert);
+  color: white;
+  display: grid;
+  place-items: center;
+}
+.statut { font-size: 0.8rem; font-weight: 700; }
+.statut-ok { color: var(--vert); }
+.statut-attente { color: #a86b00; }
+.statut-rejet { color: var(--rouge); }
+.carte-note { font-size: 0.8rem; color: var(--gris); }
+.carte-titre {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1.25;
+  margin: 0 0 6px;
+  color: var(--vert-fonce);
+}
+.carte-texte { margin: 0 0 14px; color: var(--encre); line-height: 1.5; }
+.carte-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  min-width: 40px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--vert);
+  color: white;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.btn-contour {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1.5px solid var(--vert);
+  border-radius: 10px;
+  background: white;
+  color: var(--vert);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-contour:hover { background: var(--vert-clair); }
+.btn-contour.danger { color: var(--rouge); border-color: var(--rouge); }
+.btn-contour.danger:hover { background: #fde8e8; }
+.btn-contour.plein { background: var(--vert); color: white; }
+.btn-contour.plein:hover { background: var(--vert-fonce); }
+.btn-contour[disabled] { opacity: 0.55; cursor: not-allowed; }

@@ -229,3 +229,46 @@ export async function appelAuth(chemin, options = {}) {
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
   return res.json()
 }
+
+// ---- Moderation (admin) ----
+let MOCK_FILE = [
+  { id: 12, latitude: 12.3714, longitude: -1.5197, type_dechet: 'menager', volume_estime: 'moyen',
+    photo_url: null, audio_url: null, statut: 'en_attente_revue', score_auto: 0.82,
+    alertes: [], cree_le: '2026-11-17T09:30:00Z' },
+  { id: 13, latitude: 12.37142, longitude: -1.51972, type_dechet: 'menager', volume_estime: 'moyen',
+    photo_url: null, audio_url: null, statut: 'en_attente_revue', score_auto: 0.55,
+    alertes: ['doublon_probable:12'], cree_le: '2026-11-17T09:41:00Z' },
+  { id: 14, latitude: 12.4, longitude: -1.5, type_dechet: 'plastiques', volume_estime: 'petit',
+    photo_url: null, audio_url: null, statut: 'en_attente_revue', score_auto: 0.7,
+    alertes: [], cree_le: '2026-11-17T10:02:00Z' },
+]
+
+export async function getFileModeration() {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 300))
+    return [...MOCK_FILE]
+  }
+  return appelAuth('/admin/signalements?statut=en_attente_revue')
+}
+
+export async function validerSignalement(id, fusionnerAvec = null) {
+  if (USE_MOCK) {
+    MOCK_FILE = MOCK_FILE.filter((s) => s.id !== id)
+    return { ok: true }
+  }
+  return appelAuth(`/admin/signalements/${id}/valider`, {
+    method: 'POST',
+    body: JSON.stringify({ fusionner_avec: fusionnerAvec }),
+  })
+}
+
+export async function rejeterSignalement(id, motif) {
+  if (USE_MOCK) {
+    MOCK_FILE = MOCK_FILE.filter((s) => s.id !== id)
+    return { ok: true }
+  }
+  return appelAuth(`/admin/signalements/${id}/rejeter`, {
+    method: 'POST',
+    body: JSON.stringify({ motif }),
+  })
+}

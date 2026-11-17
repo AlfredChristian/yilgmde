@@ -4,12 +4,12 @@ import { NOM, SLOGAN } from '../config/projet'
 import './Accueil.css'
 
 const SERVICES = [
-  { icone: 'carte', titre: 'Carte des dépotoirs', lien: '/carte' },
-  { icone: 'alerte', titre: 'Signaler un dépotoir', lien: '/signaler' },
-  { icone: 'suivi', titre: 'Suivre mon signalement', lien: '/suivi' },
-  { icone: 'mairie', titre: 'Espace mairie', lien: '/connexion' },
-  { icone: 'camion', titre: 'Espace chauffeur', lien: '/connexion' },
-  { icone: 'bouclier', titre: 'Brigade Laabal', lien: '/connexion' },
+  { icone: 'carte', titre: 'Carte des dépotoirs', texte: 'Voir les dépotoirs vérifiés de la ville.', lien: '/carte' },
+  { icone: 'alerte', titre: 'Signaler un dépotoir', texte: 'Sans compte, par la voix ou par écrit.', lien: '/signaler' },
+  { icone: 'suivi', titre: 'Suivre mon signalement', texte: 'Entrez votre code de suivi.', lien: '/suivi' },
+  { icone: 'mairie', titre: 'Espace mairie', texte: 'Modération, paramètres et plan de gestion.', lien: '/connexion' },
+  { icone: 'camion', titre: 'Espace chauffeur', texte: 'Votre tournée et vos arrêts du jour.', lien: '/connexion' },
+  { icone: 'bouclier', titre: 'Brigade Laabal', texte: 'Interventions et surveillance.', lien: '/connexion' },
 ]
 
 const ETAPES = [
@@ -22,7 +22,7 @@ export default function Accueil() {
   return (
     <div>
       <section className="hero">
-        <div className="hero-contenu apparait">
+        <div className="hero-contenu">
           <p className="hero-avant">Bienvenue sur</p>
           <h1 className="hero-nom">{NOM}</h1>
           <p className="hero-slogan">{SLOGAN}</p>
@@ -42,37 +42,36 @@ export default function Accueil() {
       <section className="bloc">
         <h2 className="titre-section">Services</h2>
         <div className="grille-services">
-          {SERVICES.map((s) => {
-            const contenu = (
-              <>
-                <Icone nom={s.icone} taille={44} />
-                <span className="service-titre">{s.titre}</span>
-                {!s.lien && <span className="service-bientot">Bientôt</span>}
-              </>
-            )
-            return s.lien ? (
-              <Link key={s.titre} to={s.lien} className="service">
-                {contenu}
-              </Link>
-            ) : (
-              <div key={s.titre} className="service service-inactif">
-                {contenu}
+          {SERVICES.map((s) => (
+            <article key={s.titre} className="carte">
+              <div className="carte-gauche">
+                <span className="tuile"><Icone nom={s.icone} taille={28} /></span>
               </div>
-            )
-          })}
+              <div>
+                <h3 className="carte-titre">{s.titre}</h3>
+                <p className="carte-texte">{s.texte}</p>
+                <Link to={s.lien} className="btn-contour">
+                  Ouvrir
+                </Link>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
       <section className="bande-verte">
         <h2 className="titre-section titre-clair">Comment ça marche</h2>
         <div className="grille-etapes">
-          {ETAPES.map((e) => (
-            <article key={e.titre} className="etape">
-              <Icone nom={e.icone} taille={32} />
-              <div>
-                <h3>{e.titre}</h3>
-                <p>{e.texte}</p>
+          {ETAPES.map((e, i) => (
+            <article key={e.titre} className="carte">
+              <div className="carte-gauche">
+                <span className="tuile tuile-jaune"><Icone nom={e.icone} taille={28} /></span>
               </div>
+              <div>
+                <h3 className="carte-titre">{e.titre}</h3>
+                <p className="carte-texte">{e.texte}</p>
+              </div>
+              <span className="badge">{i + 1}</span>
             </article>
           ))}
         </div>
