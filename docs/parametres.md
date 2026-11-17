@@ -105,7 +105,8 @@ Les sources sont détaillées dans `data/ouaga/LISEZMOI.md`. Un test (`tests/tes
 | `collecte.vitesse_moyenne_kmh` | Vitesse moyenne en ville | km/h | 20 | | [H] |
 | `collecte.coef_detour` | Distance routière ≈ vol d'oiseau × coef, quand il n'y a pas de réseau routier | × | 1,3 | | [H] |
 | `collecte.reseau_routier` | Fichier du réseau routier OpenStreetMap (`scripts/telecharger_reseau_routier.py`) : distances et tracés sur les vraies voies, sens uniques respectés, sans voies privées, camps militaires ni aéroport (D52). Vide = ligne droite × `coef_detour` | chemin | — | `data/ouaga/reseau_routier.json.gz` | source |
-| `collecte.reseau_routier_max_sites` | Au-delà de ce nombre de sites (commune entière), on garde la ligne droite : la matrice routière serait trop lourde pour un recalcul en direct | sites | 600 | | technique |
+| `collecte.reseau_routier_max_sites` | Jusqu'à ce nombre de sites, toutes les paires sont calculées sur les routes ; au-delà (commune entière), mode à rayon limité (D53). Les tracés sont toujours sur les routes | sites | 600 | | technique |
+| `collecte.reseau_routier_rayon_m` | Rayon du mode limité : paires plus proches sur les routes, plus lointaines estimées (ligne droite × `coef_detour`), que le solveur n'enchaîne pas | m | 5000 | | technique |
 | `collecte.temps_arret_min` | Chargement d'un point | min | 10 | | [H] |
 | `collecte.duree_max_tournee_min` | Journée de travail d'un camion | min | 480 | | [H] |
 | `collecte.rotations_max_par_jour` | Allers-retours au dépôt par camion et par jour | rotations | 2 | | [H] |

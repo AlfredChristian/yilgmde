@@ -140,14 +140,10 @@ def _charger(chemin: str, _mtime: float) -> Reseau:
 
 
 def reseau_de(config: dict, nb_sites: int = 0) -> Reseau | None:
-    """Réseau routier configuré (`collecte.reseau_routier`), ou None (ligne droite × coef_detour).
-
-    Au-delà de `collecte.reseau_routier_max_sites` sites (toute la commune), on garde la ligne
-    droite : la matrice routière demanderait trop de mémoire et de temps pour un recalcul en direct.
-    """
+    """Réseau routier configuré (`collecte.reseau_routier`), ou None (ligne droite × coef_detour)."""
     collecte = config.get("collecte") or {}
     chemin = collecte.get("reseau_routier")
-    if not chemin or nb_sites > int(collecte.get("reseau_routier_max_sites", 600)):
+    if not chemin:
         return None
     p = Path(chemin)
     if not p.is_absolute():
@@ -158,12 +154,24 @@ def reseau_de(config: dict, nb_sites: int = 0) -> Reseau | None:
 
 
 class Itineraires:
-    """Distances routières entre des sites et tracé des trajets retenus."""
+    """Distances routières entre des sites et tracé des trajets retenus.
 
-    def __init__(self, reseau: Reseau, sites):
+    Jusqu'à `max_sites_complet` sites (un arrondissement), toutes les paires sont calculées sur
+    les routes et les chemins sont gardés. Au-delà (toute la commune), Dijkstra est limité à
+    `rayon_m` autour de chaque site : les paires proches, celles qu'une tournée enchaîne, sont
+    sur les routes ; les paires lointaines, que le solveur écarte de toute façon, sont estimées
+    (ligne droite × `coef_lointain`). Les trajets retenus sont ensuite tracés sur les routes un
+    par un. Mémoire et temps restent ainsi bornés (≈ 1 ms par site au lieu de 13).
+    """
+
+    def __init__(self, reseau: Reseau, sites, max_sites_complet: int = 600, rayon_m: float = 5000.0,
+                 coef_lointain: float = 1.3):
         self.reseau = reseau
         self.sites = [tuple(map(float, s)) for s in sites]
         self.noeuds, self.acces = reseau.rattacher(sites)
+        if len(self.sites) > max_sites_complet:
+            self._limite(rayon_m, coef_lointain)
+            return
         uniques, self._rang = np.unique(self.noeuds, return_inverse=True)
         # Par lots, pour borner la mémoire : on ne garde que les colonnes des sites et des
         # prédécesseurs en int32 (≈ 0,36 Mo par site pour 90 000 carrefours).
@@ -180,19 +188,58 @@ class Itineraires:
             d[~np.isfinite(d)] = 1e9
         self.matrice_m = d
 
+    def _limite(self, rayon_m: float, coef_lointain: float) -> None:
+        uniques, self._rang = np.unique(self.noeuds, return_inverse=True)
+        lignes = []
+        for debut in range(0, len(uniques), 200):
+            dist = dijkstra(self.reseau.graphe, directed=True, indices=uniques[debut:debut + 200], limit=rayon_m)
+            lignes.append(dist[:, uniques])
+        d = np.vstack(lignes)[self._rang][:, self._rang]
+        d = d + self.acces[:, None] + self.acces[None, :]
+        loin = ~np.isfinite(d)
+        if loin.any():
+            la = np.radians([s[0] for s in self.sites])
+            lo = np.radians([s[1] for s in self.sites])
+            a = (np.sin((la[:, None] - la[None, :]) / 2) ** 2
+                 + np.cos(la[:, None]) * np.cos(la[None, :]) * np.sin((lo[:, None] - lo[None, :]) / 2) ** 2)
+            droit = 2 * R_TERRE * np.arcsin(np.sqrt(np.minimum(a, 1.0)))
+            d[loin] = droit[loin] * coef_lointain
+        np.fill_diagonal(d, 0.0)
+        self.matrice_m = d
+        self._pred = None                  # chemins recalculés à la demande (trajet)
+
     def matrice_entiers(self) -> list[list[int]]:
         return np.rint(self.matrice_m).astype(np.int64).tolist()
 
     def trajet(self, i: int, j: int) -> list[tuple[float, float]]:
         """Polyligne du site i au site j, qui suit les voies (accès en ligne droite aux deux bouts)."""
         source, cible = self.noeuds[i], self.noeuds[j]
-        pred = self._pred[self._rang[i]]
-        chemin = [int(cible)]
-        while chemin[-1] != source and pred[chemin[-1]] >= 0:
-            chemin.append(int(pred[chemin[-1]]))
-        chemin.reverse()
+        if self._pred is not None:
+            chemin = _remonter(self._pred[self._rang[i]], int(source), int(cible))
+        elif j == 0:                       # retour au dépôt : arbre inverse calculé une fois
+            chemin = _remonter(self._arbre_vers_depot(), int(cible), int(source))[::-1]
+        elif i == 0:                       # départ du dépôt : arbre calculé une fois
+            chemin = _remonter(self._arbre_depuis_depot(), int(source), int(cible))
+        else:                              # mode limité : un Dijkstra borné juste pour ce trajet
+            borne = float(self.matrice_m[i][j]) * 1.5 + 1000.0
+            _, pred = dijkstra(self.reseau.graphe, directed=True, indices=int(source), limit=borne,
+                               return_predecessors=True)
+            chemin = _remonter(pred, int(source), int(cible))
         trace = [self.sites[i], *self.reseau.geometrie(chemin), self.sites[j]]   # accès aux deux bouts
         return [p for k, p in enumerate(trace) if k == 0 or tuple(p) != tuple(trace[k - 1])]
+
+    def _arbre_depuis_depot(self):
+        if getattr(self, "_depuis", None) is None:
+            _, self._depuis = dijkstra(self.reseau.graphe, directed=True, indices=int(self.noeuds[0]),
+                                       return_predecessors=True)
+        return self._depuis
+
+    def _arbre_vers_depot(self):
+        """Prédécesseurs dans le graphe inversé : chemin de n'importe quel carrefour vers le dépôt."""
+        if getattr(self, "_vers", None) is None:
+            _, self._vers = dijkstra(self.reseau.graphe.T.tocsr(), directed=True, indices=int(self.noeuds[0]),
+                                     return_predecessors=True)
+        return self._vers
 
     def trace_tournee(self, route: list[int], arrondi: int = 5) -> list[list[list[float]]]:
         """Un tronçon par trajet : dépôt → 1er arrêt, …, dernier arrêt → dépôt (indices de sites)."""
@@ -201,6 +248,15 @@ class Itineraires:
             [[round(la, arrondi), round(lo, arrondi)] for la, lo in _simplifier(self.trajet(a, b))]
             for a, b in zip(etapes, etapes[1:])
         ]
+
+
+def _remonter(pred, source: int, cible: int) -> list[int]:
+    """Chemin source → cible à partir d'un tableau de prédécesseurs (Dijkstra depuis `source`)."""
+    chemin = [cible]
+    while chemin[-1] != source and pred[chemin[-1]] >= 0:
+        chemin.append(int(pred[chemin[-1]]))
+    chemin.reverse()
+    return chemin
 
 
 def _simplifier(points: list, tolerance_m: float = 4.0) -> list:

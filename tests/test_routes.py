@@ -75,8 +75,20 @@ def test_tournees_tracees_sur_le_reseau(tmp_path):
     assert "trace" not in sans["tournees"][0]
 
 
-def test_au_dela_du_seuil_on_garde_la_ligne_droite(tmp_path):
-    config = appliquer_surcharges(charger_config(None), {"collecte": {"reseau_routier": "nimporte.json.gz", "reseau_routier_max_sites": 10}})
-    assert reseau_de(config, nb_sites=11) is None
+def test_mode_limite_pour_beaucoup_de_sites(reseau):
+    """Commune entière : paires proches sur les routes, paires lointaines estimées, trajets tracés sur les routes."""
+    sites = [NOEUDS["1"], NOEUDS["2"], NOEUDS["8"], NOEUDS["6"]]
+    complet = Itineraires(reseau, sites)
+    limite = Itineraires(reseau, sites, max_sites_complet=1, rayon_m=150, coef_lointain=1.3)
+    assert limite.matrice_m[0][1] == pytest.approx(complet.matrice_m[0][1])          # proche : identique
+    droit = distance_m(*NOEUDS["2"], *NOEUDS["8"])
+    assert limite.matrice_m[1][2] == pytest.approx(droit * 1.3, rel=0.01)            # lointain : estimé
+    for i, j in [(0, 2), (1, 2), (2, 0), (3, 1)]:                                     # dépôt, retour, autres
+        assert limite.trajet(i, j) == complet.trajet(i, j)
+    assert NOEUDS["5"] not in [tuple(p) for p in limite.trajet(1, 2)]
+
+
+def test_reseau_introuvable():
+    config = appliquer_surcharges(charger_config(None), {"collecte": {"reseau_routier": "nimporte.json.gz"}})
     with pytest.raises(ValueError, match="introuvable"):
-        reseau_de(config, nb_sites=5)
+        reseau_de(config)
