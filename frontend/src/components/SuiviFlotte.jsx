@@ -168,12 +168,6 @@ function VueSuivi({ onRetourCarte }) {
         <p><strong>{r.tournees_affectees}</strong> tournées affectées · <strong>{r.tournees_terminees}</strong> terminées</p>
       </div>
 
-      <p className="suivi-aide">
-        Un <strong>passage</strong> de collecte s'étale sur {suivi.jours.length} jour{suivi.jours.length > 1 ? 's' : ''} : la commune
-        travaille 6 jours par semaine et chaque point est vidé 2 fois par semaine (réglages du plan). Le même plan se répète
-        à chaque passage ; les jours ci-dessous sont ceux d'un passage.
-      </p>
-
       <div className="suivi-commandes">
         <div className="suivi-jours" role="group" aria-label="Jour du passage">
           {suivi.jours.map((j) => (

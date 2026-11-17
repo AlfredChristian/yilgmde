@@ -275,3 +275,20 @@ def test_les_photos_ne_sont_pas_servies_publiquement(client):
     sid = signaler(client, photo=True)["id"]
     for url in (f"/uploads/{sid}.png", f"/admin/signalements/{sid}/photo"):
         assert client.get(url).status_code in (401, 404)
+
+
+def test_fiche_detaillee_pour_decider(client):
+    """D54 : description, appareil, dépotoirs et signalements proches ; réservée à l'admin."""
+    premier = signaler(client)
+    valider(client, premier["id"])
+    r = client.post("/signalements", data={"latitude": "12.3716", "longitude": "-1.5197", "type_dechet": "menager",
+                                           "volume_estime": "gros", "description": "tas derrière le marché"},
+                    headers={"X-Device-Token": "appareil-fiche-0001"})
+    sid = r.json()["id"]
+    fiche = client.get(f"/admin/signalements/{sid}", headers=entetes(client)).json()
+    assert fiche["description"] == "tas derrière le marché" and fiche["volume_estime"] == "gros"
+    assert fiche["contributeur"]["nb_signalements"] == 1 and "jeton_appareil" not in fiche["contributeur"]
+    assert [d["distance_m"] for d in fiche["depotoirs_proches"]] == [22]           # le dépotoir validé, à ~22 m
+    assert fiche["signalements_proches"][0]["id"] == premier["id"]
+    assert client.get(f"/admin/signalements/{sid}", headers=entetes(client, Role.chauffeur)).status_code == 403
+    assert client.get("/admin/signalements/99999", headers=entetes(client)).status_code == 404

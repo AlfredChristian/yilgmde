@@ -104,3 +104,5 @@
 - [x] Démo prête en une commande : `charger_exemples.py --ouaga --demo`
 - [x] Suivi de la flotte réel : arrêts cochés en direct, horaire prévu rejouable par jour (D51)
 - [x] Tournées sur les vraies voies (réseau OSM hors ligne, sens uniques, sans camps ni aéroport) (D52)
+- [x] Modération : fiche détaillée avant décision (carte, photo, voix, voisinage, appareil) (D54)
+- [x] Commune entière sur les routes (D53)

@@ -113,7 +113,10 @@ def distances(sites: Sequence[tuple[float, float]], config: dict):
     est configuré (D52), sinon ligne droite × `coef_detour`."""
     reseau = reseau_de(config, len(sites))
     if reseau is not None:
-        itin = Itineraires(reseau, sites)
+        c = config["collecte"]
+        itin = Itineraires(reseau, sites, max_sites_complet=int(c.get("reseau_routier_max_sites", 600)),
+                           rayon_m=float(c.get("reseau_routier_rayon_m", 5000)),
+                           coef_lointain=float(c.get("coef_detour", 1.3)))
         return itin.matrice_entiers(), itin
     return matrice_distances_m(sites, float(config["collecte"].get("coef_detour", 1.0))), None
 

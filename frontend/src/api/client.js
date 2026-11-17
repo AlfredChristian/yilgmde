@@ -316,14 +316,23 @@ export async function getFileModeration() {
     await new Promise((r) => setTimeout(r, 300))
     return [...MOCK_FILE]
   }
+  // La file reste légère : photo et note vocale ne sont téléchargées que dans la fiche.
   const liste = await appelAuth('/admin/signalements?statut=en_attente_revue')
-  return Promise.all(
-    liste.map(async (s) => ({
-      ...s,
-      photo_url: await urlProtegee(s.photo_url),
-      audio_url: await urlProtegee(s.note_vocale_url),
-    })),
-  )
+  return liste.map((s) => ({ ...s, a_photo: Boolean(s.photo_url), a_audio: Boolean(s.note_vocale_url) }))
+}
+
+// Fiche complète d'un signalement (D54) : description, quartier, appareil, voisinage, médias.
+export async function getSignalementDetail(id) {
+  if (USE_MOCK) {
+    const s = MOCK_FILE.find((x) => x.id === id)
+    if (!s) throw new Error('signalement introuvable')
+    return { ...s, description: id === 13 ? 'Tas au bord de la voie, devant l’école' : null, secteur: 'Secteur 12', arrondissement: 3,
+      contributeur: { score_confiance: 0.6, nb_signalements: 3, verifies: 2, rejetes: 0, bloque: false },
+      depotoirs_proches: id === 13 ? [{ id: 3, distance_m: 40, latitude: 12.3716, longitude: -1.5195, statut: 'actif', legalite: 'illegal', volume_estime: 'moyen', nb_signalements: 4 }] : [],
+      signalements_proches: id === 13 ? [{ id: 12, distance_m: 3, latitude: 12.3714, longitude: -1.5197, statut: 'en_attente_revue', type_dechet: 'menager', volume_estime: 'moyen', cree_le: '2026-11-17T09:30:00Z' }] : [] }
+  }
+  const s = await appelAuth(`/admin/signalements/${id}`)
+  return { ...s, photo_url: await urlProtegee(s.photo_url), audio_url: await urlProtegee(s.note_vocale_url) }
 }
 
 export async function validerSignalement(id, fusionnerAvec = null) {
