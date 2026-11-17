@@ -16,14 +16,15 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** : simulation multi-agents faite (branche `back/simulation`). `main` contient déjà tout le plan (PR #11 : C2, C3, C7, C4, D1–D4) et les vues de terrain (PR #12 : C6, H1–H3). Ensuite : export G1, puis les P2.
-- **Fichiers modifiés** : `simulation/agents.py` (`simuler`, D29), `backend/routes/scenarios.py` (`POST /scenarios/{id}/simuler`), `backend/schemas.py` (`SimulationEntree`), `config/default.yaml` (bloc `simulation:` [H]), `tests/test_agents.py` (13 tests) et 2 tests dans `tests/test_scenarios.py` ; suite complète : **228 verts**. Docs : `docs/api-contract.md`, `DECISIONS.md` (D18 tranchée, D29), `TODO.md`.
-- **Bugs ouverts / limites** : coefficients de simulation tous [H] (apport volontaire 0,6, seuil 1 500 kg, réapparition 5 %/jour…) : à caler avec la mairie ou des observations (Cramer). Les dépotoirs hors zone ne reçoivent pas de dépôts dans la simulation. La simulation suit le plan figé du jour 1 (pas de recalcul en cours de simulation). Toujours à confirmer : `collecte.depot` (Polesgo), vraies zones et populations. Pas de limitation des tentatives de connexion ; `score_confiance` jamais mis à jour.
-- **Pour lancer avec des données** : `python scripts/charger_exemples.py`, `uvicorn backend.main:app --reload`, puis en admin `POST /scenarios/1/simuler` avec `{"jours": 30, "graine": 42}`. Pour comparer : créer un scénario (`POST /scenarios` avec `{"nom": "pluies", "parametres": {"saison": "pluies"}}`) et simuler les deux avec la même graine.
+- **Objectif en cours** : export OSM (G1) et comparaison de scénarios (D6) faits (branche `back/export-osm`). `main` contient tout le reste du back P1 : plan (C2–C4, C7), scénarios (D1–D4), terrain (C6, H1–H3), simulation (E1–E4). Reste surtout du P2 et l'aide au front.
+- **Fichiers modifiés** : `backend/export_osm.py`, `backend/routes/admin_export.py`, `backend/routes/scenarios.py` (`/scenarios/comparer`, déclarée avant `/scenarios/{id}`), `backend/main.py`, `config/default.yaml` (bloc `export_osm:`), `tests/test_export_osm.py` (6 tests) et 2 tests dans `tests/test_scenarios.py` ; suite complète : **236 verts**. Docs : `docs/api-contract.md`, `DECISIONS.md` (D30, D31), `TODO.md`.
+- **Bugs ouverts / limites** : étiquettes OSM et licence des données (D16 proposé, `export_osm.licence: null`) à valider avant tout versement ; un versement OSM = un import à annoncer à la communauté OSM du Burkina. `/scenarios/comparer` recalcule les simulations à chaque appel (~1 s par scénario). Coefficients `[H]` de simulation et `collecte.depot` toujours à confirmer. Pas de limitation des tentatives de connexion ; `score_confiance` jamais mis à jour.
+- **Pour lancer avec des données** : `python scripts/charger_exemples.py`, `uvicorn backend.main:app --reload` ; en admin : `GET /admin/export/depotoirs.geojson`, `GET /scenarios/comparer?ids=1,2&jours=30&graine=42` (après avoir créé un 2e scénario).
 - **Prochaine étape précise** :
-  1. G1 : `GET /admin/export/depotoirs.geojson` (dépotoirs vérifiés, propriétés prêtes pour OSM : `amenity=waste_disposal`? à vérifier avec Cramer, `source`, dates) ;
-  2. D6 (P2) : `GET /scenarios/comparer?ids=1,2` (indicateurs du plan + résumé de simulation côte à côte, même graine) ;
-  3. P2 : `/laabal/constats`, passage `classe`, import par lot A4, limitation des tentatives de connexion.
+  1. sécurité (P1 transverse) : limiter les tentatives de `POST /auth/login` (compteur par e-mail et IP, blocage temporaire, paramètres dans la config) ;
+  2. `score_confiance` des contributeurs : monter à la validation, baisser au rejet (A3), et l'utiliser dans le score automatique (A2) ;
+  3. P2 : `/laabal/constats` (amendes réelles), passage `classe`, saisie d'un site officiel par l'admin, import par lot A4 ;
+  4. aider Christian à brancher le front sur `/points-regroupement`, `/scenarios/{id}/plan`, `/simuler`, `/comparer`.
 
 ## Cramer (docs / données / présentation)
 
