@@ -63,7 +63,7 @@
 
 ## Cramer — présentation, documentation, données, tests
 
-- [ ] README complété (présentation, installation, lancement, licence) (P1)
+- [x] README complété (présentation, installation, lancement, licence) (P1) — licence encore à trancher : `LICENSE` en MIT, D16 propose Apache-2.0
 - [ ] `docs/enonce.md` vérifié contre le sujet officiel (P1)
 - [ ] Collecte des signalements de notre secteur (une fois le secteur confirmé) (P1)
 - [ ] Hypothèses de `config/ouagadougou.yaml` documentées avec leurs sources (P1)
