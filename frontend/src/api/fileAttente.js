@@ -21,9 +21,14 @@ async function transaction(mode, action) {
   })
 }
 
-export function ajouter(donnees) {
-  const cle = Date.now() + '-' + Math.random().toString(16).slice(2)
-  return transaction('readwrite', (s) => s.put({ cle, creeLe: Date.now(), donnees })).then(() => cle)
+// Cle au format accepte par le serveur (id_client : 8 a 64 caracteres A-Za-z0-9_.:-).
+export function nouvelleCle() {
+  return Date.now() + '-' + Math.random().toString(16).slice(2)
+}
+
+// La cle et la date peuvent etre choisies avant le premier essai d'envoi.
+export function ajouter(donnees, { cle = nouvelleCle(), creeLe = Date.now() } = {}) {
+  return transaction('readwrite', (s) => s.put({ cle, creeLe, donnees })).then(() => cle)
 }
 export const lister = () => transaction('readonly', (s) => s.getAll())
 export const retirer = (cle) => transaction('readwrite', (s) => s.delete(cle))

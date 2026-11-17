@@ -3,7 +3,7 @@
 
 // Attention : les variables Vite sont des chaines, pas des booleens.
 
-import { ajouter, lister, retirer } from './fileAttente'
+import { ajouter, lister, retirer, nouvelleCle } from './fileAttente'
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 const API_URL = import.meta.env.VITE_API_URL ?? '/api'
@@ -128,13 +128,32 @@ function estHorsLigne(err) {
   return err instanceof TypeError || !navigator.onLine
 }
 
-// Tente l'envoi ; sans reseau, met en file d'attente.
+// Erreur definitive : le serveur refuse ce signalement, inutile de reessayer.
+function estDefinitive(err) {
+  return [400, 413, 422].includes(err.statut)
+}
+
+// Faut-il garder le signalement pour plus tard ? Reseau coupe ou erreur temporaire du serveur.
+function aReessayer(err) {
+  return estHorsLigne(err) || (typeof err.statut === 'number' && !estDefinitive(err))
+}
+
+// Tente l'envoi ; en cas de coupure ou d'erreur temporaire, met en file d'attente.
 export async function signalerAvecFile(donnees) {
+  // Identifiant et date fixes des le premier essai : si la reponse se perd, la file
+  // renverra le meme id_client et le serveur ne creera pas de doublon.
+  const id_client = nouvelleCle()
+  const creeLe = Date.now()
   try {
-    return { envoye: true, reponse: await postSignalement(donnees) }
+    const reponse = await postSignalement({
+      ...donnees,
+      id_client,
+      capture_le: new Date(creeLe).toISOString(),
+    })
+    return { envoye: true, reponse }
   } catch (err) {
-    if (estHorsLigne(err)) {
-      await ajouter(donnees)
+    if (aReessayer(err)) {
+      await ajouter(donnees, { cle: id_client, creeLe })
       return { envoye: false }
     }
     throw err
@@ -143,11 +162,6 @@ export async function signalerAvecFile(donnees) {
 
 export async function nombreEnAttente() {
   return (await lister()).length
-}
-
-// Erreurs temporaires du serveur : l'element reste dans la file (docs/api-contract.md).
-function estTemporaire(err) {
-  return err.statut === 429 || err.statut === 503
 }
 
 // Renvoie les signalements en attente. Retourne le nombre envoye.
@@ -163,10 +177,9 @@ export async function viderFile() {
       await retirer(item.cle) // 200 (deja recu) ou 201 : l'element peut partir
       envoyes += 1
     } catch (err) {
-      // Pas de reseau, trop d'envois (429) ou serveur indisponible (503) :
-      // on garde tout dans la file et on reessaiera plus tard.
-      if (estHorsLigne(err) || estTemporaire(err)) break
-      // Erreur definitive (413, 422...) : inutile de reessayer.
+      // Refus definitif (400, 413, 422) : inutile de reessayer, on retire.
+      // Tout le reste (reseau coupe, 429, 503, 500...) : on garde tout et on reessaiera.
+      if (!estDefinitive(err)) break
       await retirer(item.cle)
     }
   }
