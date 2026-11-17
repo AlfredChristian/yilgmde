@@ -71,6 +71,16 @@ laabal:
     poids_reapparition: 2                # un dépotoir qui revient est traité en priorité
     poids_signalement: 0.5
 
+masquage:                                # livrable 1 : visages et plaques floutés sur le serveur (backend/masquage.py)
+  cote_max_px: 1600                      # photo réduite au-delà (stockage, vitesse)
+  cote_detection_px: 800                 # détection sur une copie réduite (rapide)
+  facteur_echelle: 1.1                   # pas de la recherche multi-échelle d'OpenCV
+  voisins_min_visage: 5                  # [H] plus haut = moins de fausses détections, plus de visages manqués
+  voisins_min_plaque: 4                  # [H]
+  taille_min_px: 20                      # plus petit visage ou plaque cherché (en pixels de la photo)
+  marge: 0.25                            # zone floutée élargie de 25 % de chaque côté
+  qualite_jpeg: 85
+
 import:                                  # A4, POST /admin/signalements/import
   max_par_lot: 1000                      # borne la taille d'un lot (temps de calcul)
 
