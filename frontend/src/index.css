@@ -1,111 +1,193 @@
+@import '@fontsource/poppins/400.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource/poppins/700.css';
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
-
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  --vert: #1b6b4a;
+  --vert-fonce: #124a34;
+  --vert-clair: #e3f1e9;
+  --jaune: #f4b942;
+  --rouge: #d62828;
+  --sable: #faf6ee;
+  --encre: #1d2b24;
+  --gris: #5b6b63;
+  --rayon: 16px;
+  --ombre: 0 8px 24px rgba(18, 74, 52, 0.12);
+  --bordure: #e3e8ec;
+  --serif: Georgia, 'Times New Roman', serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  font-family: 'Poppins', system-ui, sans-serif;
+  background: var(--sable);
+  color: var(--encre);
 }
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.btn {
+  display: inline-block;
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ombre);
+}
+.btn-primaire {
+  background: var(--jaune);
+  color: var(--encre);
+}
+.btn-secondaire {
+  background: transparent;
+  color: white;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Profondeur et mouvement --- */
+:root {
+  --ombre-douce: 0 2px 6px rgba(18, 74, 52, 0.08), 0 8px 20px rgba(18, 74, 52, 0.08);
+  --ombre-forte: 0 12px 32px rgba(18, 74, 52, 0.22);
+  --rayon-petit: 10px;
+  --transition: 0.2s ease;
+}
+
+/* Focus clavier soigné (remplace le cadre noir par défaut) */
+:focus-visible {
+  outline: 3px solid var(--vert);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+.hero :focus-visible,
+.bande-verte :focus-visible {
+  outline-color: var(--jaune);
+}
+
+/* Apparition douce : à utiliser avec la classe .apparait */
+@keyframes apparition {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.apparait {
+  animation: apparition 0.6s ease both;
+}
+
+/* Respect des personnes qui réduisent les animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Modèle de carte ---------- */
+.carte {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px 20px;
+  align-items: start;
+  background: white;
+  border: 1px solid var(--bordure);
+  border-radius: 14px;
+  padding: 20px 64px 20px 20px;
+  box-shadow: 0 1px 2px rgba(16, 40, 30, 0.05);
+}
+.carte-gauche {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 84px;
   text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
 }
-
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+.tuile {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--vert);
+  color: white;
+  display: grid;
+  place-items: center;
 }
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+.statut { font-size: 0.8rem; font-weight: 700; }
+.statut-ok { color: var(--vert); }
+.statut-attente { color: #a86b00; }
+.statut-rejet { color: var(--rouge); }
+.carte-note { font-size: 0.8rem; color: var(--gris); }
+.carte-titre {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 1.25rem;
+  line-height: 1.25;
+  margin: 0 0 6px;
+  color: var(--vert-fonce);
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+.carte-texte { margin: 0 0 14px; color: var(--encre); line-height: 1.5; }
+.carte-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  min-width: 40px;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--vert);
+  color: white;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
 }
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
+.btn-contour {
   display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1.5px solid var(--vert);
+  border-radius: 10px;
+  background: white;
+  color: var(--vert);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
 }
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
+.btn-contour:hover { background: var(--vert-clair); }
+.btn-contour.danger { color: var(--rouge); border-color: var(--rouge); }
+.btn-contour.danger:hover { background: #fde8e8; }
+.btn-contour.plein { background: var(--vert); color: white; }
+.btn-contour.plein:hover { background: var(--vert-fonce); }
+.btn-contour[disabled] { opacity: 0.55; cursor: not-allowed; }
