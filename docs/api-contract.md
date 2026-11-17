@@ -201,7 +201,7 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
     "stock_a_collecter_kg": 35000, "capacite_collecte_pct": 100.0, "part_captee_estimee_pct": 67.6,
     "precollecte_pct": 30.0, "apport_volontaire_pct": 37.6, "non_capte_pct": 32.4, "dechets_collectes_pct": 100.0, "depotoirs_actifs": 2,
     "depotoirs_planifies_laabal": 2, "depotoirs_en_attente_laabal": 0,
-    "camions_utilises": ["camion_1", "camion_2", "camion_3"], "camions_indisponibles": [],
+    "camions_utilises": ["camion_1", "camion_2", "camion_3"], "camions_indisponibles": [], "camions_flotte": ["camion_1", "camion_2", "camion_3"],
     "distance_totale_km": 145.1, "cout_total_xof": 100000, "cout_mensuel_estime_xof": 866667,
     "budget_mensuel_xof": 5000000, "budget_depasse": false, "saison": "seche", "methode_tournees": "ortools"
   },

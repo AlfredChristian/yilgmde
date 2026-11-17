@@ -1,16 +1,40 @@
-# React + Vite
+# Front Yilgmdé (React + Vite, PWA)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Lancer avec les données d'exemple (sans API)
 
-Currently, two official plugins are available:
+```
+npm install
+npm run dev            # VITE_USE_MOCK=true (voir .env.example)
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Comptes de test du mode mock : `admin@test`, `chauffeur@test`, `laabal@test`, mot de passe `test`.
 
-## React Compiler
+## Lancer branché sur la vraie API
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Dans un premier terminal, à la racine du dépôt, avec une base vide :
 
-## Expanding the Oxlint configuration
+   ```
+   set YILGMDE_ADMIN_EMAIL=admin@ouaga.bf          (PowerShell : $env:YILGMDE_ADMIN_EMAIL="admin@ouaga.bf")
+   set YILGMDE_ADMIN_PASSWORD=admin12345
+   python scripts/charger_exemples.py --ouaga
+   uvicorn backend.main:app --reload
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+2. Dans `frontend/`, créer `.env.local` (ignoré par git) :
+
+   ```
+   VITE_API_URL=/api
+   VITE_USE_MOCK=false
+   ```
+
+   puis `npm run dev`. Vite redirige `/api` vers `http://localhost:8000`.
+
+3. Se connecter avec le compte admin. Les comptes chauffeur et Laabal se créent avec
+   `POST /admin/utilisateurs`, puis l'admin affecte une tournée avec
+   `POST /admin/tournees/{id}/affecter` (voir `docs/api-contract.md`, ou `http://localhost:8000/docs`).
+
+## Où l'API est appelée
+
+Tout passe par `src/api/client.js` : les pages ne savent pas si les données viennent du mock
+ou de l'API. Le formulaire du plan (`pages/Plan.jsx`) travaille sur des champs simples
+(périmètre, camions en panne, saison, budget) que `versApi` traduit en paramètres de scénario.

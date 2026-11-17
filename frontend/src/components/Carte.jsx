@@ -61,10 +61,13 @@ export default function Carte() {
                     key={p.id}
                     center={[lat, lon]}
                     radius={10}
-                    pathOptions={{ color: COULEURS_DEPOTOIR[p.statut] ?? '#555', fillOpacity: 0.7 }}
+                    pathOptions={{
+                      color: (p.legalite === 'officiel' ? COULEURS_DEPOTOIR.officiel : COULEURS_DEPOTOIR[p.statut]) ?? '#555',
+                      fillOpacity: 0.7,
+                    }}
                   >
                     <Popup>
-                      <strong>Dépotoir n°{p.id}</strong>
+                      <strong>{p.legalite === 'officiel' ? 'Centre de collecte' : 'Dépotoir'} n°{p.id}</strong>
                       <br />
                       Statut : {p.statut}
                       <br />

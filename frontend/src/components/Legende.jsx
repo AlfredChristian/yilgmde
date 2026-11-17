@@ -4,7 +4,9 @@ import { COULEURS_DEPOTOIR, COULEURS_SIGNALEMENT } from '../config/couleurs'
 // Les couleurs viennent de config/couleurs.js, comme dans Carte.jsx.
 const ELEMENTS = [
   { couleur: COULEURS_DEPOTOIR.actif, texte: 'Dépotoir actif' },
-  { couleur: COULEURS_DEPOTOIR.eradique, texte: 'Dépotoir éradiqué' },
+  { couleur: COULEURS_DEPOTOIR.intervention_planifiee, texte: 'Intervention en cours' },
+  { couleur: COULEURS_DEPOTOIR.eradique, texte: 'Dépotoir éradiqué ou surveillé' },
+  { couleur: COULEURS_DEPOTOIR.officiel, texte: 'Centre de collecte officiel' },
   { couleur: COULEURS_SIGNALEMENT.enAttente, texte: 'Signalement en attente', petit: true },
   { couleur: COULEURS_SIGNALEMENT.alerte, texte: 'Signalement avec alerte', petit: true },
   { couleur: COULEURS_SIGNALEMENT.rejete, texte: 'Signalement rejeté', petit: true },

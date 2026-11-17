@@ -74,6 +74,7 @@ def test_panne_de_tous_les_camions_cree_des_non_couverts(config):
     assert not any(t["type"] == "collecte" for t in plan["tournees"])
     assert plan["indicateurs"]["capacite_collecte_pct"] == 0
     assert plan["indicateurs"]["camions_indisponibles"] == [c["id"] for c in config["camions"]]
+    assert plan["indicateurs"]["camions_flotte"] == [c["id"] for c in config["camions"]]
     deps = [nc for nc in plan["non_couverts"] if "depotoir_id" in nc]
     assert {d["depotoir_id"] for d in deps} == {1, 3}
     assert "aucun camion disponible" in deps[0]["raison"]
