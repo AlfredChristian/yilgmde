@@ -95,5 +95,13 @@
 /* Le suivi s'ouvre par-dessus la page, sous l'en-tête, pour que la carte ait de la place. */
 .suivi-plein-ecran { position: fixed; inset: 64px 0 0 0; z-index: 1200; height: auto; min-height: 0; padding: 22px 28px; overflow: auto; }
 .suivi-plein-ecran { background: #f6f8f7; display: flex; flex-direction: column; gap: 14px; }
-.suivi-plein-ecran .suivi-carte, .suivi-plein-ecran .suivi-liste { height: calc(100vh - 340px); max-height: none; min-height: 340px; }
+.suivi-plein-ecran .suivi-carte, .suivi-plein-ecran .suivi-liste { height: calc(100vh - 420px); max-height: none; min-height: 320px; }
 .suivi-plein-ecran .suivi-corps { grid-template-columns: minmax(0, 1fr) 320px; }
+.suivi-aide { margin: 0; font-size: .8rem; color: var(--gris); line-height: 1.45; }
+.suivi-compte { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; font-size: .78rem; color: var(--gris); }
+.suivi-compte strong { color: var(--vert-fonce, #0b3d2a); }
+.suivi-barre { position: relative; }
+.suivi-barre i { position: absolute; inset: 0 auto 0 0; display: block; height: 100%; border-radius: 4px; background: #b9c4be; }
+.suivi-barre span { position: relative; }
+.suivi-retard { font-size: .72rem; color: #a5520c; font-weight: 600; }
+.suivi-cle-barre { display: inline-block; width: 18px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #1f9d55 50%, #b9c4be 50%); }
