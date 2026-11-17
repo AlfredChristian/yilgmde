@@ -38,12 +38,14 @@ def test_fusion_ne_modifie_pas_les_entrees():
 
 def test_fusion_des_camions_par_id():
     config = charger_config("ouagadougou")
+    n = len(config["camions"])
     nouvelle = appliquer_surcharges(config, {"camions": [{"id": "camion_2", "disponible": False}]})
     par_id = {c["id"]: c for c in nouvelle["camions"]}
     assert par_id["camion_2"]["disponible"] is False
-    assert par_id["camion_2"]["capacite_kg"] == 6000  # les autres champs sont conservés
-    assert len(nouvelle["camions"]) == 3
-    assert [c["id"] for c in camions_disponibles(nouvelle)] == ["camion_1", "camion_3"]
+    assert par_id["camion_2"]["capacite_kg"] == config["camions"][1]["capacite_kg"]  # autres champs conservés
+    assert len(nouvelle["camions"]) == n
+    assert "camion_2" not in [c["id"] for c in camions_disponibles(nouvelle)]
+    assert len(camions_disponibles(nouvelle)) == n - 1
     # la config d'origine n'a pas bougé (fonction pure)
     assert all(c["disponible"] for c in config["camions"])
 

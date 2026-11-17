@@ -10,7 +10,8 @@ from simulation.tournees import matrice_distances_m, planifier_tournees, vitesse
 
 @pytest.fixture
 def config():
-    return charger_config("ouagadougou", surcharges={"collecte": {"depot": {"latitude": 12.37, "longitude": -1.52}}})
+    # Configuration générique : on teste le moteur, pas les valeurs de Ouaga (70 camions, etc.).
+    return charger_config(None, surcharges={"collecte": {"depot": {"latitude": 12.37, "longitude": -1.52}}})
 
 
 def point(id_, lat, lon, stock=1000.0, capacite=3000.0):
