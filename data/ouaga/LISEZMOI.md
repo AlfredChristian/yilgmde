@@ -75,3 +75,11 @@ Les fichiers de ce dossier sont sous **Open Database License (ODbL) 1.0** : http
 ## Vie privée
 
 Les signalements ne contiennent ni identifiant d'appareil, ni photo, ni note vocale, ni texte libre. L'application publie aussi en continu les signalements **vérifiés** sous ODbL (`GET /donnees/signalements.geojson`), avec des positions arrondies à environ 11 m et la date au jour près.
+
+## Réseau routier (`reseau_routier.json.gz`, D52)
+
+Voies carrossables de OpenStreetMap dans la boîte de la commune (12,24–12,50 N, 1,66–1,39 O),
+téléchargées par `python scripts/telecharger_reseau_routier.py` (Overpass) le 17/11/2026 :
+48 683 voies, 400 282 nœuds, 1 457 voies à sens unique. Retirés : accès interdit ou privé, voies
+militaires, allées de parking, voies situées dans un camp militaire ou un aéroport.
+© contributeurs OpenStreetMap, licence ODbL. Relancer le script met le fichier à jour.

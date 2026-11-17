@@ -11,6 +11,7 @@ shapely
 pyproj
 geopandas
 scikit-learn
+scipy                            # itinéraires sur le réseau routier (D52)
 ortools
 pytest
 httpx

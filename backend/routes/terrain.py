@@ -141,6 +141,7 @@ def suivi_flotte(request: Request, _=Depends(admin)):
             "affectee_a": t.get("affectee_a"), "affectee_nom": noms.get(t.get("affectee_a")),
             "arrets_effectues": faits, "arrets_total": len(arrets),
             "derniere_activite": max((a["effectue_le"] for a in arrets if a["effectue_le"]), default=None),
+            "trace": t.get("trace"),          # D52 : un tronçon par trajet, sur les voies (absent sans réseau routier)
             "arrets": arrets,
         })
     depot = request.app.state.config["collecte"].get("depot") or {}

@@ -103,3 +103,4 @@
 - [x] F5 — Gestion des comptes par l'admin : créer, renommer, rôle, désactiver / réactiver, mot de passe (D49), page `/admin/utilisateurs`
 - [x] Démo prête en une commande : `charger_exemples.py --ouaga --demo`
 - [x] Suivi de la flotte réel : arrêts cochés en direct, horaire prévu rejouable par jour (D51)
+- [x] Tournées sur les vraies voies (réseau OSM hors ligne, sens uniques, sans camps ni aéroport) (D52)
