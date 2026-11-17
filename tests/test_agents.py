@@ -40,8 +40,8 @@ def test_indicateurs_par_jour(config):
     r = simuler(DONNEES, config, 10, 1)
     assert r["graine"] == 1 and [i["jour"] for i in r["indicateurs"]] == list(range(1, 11))
     for i in r["indicateurs"]:
-        assert {"pct_collecte", "depotoirs_actifs", "cout_xof", "distance_km"} <= set(i)   # contrat d'API
-        assert 0 <= i["pct_collecte"] <= 100
+        assert {"part_captee_pct", "pct_collecte", "depotoirs_actifs", "cout_xof", "distance_km"} <= set(i)   # contrat d'API
+        assert 0 <= i["part_captee_pct"] <= 100
         assert i["production_kg"] == pytest.approx(10000 * config["population"]["production_dechets_kg_hab_jour"])
     assert r["resume"]["jours"] == 10
 
@@ -63,7 +63,7 @@ def test_graine_par_defaut_de_la_config(config):
 def test_conservation_des_dechets(config):
     """Production = arrivée aux points + dépôts sauvages, chaque jour."""
     for i in simuler(DONNEES, config, 15, 3)["indicateurs"]:
-        arrive = i["production_kg"] * i["pct_collecte"] / 100
+        arrive = i["production_kg"] * i["part_captee_pct"] / 100
         assert arrive + i["dechets_sauvages_kg"] == pytest.approx(i["production_kg"], abs=1)
 
 
@@ -82,7 +82,7 @@ def test_plus_d_abonnements_plus_de_collecte(config):
     peu = appliquer_surcharges(config, {"population": {"taux_abonnement_precollecteurs": 0.0}})
     beaucoup = appliquer_surcharges(config, {"population": {"taux_abonnement_precollecteurs": 0.9},
                                              "precollecteurs": {"nombre": 200}})
-    assert resume(beaucoup)["pct_collecte_moyen"] > resume(peu)["pct_collecte_moyen"]
+    assert resume(beaucoup)["part_captee_moyenne_pct"] > resume(peu)["part_captee_moyenne_pct"]
     assert resume(beaucoup)["dechets_sauvages_kg"] < resume(peu)["dechets_sauvages_kg"]
 
 

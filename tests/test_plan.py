@@ -48,7 +48,7 @@ def test_plan_complet_et_coherent(config):
                 assert a["cible_id"] in ids_points
     ind = plan["indicateurs"]
     assert ind["depotoirs_actifs"] == 2                     # le dépotoir éradiqué ne compte pas (règle 3)
-    assert ind["dechets_collectes_pct"] == 100.0 and plan["non_couverts"] == []
+    assert ind["capacite_collecte_pct"] == 100.0 and plan["non_couverts"] == []
     assert ind["demande_totale_kg_jour"] == pytest.approx(10000 * config["population"]["production_dechets_kg_hab_jour"])
     assert ind["cout_total_xof"] == sum(t["cout_xof"] for t in plan["tournees"])
     assert ind["methode_tournees"] == "ortools"
@@ -72,7 +72,7 @@ def test_panne_de_tous_les_camions_cree_des_non_couverts(config):
     panne = appliquer_surcharges(config, {"camions": [{"id": c["id"], "disponible": False} for c in config["camions"]]})
     plan = calculer_plan(DONNEES, panne)
     assert not any(t["type"] == "collecte" for t in plan["tournees"])
-    assert plan["indicateurs"]["dechets_collectes_pct"] == 0
+    assert plan["indicateurs"]["capacite_collecte_pct"] == 0
     assert plan["indicateurs"]["camions_indisponibles"] == [c["id"] for c in config["camions"]]
     deps = [nc for nc in plan["non_couverts"] if "depotoir_id" in nc]
     assert {d["depotoir_id"] for d in deps} == {1, 3}
@@ -116,7 +116,7 @@ def test_budget(config):
 def test_sans_donnees(config):
     plan = calculer_plan({"zones": [], "depotoirs": []}, config)
     assert plan["points_regroupement"] == [] and plan["tournees"] == []
-    assert plan["indicateurs"]["dechets_collectes_pct"] == 100.0
+    assert plan["indicateurs"]["capacite_collecte_pct"] == 100.0
 
 
 # --- Livrable 3 : plan d'un arrondissement ------------------------------------------------
@@ -187,3 +187,21 @@ def test_budget_au_prorata_du_perimetre(config):
     commune = simuler(PAR_ARR, config, 1, 1)["indicateurs"][0]["budget_restant_xof"]
     arr = simuler(PAR_ARR, arr4, 1, 1)["indicateurs"][0]["budget_restant_xof"]
     assert arr < commune
+
+
+def test_capacite_et_part_captee_sont_distinctes(config):
+    """D41 : le plan dit si les camions suffisent ET estime la part des déchets qui arrive aux points."""
+    from simulation.agents import simuler
+    ind = calculer_plan(DONNEES, config)["indicateurs"]
+    assert ind["capacite_collecte_pct"] == 100.0 == ind["dechets_collectes_pct"]           # alias déprécié
+    assert ind["part_captee_estimee_pct"] < 100
+    assert ind["precollecte_pct"] + ind["apport_volontaire_pct"] == pytest.approx(ind["part_captee_estimee_pct"], abs=0.2)
+    assert ind["part_captee_estimee_pct"] + ind["non_capte_pct"] == pytest.approx(100, abs=0.2)
+    # la simulation retrouve l'estimation le premier jour (pas encore de dissuasion Laabal)
+    jour1 = simuler(DONNEES, config, 1, 1)["indicateurs"][0]
+    assert jour1["part_captee_pct"] == pytest.approx(ind["part_captee_estimee_pct"], abs=1)
+    # le levier « apport volontaire » agit sur la part captée, pas sur la capacité des camions
+    plus = appliquer_surcharges(config, {"simulation": {"prob_apport_volontaire": 0.9}})
+    ind2 = calculer_plan(DONNEES, plus)["indicateurs"]
+    assert ind2["part_captee_estimee_pct"] > ind["part_captee_estimee_pct"]
+    assert ind2["capacite_collecte_pct"] == ind["capacite_collecte_pct"]

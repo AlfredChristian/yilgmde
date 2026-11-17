@@ -48,7 +48,10 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
           f"| Points de regroupement | {ind['nb_points_regroupement']} |",
           f"| Collecte | {freq} passage(s) par semaine, {len(collecte)} rotation(s) sur"
           f" {max((t.get('jour', 1) for t in collecte), default=0)} jour(s) par passage |",
-          f"| Part du stock collectée à chaque passage | {_nb(ind['dechets_collectes_pct'], 1)} % |",
+          f"| Capacité de collecte des camions (part du stock des points vidée à chaque passage)"
+          f" | {_nb(ind['capacite_collecte_pct'], 1)} % |",
+          f"| Part des déchets captée, estimée (arrive aux points : pré-collecte {_nb(ind['precollecte_pct'], 1)} %"
+          f" + apport volontaire {_nb(ind['apport_volontaire_pct'], 1)} %) | {_nb(ind['part_captee_estimee_pct'], 1)} % |",
           f"| Camions utilisés | {', '.join(ind['camions_utilises']) or 'aucun'} |",
           f"| Camions indisponibles | {', '.join(ind['camions_indisponibles']) or 'aucun'} |",
           f"| Distance d'un passage | {_nb(ind['distance_totale_km'], 1)} km |",

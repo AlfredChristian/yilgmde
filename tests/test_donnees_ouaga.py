@@ -95,7 +95,7 @@ def test_plan_d_un_arrondissement_rapide_a_l_echelle_reelle():
     assert time.perf_counter() - debut < 20                         # ~0,5 s en pratique
     ind = plan["indicateurs"]
     assert ind["perimetre"]["population"] == 336_483
-    assert ind["nb_points_regroupement"] > 200 and ind["dechets_collectes_pct"] > 90
+    assert ind["nb_points_regroupement"] > 200 and ind["capacite_collecte_pct"] > 90
     assert ind["budget_mensuel_xof"] < config["mairie"]["budget_mensuel_xof"]
 
 
