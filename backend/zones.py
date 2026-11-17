@@ -17,8 +17,9 @@ def lire_zones(conn: sqlite3.Connection) -> list[dict]:
             "geometrie": db.depuis_json(l["geometrie"], {}),
             "population": l["population"],
             "densite": l["densite"],
+            "arrondissement": l["arrondissement"],
         }
-        for l in conn.execute("SELECT id, nom, geometrie, population, densite FROM zone ORDER BY id")
+        for l in conn.execute("SELECT id, nom, geometrie, population, densite, arrondissement FROM zone ORDER BY id")
     ]
 
 
@@ -29,8 +30,9 @@ def zone_id_pour_point(conn: sqlite3.Connection, latitude: float, longitude: flo
 def importer_zones_geojson(conn: sqlite3.Connection, collection: dict) -> int:
     """Insère les zones d'une `FeatureCollection` de Polygon/MultiPolygon. Renvoie leur nombre.
 
-    Propriétés lues : `nom` (obligatoire), `population`, `densite`, `id` (optionnel,
-    pour garder des identifiants stables d'un jeu de données à l'autre).
+    Propriétés lues : `nom` (obligatoire), `population`, `densite`, `arrondissement`
+    (entier), `id` (optionnel, pour garder des identifiants stables d'un jeu de données
+    à l'autre).
     Tout ou rien : une zone invalide annule l'import.
     """
     if collection.get("type") != "FeatureCollection":
@@ -46,11 +48,15 @@ def importer_zones_geojson(conn: sqlite3.Connection, collection: dict) -> int:
             point_dans_geometrie(0.0, 0.0, geometrie)   # valide le type de géométrie
         except (ValueError, KeyError, IndexError, TypeError) as e:
             raise ValueError(f"zone {nom!r} : géométrie invalide ({e})") from e
-        zones.append((proprietes.get("id"), nom, geometrie, proprietes.get("population"), proprietes.get("densite")))
+        arrondissement = proprietes.get("arrondissement")
+        if arrondissement is not None and (isinstance(arrondissement, bool) or not isinstance(arrondissement, int)):
+            raise ValueError(f"zone {nom!r} : 'arrondissement' doit être un entier")
+        zones.append((proprietes.get("id"), nom, geometrie, proprietes.get("population"), proprietes.get("densite"),
+                      arrondissement))
     with db.transaction(conn):
-        for zone_id, nom, geometrie, population, densite in zones:
+        for zone_id, nom, geometrie, population, densite, arrondissement in zones:
             conn.execute(
-                "INSERT INTO zone (id, nom, geometrie, population, densite) VALUES (?, ?, ?, ?, ?)",
-                (zone_id, nom, db.en_json(geometrie), population, densite),
+                "INSERT INTO zone (id, nom, geometrie, population, densite, arrondissement) VALUES (?, ?, ?, ?, ?, ?)",
+                (zone_id, nom, db.en_json(geometrie), population, densite, arrondissement),
             )
     return len(zones)

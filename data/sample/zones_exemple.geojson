@@ -8,7 +8,8 @@
     "id": 1,
     "nom": "Zone exemple A",
     "population": 12000,
-    "densite": 8000
+    "densite": 8000,
+    "arrondissement": 1
    },
    "geometry": {
     "type": "Polygon",
@@ -44,7 +45,8 @@
     "id": 2,
     "nom": "Zone exemple B",
     "population": 8000,
-    "densite": 5000
+    "densite": 5000,
+    "arrondissement": 2
    },
    "geometry": {
     "type": "Polygon",
