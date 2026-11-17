@@ -105,7 +105,7 @@ INDICATEURS_COMPARES = [
 def comparer(
     request: Request,
     ids: str = Query(..., description="ids séparés par des virgules, ex. 1,2"),
-    jours: int = Query(30, ge=1, le=365),
+    jours: int | None = Query(None, ge=1, le=365, description="par défaut : scenario.horizon_jours"),
     graine: int | None = None,
     _=Depends(admin),
 ):
@@ -121,6 +121,7 @@ def comparer(
     if not 2 <= len(liste) <= 4 or len(set(liste)) != len(liste):
         raise HTTPException(422, "comparer 2 à 4 scénarios distincts")
     graine = int(request.app.state.config["scenario"].get("graine_aleatoire", 0) if graine is None else graine)
+    jours = jours or int(request.app.state.config["scenario"].get("horizon_jours", 30))
 
     colonnes = []
     for sid in liste:
@@ -230,7 +231,8 @@ def simuler_scenario(request: Request, scenario_id: int, entree: SimulationEntre
         scenario = plans.lire_scenario(conn, scenario_id)
         donnees = plans.lire_donnees(conn)
     config = plans.config_effective(request.app.state.config, scenario)
-    resultat = simuler(donnees, config, entree.jours, entree.graine, plan=plan)
+    jours = entree.jours or int(config["scenario"].get("horizon_jours", 30))
+    resultat = simuler(donnees, config, jours, entree.graine, plan=plan)
     with acces_db(request) as conn:
         with db.transaction(conn):
             conn.execute("DELETE FROM indicateur_simulation WHERE plan_id = ?", (plan["id"],))

@@ -154,7 +154,7 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
 - `POST /scenarios/{id}/calculer` → Plan, calcul forcé.
 - `GET /scenarios/{id}/plan/synthese` → **plan de gestion lisible** en Markdown (`text/markdown`) : en bref, points par zone avec une explication, tournées par camion et rotation, brigade Laabal, ce qui n'est pas couvert. Pour le tableau de bord, le rapport ou l'impression.
 - `GET /scenarios/{id}/plan` → dernier Plan, **recalculé d'abord si les entrées ont changé** (dépotoirs, zones, paramètres) ; sinon le même plan est renvoyé.
-- `POST /scenarios/{id}/simuler` : `{"jours": 30, "graine": 42}` (corps optionnel ; `jours` de 1 à 365, défaut 30 ; `graine` par défaut celle de la config). Simule sur le plan à jour du scénario ; **même graine = mêmes résultats**. `422` si `jours` hors bornes, `404` si scénario inconnu. Les colonnes `pct_collecte`, `depotoirs_actifs`, `cout_xof`, `distance_km` sont enregistrées dans `indicateur_simulation` (la simulation précédente du même plan est remplacée).
+- `POST /scenarios/{id}/simuler` : `{"jours": 30, "graine": 42}` (corps optionnel ; `jours` de 1 à 365, défaut `scenario.horizon_jours` (30) ; `graine` par défaut celle de la config). Simule sur le plan à jour du scénario ; **même graine = mêmes résultats**. `422` si `jours` hors bornes, `404` si scénario inconnu. Les colonnes `pct_collecte`, `depotoirs_actifs`, `cout_xof`, `distance_km` sont enregistrées dans `indicateur_simulation` (la simulation précédente du même plan est remplacée).
 ```json
 { "scenario_id": 1, "plan_id": 7, "graine": 42,
   "indicateurs": [{ "jour": 1, "part_captee_pct": 78.2, "pct_collecte": 78.2, "depotoirs_actifs": 2, "cout_xof": 0, "distance_km": 0.0,
@@ -168,7 +168,7 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
               "distance_totale_km": 1110.2, "amendes_total_xof": 150000, "constats": 15, "budget_restant_xof": 4345952 } }
 ```
   - `part_captee_pct` : part de la production du jour **arrivée aux points** (pré-collecte + apport volontaire + dissuasion Laabal − débordement des points) ; `part_captee_moyenne_pct` dans le résumé (D41). `pct_collecte` et `pct_collecte_moyen` : anciens noms, **dépréciés**, mêmes valeurs. `cout_xof`, `distance_km` : non nuls les seuls jours de passage. `budget_restant_xof` : `null` si pas de budget dans la config.
-- `GET /scenarios/comparer?ids=1,2&jours=30&graine=42` (D6) : 2 à 4 scénarios distincts (`422` sinon, `404` si l'un est inconnu), plan à jour et simulation de chacun avec la **même graine** (par défaut celle de la config).
+- `GET /scenarios/comparer?ids=1,2&jours=30&graine=42` (D6, `jours` par défaut `scenario.horizon_jours`) : 2 à 4 scénarios distincts (`422` sinon, `404` si l'un est inconnu), plan à jour et simulation de chacun avec la **même graine** (par défaut celle de la config).
 ```json
 { "jours": 30, "graine": 42,
   "scenarios": [{ "id": 1, "nom": "base", "parametres": {}, "plan_id": 7 }, { "id": 2, "nom": "2 camions en moins", "parametres": {...}, "plan_id": 8 }],
