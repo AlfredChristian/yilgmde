@@ -5,26 +5,22 @@
 Déterministe (graine fixe) : relancer donne exactement les mêmes fichiers.
 
 Ce qui est **réel** (sources dans `data/ouaga/LISEZMOI.md`) :
-- population de chaque arrondissement : INSD, 5e RGPH 2019, monographie de la commune
-  de Ouagadougou, tableau 2.2 ;
-- **contour de la commune** et centre administratif : OpenStreetMap (relation 5675756,
-  ODbL), dans `data/ouaga/commune_ouagadougou.geojson` (≈ 529 km², le RGPH en déduit 551) ;
+- **découpage administratif** : 12 arrondissements et 55 secteurs relevés sur la carte de
+  l'INSD (monographie RGPH 2019), calés sur le terrain (`scripts/arrondissements_insd.py`, D42) ;
+- population de chaque arrondissement : INSD, 5e RGPH 2019, tableau 2.2 ;
 - composition des déchets (UN-Habitat) pour la répartition des types signalés ;
 - 35 centres de collecte et de tri dans la ville (UN-Habitat), saisis ici comme sites officiels.
 
-Ce qui est **fictif mais plausible** (autorisé par les organisateurs) :
-- limites **schématiques** des arrondissements et secteurs **à l'intérieur** du vrai contour :
-  un disque central (arr. 1 et 2) et une couronne partagée en secteurs angulaires
-  proportionnels à la population, découpés par le contour réel ; les limites des
-  arrondissements ne sont pas publiées en données ouvertes (absentes d'OpenStreetMap) :
-  ce ne sont PAS les limites administratives ;
+Ce qui est **approché ou fictif** (autorisé par les organisateurs) :
+- limites **entre secteurs** d'un même arrondissement (Voronoï autour des numéros relevés) ;
+- répartition de la population d'un arrondissement entre ses secteurs, au prorata de la
+  superficie (la monographie ne donne pas la population par secteur) ;
 - position des dépotoirs, des centres de collecte et l'historique des signalements.
 """
 
 from __future__ import annotations
 
 import json
-import math
 import random
 import sys
 from datetime import datetime, timedelta, timezone
@@ -32,27 +28,23 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from shapely.geometry import Polygon, mapping, shape  # noqa: E402
+from shapely.geometry import mapping, shape  # noqa: E402
 
-from simulation.geometrie import depuis_metres  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from arrondissements_insd import ARRONDISSEMENT_DU_SECTEUR, decoupage  # noqa: E402
+
+from simulation.geometrie import aire_m2, depuis_metres, distance_m  # noqa: E402
 
 GRAINE = 2026
 DOSSIER = Path(__file__).resolve().parent.parent / "data" / "ouaga"
-COMMUNE = json.loads((DOSSIER / "commune_ouagadougou.geojson").read_text(encoding="utf-8"))
-_centre = COMMUNE["metadata"]["centre_administratif"]
-CENTRE = (_centre["latitude"], _centre["longitude"])   # centre administratif (OpenStreetMap)
-CONTOUR = shape(COMMUNE["features"][0]["geometry"])
+CENTRE = (12.368148, -1.5270851)          # centre administratif (OpenStreetMap, node 27565002)
+RAYON_PERIPHERIE_M = 7000                 # au-delà : quartiers périphériques, plus de dépôts sauvages [H]
 AUJOURD_HUI = datetime(2026, 11, 17, 8, 0, tzinfo=timezone.utc)
 
 # INSD, RGPH 2019, monographie de la commune de Ouagadougou, tableau 2.2.
 POPULATION_2019 = {1: 102_528, 2: 83_436, 3: 311_406, 4: 207_647, 5: 129_984, 6: 222_854,
                    7: 282_837, 8: 152_880, 9: 336_483, 10: 263_969, 11: 254_928, 12: 66_314}
 DENSITE_2019 = 4385.5                    # hab./km², tableau 2.3
-SUPERFICIE_KM2 = sum(POPULATION_2019.values()) / DENSITE_2019   # ≈ 551 km²
-RAYON_COMMUNE_M = 22_000                 # au-delà du contour réel : chaque secteur est découpé par lui
-RAYON_CENTRE_M = 3200                    # disque central des arrondissements 1 et 2 (schématique)
-RAYON_BANDES_M = 7000                    # limite entre bande intérieure (dense) et extérieure
-POIDS_BANDE = {"interieure": 1.4, "exterieure": 0.8}   # le centre est plus dense que la périphérie
 
 # Composition UN-Habitat (alimentaires 22 %, plastiques 5 %, papiers 6 %, autres 67 %), ramenée
 # aux types de l'application : les « autres » sont surtout des ordures ménagères mélangées.
@@ -60,34 +52,7 @@ TYPES = [("menager", 0.55), ("organique", 0.20), ("plastiques", 0.10), ("gravats
          ("encombrants", 0.05), ("autre", 0.02)]
 
 
-def arc(r_int, r_ext, a0, a1, pas_deg=2.0):
-    """Polygone (lon, lat) d'un secteur d'anneau entre les angles a0 et a1 (degrés, 0 = est)."""
-    n = max(2, int(abs(a1 - a0) / pas_deg) + 1)
-    angles = [a0 + (a1 - a0) * i / (n - 1) for i in range(n)]
-    pts = []
-    for a in angles:
-        x, y = r_ext * math.cos(math.radians(a)), r_ext * math.sin(math.radians(a))
-        la, lo = depuis_metres(x, y, *CENTRE)
-        pts.append([round(lo, 6), round(la, 6)])
-    if r_int > 0:
-        for a in reversed(angles):
-            x, y = r_int * math.cos(math.radians(a)), r_int * math.sin(math.radians(a))
-            la, lo = depuis_metres(x, y, *CENTRE)
-            pts.append([round(lo, 6), round(la, 6)])
-    else:
-        lo_c, la_c = CENTRE[1], CENTRE[0]
-        pts.append([lo_c, la_c])
-    pts.append(pts[0])
-    return pts
-
-
-def piece(r_int, r_ext, a0, a1):
-    """Secteur d'anneau découpé par le contour réel de la commune (shapely)."""
-    return Polygon(arc(r_int, r_ext, a0, a1)).intersection(CONTOUR)
-
-
 def aire_km2(geometrie) -> float:
-    from simulation.geometrie import aire_m2
     return aire_m2(mapping(geometrie)) / 1e6
 
 
@@ -107,40 +72,21 @@ def _arrondir(geo: dict) -> dict:
 
 
 def generer_zones():
-    """Arr. 1 et 2 : moitiés ouest et est du disque central ; arr. 3 à 12 : couronne, dans le vrai contour."""
-    pieces = []   # (arrondissement, r_int, r_ext, a0, a1, bande)
-    for arr, (a0, a1) in ((1, (90, 270)), (2, (-90, 90))):
-        milieu = (a0 + a1) / 2
-        pieces += [(arr, 0, RAYON_CENTRE_M, a0, milieu, "interieure"),
-                   (arr, 0, RAYON_CENTRE_M, milieu, a1, "interieure")]
-    couronne = list(range(3, 13))
-    total = sum(POPULATION_2019[a] for a in couronne)
-    angle = 90.0
-    for arr in couronne:                                  # dans le sens horaire depuis le nord
-        largeur = 360 * POPULATION_2019[arr] / total
-        n = max(1, round(POPULATION_2019[arr] / 96_000))
-        for k in range(n):
-            a0 = angle - largeur * k / n
-            a1 = angle - largeur * (k + 1) / n
-            pieces += [(arr, RAYON_CENTRE_M, RAYON_BANDES_M, a1, a0, "interieure"),
-                       (arr, RAYON_BANDES_M, RAYON_COMMUNE_M, a1, a0, "exterieure")]
-        angle -= largeur
-
-    zones, numero = [], 1
+    """Les 55 secteurs (carte INSD) ; population de l'arrondissement répartie au prorata de la superficie."""
+    _, secteurs, _ = decoupage()
+    zones = []
     for arr in range(1, 13):
-        siennes = [(p, piece(*p[1:5])) for p in pieces if p[0] == arr]
-        siennes = [(p, g) for p, g in siennes if not g.is_empty and aire_km2(g) > 0.05]
-        poids = [aire_km2(g) * POIDS_BANDE[p[5]] for p, g in siennes]
-        for ((a, r_int, r_ext, a0, a1, bande), g), pop in zip(siennes, repartir(POPULATION_2019[arr], poids)):
-            surface = aire_km2(g)
+        siens = sorted(s for s, a in ARRONDISSEMENT_DU_SECTEUR.items() if a == arr)
+        surfaces = [aire_km2(secteurs[s]) for s in siens]
+        for s, surface, pop in zip(siens, surfaces, repartir(POPULATION_2019[arr], surfaces)):
+            centre = secteurs[s].representative_point()
             zones.append({
                 "type": "Feature",
-                "geometry": _arrondir(mapping(g)),
-                "properties": {"id": numero, "nom": f"Arr. {arr} — secteur {numero}", "arrondissement": arr,
-                               "population": pop, "densite": round(pop / surface, 1),
-                               "bande": bande, "superficie_km2": round(surface, 2)},
+                "geometry": _arrondir(mapping(secteurs[s])),
+                "properties": {"id": s, "nom": f"Secteur {s}", "arrondissement": arr, "population": pop,
+                               "densite": round(pop / surface, 1), "superficie_km2": round(surface, 2),
+                               "peripherie": distance_m(centre.y, centre.x, *CENTRE) > RAYON_PERIPHERIE_M},
             })
-            numero += 1
     return zones
 
 
@@ -166,7 +112,7 @@ def tirer(rng, table):
 
 def generer_depotoirs(rng, zones):
     """35 centres de collecte (officiels) + 180 dépotoirs illégaux, plus nombreux en périphérie."""
-    poids = [z["properties"]["population"] * (2.0 if z["properties"]["bande"] == "exterieure" else 1.0) for z in zones]
+    poids = [z["properties"]["population"] * (2.0 if z["properties"]["peripherie"] else 1.0) for z in zones]
     depotoirs = []
 
     def ajouter(zone, legalite, statut, volume, nb_sig, reap, premiere):
@@ -257,9 +203,22 @@ def main():
     ecrire = lambda nom, contenu: (DOSSIER / nom).write_text(
         json.dumps(contenu, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     ecrire("zones.geojson", collection(
-        zones, "Secteurs des 12 arrondissements de Ouagadougou, découpés dans le contour RÉEL de la commune "
-               "(OpenStreetMap, relation 5675756) ; limites internes SCHÉMATIQUES (ce ne sont pas les limites "
-               "administratives) ; population réelle par arrondissement (INSD, RGPH 2019), répartie entre secteurs.",
+        zones, "Les 55 secteurs des 12 arrondissements de Ouagadougou, relevés sur la carte de l'INSD (RGPH 2019) et "
+               "calés sur le terrain (D42) ; limites entre secteurs approchées (Voronoï) ; population réelle par "
+               "arrondissement (INSD, RGPH 2019), répartie entre secteurs au prorata de la superficie.",
+        "ODbL-1.0"))
+    arrondissements, _, commune = decoupage()
+    ecrire("arrondissements.geojson", collection(
+        [{"type": "Feature", "geometry": _arrondir(mapping(g)),
+          "properties": {"arrondissement": a, "population": POPULATION_2019[a],
+                         "superficie_km2": round(aire_km2(g), 1),
+                         "secteurs": sorted(s for s, aa in ARRONDISSEMENT_DU_SECTEUR.items() if aa == a)}}
+         for a, g in sorted(arrondissements.items())],
+        "Les 12 arrondissements de Ouagadougou relevés sur la carte de l'INSD (RGPH 2019), calés sur le terrain (D42).",
+        "ODbL-1.0"))
+    ecrire("commune_ouagadougou.geojson", collection(
+        [{"type": "Feature", "geometry": _arrondir(mapping(commune)), "properties": {"nom": "Ouagadougou"}}],
+        "Contour de la commune d'après la carte de l'INSD (RGPH 2019), calé sur le contour OpenStreetMap (D42).",
         "ODbL-1.0"))
     ecrire("depotoirs.geojson", collection(
         depotoirs, "Dépotoirs FICTIFS mais plausibles ; les 35 sites officiels figurent les centres de collecte et de tri.",
@@ -267,7 +226,7 @@ def main():
     ecrire("signalements.geojson", collection(
         signalements, "Signalements citoyens FICTIFS, anonymes (ni appareil, ni photo, ni texte libre).", "ODbL-1.0"))
     pop = sum(z["properties"]["population"] for z in zones)
-    print(f"{len(zones)} secteurs ({pop} habitants, {aire_km2(CONTOUR):.0f} km² dans le contour réel),"
+    print(f"{len(zones)} secteurs ({pop} habitants, {aire_km2(commune):.0f} km²),"
           f" {len(depotoirs)} dépotoirs, "
           f"{len(signalements)} signalements → {DOSSIER}")
 
