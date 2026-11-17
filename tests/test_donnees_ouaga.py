@@ -47,7 +47,7 @@ def test_population_du_recensement_2019():
         par_arr[f["properties"]["arrondissement"]] += f["properties"]["population"]
     assert dict(par_arr) == gen.POPULATION_2019
     assert sum(par_arr.values()) == 2_415_266
-    assert len(ZONES["features"]) == 52
+    assert sorted(f["properties"]["id"] for f in ZONES["features"]) == list(range(1, 56))   # les 55 secteurs
 
 
 def test_geometrie_coherente():
@@ -61,15 +61,41 @@ def test_geometrie_coherente():
     for f in DEPOTOIRS["features"]:
         lon, lat = f["geometry"]["coordinates"]
         assert point_dans_geometrie(lat, lon, geometries[f["properties"]["zone_id"]])
-    # chaque secteur est dans le contour réel de la commune (OpenStreetMap), et ils le remplissent
+    # les secteurs pavent la commune, et chacun est dans son arrondissement
     from shapely.geometry import shape
     from shapely.ops import unary_union
     commune = shape(lire("commune_ouagadougou.geojson")["features"][0]["geometry"])
     secteurs = [shape(g) for g in geometries.values()]
-    assert all(commune.buffer(1e-6).contains(s) for s in secteurs)
-    assert unary_union(secteurs).area == pytest.approx(commune.area, rel=0.01)
+    assert unary_union(secteurs).area == pytest.approx(commune.area, rel=0.001)
+    arrondissements = {f["properties"]["arrondissement"]: shape(f["geometry"])
+                       for f in lire("arrondissements.geojson")["features"]}
+    for f in ZONES["features"]:
+        assert arrondissements[f["properties"]["arrondissement"]].buffer(1e-6).contains(shape(f["geometry"]))
     officiels = [f for f in DEPOTOIRS["features"] if f["properties"]["legalite"] == "officiel"]
     assert len(officiels) == 35                                    # centres de collecte (UN-Habitat)
+
+
+def test_arrondissements_conformes_a_l_insd():
+    """D42 : superficie relevée de chaque arrondissement vs INSD (population / densité, tableaux 2.2 et A 15)."""
+    densite_insd = {1: 5559.2, 2: 6466.2, 3: 7581.0, 4: 2530.9, 5: 6058.0, 6: 7853.3, 7: 5517.5, 8: 2287.0,
+                    9: 3763.6, 10: 10061.3, 11: 6280.1, 12: 1644.9}
+    ecarts = {}
+    for f in lire("arrondissements.geojson")["features"]:
+        a = f["properties"]["arrondissement"]
+        officielle = gen.POPULATION_2019[a] / densite_insd[a]
+        ecarts[a] = abs(f["properties"]["superficie_km2"] - officielle) / officielle
+    assert sum(1 for e in ecarts.values() if e <= 0.07) >= 9            # 9 sur 12 à ±7 %
+    assert max(ecarts.values()) < 0.30                                   # écarts connus : arr. 8, 10, 11
+    total = sum(f["properties"]["superficie_km2"] for f in lire("arrondissements.geojson")["features"])
+    assert total == pytest.approx(518, rel=0.03)                         # 518 km² (SDAGO 2010, monographie)
+
+
+def test_calage_coherent_avec_openstreetmap():
+    """La carte INSD calée recouvre le contour OpenStreetMap à plus de 80 % (formes différentes au nord-est)."""
+    from shapely.geometry import shape
+    insd = shape(lire("commune_ouagadougou.geojson")["features"][0]["geometry"])
+    osm = shape(lire("commune_osm.geojson")["features"][0]["geometry"])
+    assert insd.intersection(osm).area / insd.union(osm).area > 0.80
 
 
 def test_signalements_anonymes_et_licence():
@@ -113,7 +139,7 @@ def client(tmp_path, monkeypatch):
 
 def test_chargement_idempotent(client):
     n = charger_exemples(app.state.db, DOSSIER_OUAGA)
-    assert n == {"zones": 52, "depotoirs": 215, "signalements": len(SIGNALEMENTS["features"])}
+    assert n == {"zones": 55, "depotoirs": 215, "signalements": len(SIGNALEMENTS["features"])}
     assert charger_exemples(app.state.db, DOSSIER_OUAGA) == {"zones": 0, "depotoirs": 0, "signalements": 0}
     arr = client.get("/arrondissements").json()
     assert [a["arrondissement"] for a in arr] == list(range(1, 13))

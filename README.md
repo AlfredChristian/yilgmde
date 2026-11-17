@@ -70,7 +70,7 @@ export YILGMDE_JWT_SECRET=une-longue-chaine-aleatoire
 python scripts/charger_exemples.py --ouaga   # démo : 12 arrondissements de Ouaga, 215 dépotoirs, 930 signalements
 python scripts/charger_exemples.py           # ou le petit jeu de data/sample/ (2 zones)
 ```
-Le jeu de Ouaga (`data/ouaga/`, licence ODbL) est **fictif mais réaliste** : vrai contour de la commune (OpenStreetMap), population réelle par arrondissement (recensement 2019), limites internes des arrondissements schématiques, dépotoirs et signalements inventés. Sources et limites : `data/ouaga/LISEZMOI.md`. Sans effet si la base est déjà remplie.
+Le jeu de Ouaga (`data/ouaga/`, licence ODbL) a un **découpage réel** (12 arrondissements et 55 secteurs relevés sur la carte de l'INSD) et la population réelle par arrondissement (recensement 2019) ; les dépotoirs et signalements sont inventés. Sources et limites : `data/ouaga/LISEZMOI.md`. Sans effet si la base est déjà remplie.
 
 ### 3. Démarrer
 
@@ -83,7 +83,7 @@ cd frontend && npm run dev                 # interface : http://localhost:5173
 
 Depuis http://localhost:8000/docs, après `POST /auth/login` avec le compte admin (bouton « Authorize ») :
 
-1. `PUT /scenarios/1/parametres` avec `{"perimetre": {"arrondissements": [9]}}` : plan de l'arrondissement 9 (336 000 habitants) en moins d'une seconde ; `GET /scenarios/1/plan/synthese` le donne en texte lisible.
+1. `PUT /scenarios/1/parametres` avec `{"perimetre": {"arrondissements": [9]}}` : plan de l'arrondissement 9 (336 000 habitants, secteurs 37 à 40) en moins d'une seconde ; `GET /scenarios/1/plan/synthese` le donne en texte lisible.
 2. `GET /points-regroupement` : les points du plan courant, chacun avec son explication.
 3. `PUT /scenarios/1/parametres` avec `{"camions": [{"id": "camion_2", "disponible": false}]}` : le plan est recalculé sans ce camion ; ce qui n'est plus desservi est listé avec la raison.
 4. `PUT /scenarios/1/parametres` avec `{"saison": "pluies"}` : plus de déchets, camions plus lents ; le budget de l'arrondissement est dépassé.
