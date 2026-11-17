@@ -157,3 +157,42 @@ def test_site_officiel_pas_eradique(client):
     with app.state.db:
         app.state.db.execute("UPDATE depotoir SET legalite = 'officiel' WHERE id = 1")
     assert client.post("/laabal/depotoirs/1/intervention", data={"statut": "en_cours"}, headers=hl).status_code == 409
+
+
+# --- Constats ---------------------------------------------------------------------------
+
+def test_constat_avec_preuves_et_amende_par_defaut(client):
+    uid, hl = compte(client, Role.laabal)
+    r = client.post("/laabal/constats", data={"depotoir_id": "1", "description": "dépôt d'un tricycle"},
+                    files=[("preuves", ("a.png", PNG, "image/png")), ("preuves", ("b.png", PNG, "image/png"))],
+                    headers=hl)
+    assert r.status_code == 201, r.text
+    c = r.json()
+    assert c["preuves"] == 2 and c["montant_xof"] == app.state.config["laabal"]["montant_amende_xof"]
+    assert c["laabal_id"] == uid and c["statut"] == "enregistre"
+    r2 = client.post("/laabal/constats", data={"depotoir_id": "1", "montant_xof": "2500"}, headers=hl)
+    assert r2.status_code == 201 and r2.json()["preuves"] == 0 and r2.json()["montant_xof"] == 2500
+    assert [x["id"] for x in client.get("/laabal/constats", headers=hl).json()] == [r2.json()["id"], c["id"]]
+    _, h_autre = compte(client, Role.laabal, "autre-laabal")
+    assert client.get("/laabal/constats", headers=h_autre).json() == []
+    _, ha = compte(client, Role.admin)
+    total = client.get("/admin/constats", headers=ha).json()
+    assert total["nombre"] == 2 and total["montant_total_xof"] == c["montant_xof"] + 2500
+    actions = [l["action"] for l in app.state.db.execute("SELECT action FROM journal_audit")]
+    assert actions.count("creer_constat") == 2
+
+
+def test_constat_refuse(client):
+    _, hl = compte(client, Role.laabal)
+    assert client.post("/laabal/constats", data={"depotoir_id": "999"}, headers=hl).status_code == 404
+    assert client.post("/laabal/constats", data={"depotoir_id": "1", "montant_xof": "-5"}, headers=hl).status_code == 422
+    trop = [("preuves", (f"{i}.png", PNG, "image/png")) for i in range(6)]
+    assert client.post("/laabal/constats", data={"depotoir_id": "1"}, files=trop, headers=hl).status_code == 422
+    faux = [("preuves", ("x.png", b"pas une image", "image/png"))]
+    assert client.post("/laabal/constats", data={"depotoir_id": "1"}, files=faux, headers=hl).status_code == 422
+    with app.state.db:
+        app.state.db.execute("UPDATE depotoir SET legalite = 'officiel' WHERE id = 1")
+    assert client.post("/laabal/constats", data={"depotoir_id": "1"}, headers=hl).status_code == 409
+    _, hc = compte(client, Role.chauffeur)
+    assert client.post("/laabal/constats", data={"depotoir_id": "1"}, headers=hc).status_code == 403
+    assert client.get("/admin/constats", headers=hl).status_code == 403
