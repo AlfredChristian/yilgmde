@@ -1,0 +1,62 @@
+.vocal-micro {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 1.05rem;
+  background: var(--vert-clair);
+  color: var(--vert-fonce);
+  border: 2px dashed var(--vert);
+  cursor: pointer;
+}
+.vocal-micro:hover {
+  background: #d3e9dc;
+}
+
+.vocal-en-cours {
+  background: #fde8e8;
+  color: var(--rouge);
+  border-color: var(--rouge);
+  animation: pulse 1.2s infinite;
+}
+.vocal-carre {
+  width: 22px;
+  height: 22px;
+  background: var(--rouge);
+  flex-shrink: 0;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.vocal-pret {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.vocal-pret audio {
+  flex: 1;
+  min-width: 220px;
+}
+.vocal-refaire {
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 18px;
+  background: white;
+  border: 2px solid var(--gris);
+  cursor: pointer;
+}
+
+.vocal-erreur {
+  margin: 8px 0 0;
+  padding: 10px 14px;
+  background: #fff3cd;
+  border-left: 6px solid var(--jaune);
+}

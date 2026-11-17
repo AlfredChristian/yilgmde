@@ -1,0 +1,162 @@
+.signaler { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+.signaler-titre {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  margin: 0 0 8px;
+  color: var(--vert-fonce);
+}
+.signaler-intro { color: var(--gris); margin: 0 0 24px; }
+
+.signaler-form { display: grid; gap: 20px; counter-reset: etape; }
+.signaler-form section {
+  background: white;
+  border: 1px solid var(--bordure);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 1px 2px rgba(16, 40, 30, 0.05);
+  display: grid;
+  gap: 18px;
+}
+.signaler-form section h2 {
+  counter-increment: etape;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  color: var(--vert-fonce);
+}
+.signaler-form section h2::before {
+  content: counter(etape);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--vert);
+  color: white;
+  display: grid;
+  place-items: center;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+}
+
+.signaler-carte {
+  height: 340px;
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.signaler-aide { margin: 0; font-size: 0.9rem; color: var(--gris); }
+
+/* Champs */
+.signaler-form label, .description label { display: grid; gap: 6px; font-weight: 700; font-size: 0.9rem; color: var(--vert-fonce); }
+.signaler-form select, .signaler-form textarea {
+  font: inherit;
+  font-weight: 400;
+  color: var(--encre);
+  padding: 13px 14px;
+  border: 1.5px solid #d5dde0;
+  border-radius: 12px;
+  background: #fbfcfc;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.signaler-form select:focus, .signaler-form textarea:focus {
+  outline: none;
+  border-color: var(--vert);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(27, 107, 74, 0.15);
+}
+.signaler-form fieldset { border: 0; padding: 0; margin: 0; }
+.signaler-form fieldset legend { font-weight: 700; font-size: 0.9rem; color: var(--vert-fonce); padding: 0; }
+
+/* Choix en cartes */
+.choix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.choix label {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 104px;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--encre);
+  background: white;
+  border: 1.5px solid #d5dde0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.choix label:hover { border-color: var(--vert); }
+.choix input { position: absolute; opacity: 0; pointer-events: none; }
+.choix-actif {
+  border-color: var(--vert) !important;
+  background: var(--vert-clair) !important;
+  color: var(--vert-fonce) !important;
+}
+.choix-actif::after {
+  content: '✓';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--vert);
+  color: white;
+  font-size: 0.75rem;
+  display: grid;
+  place-items: center;
+}
+
+.btn-vert { background: var(--vert); color: white; justify-self: start; }
+.btn-jaune { background: var(--jaune); color: var(--encre); }
+.signaler-form > button[type='submit'] { width: 100%; padding: 16px; font-size: 1.1rem; border-radius: 14px; }
+
+.signaler-message {
+  margin: 0;
+  padding: 12px 16px;
+  background: #fff3cd;
+  border-radius: 12px;
+  border: 1px solid #f0dc9a;
+}
+
+.description { display: grid; gap: 12px; }
+.description-titre { margin: 0; font-weight: 700; font-size: 0.9rem; color: var(--vert-fonce); }
+
+/* Confirmation */
+.confirmation {
+  background: white;
+  border: 1px solid var(--bordure);
+  border-radius: 14px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(16, 40, 30, 0.05);
+}
+.confirmation h1 { margin: 0 0 12px; font-family: var(--serif); color: var(--vert-fonce); font-size: clamp(1.5rem, 5vw, 2rem); }
+.confirmation-code {
+  font-size: clamp(1.8rem, 8vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--vert-clair);
+  color: var(--vert-fonce);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+  word-break: break-all;
+}
+.confirmation-rejet .confirmation-code { background: #fde8e8; color: var(--rouge); }
+.confirmation-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+.btn-secondaire-sombre { background: white; color: var(--vert-fonce); border-color: var(--vert); }
+
+/* Pin de position */
+.pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--rouge);
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px var(--rouge), 0 2px 6px rgba(0, 0, 0, 0.4);
+}

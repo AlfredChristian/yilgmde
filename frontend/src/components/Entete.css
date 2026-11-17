@@ -1,0 +1,114 @@
+.entete {
+  position: sticky;
+  top: 0;
+  z-index: 2000; /* au-dessus de Leaflet */
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding-right: 20px;
+}
+
+.entete-menu {
+  width: 64px;
+  height: 64px;
+  border: 0;
+  background: var(--vert);
+  color: white;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.entete-menu:hover {
+  background: var(--vert-fonce);
+}
+
+.entete-nom {
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--vert-fonce);
+}
+
+.entete-liens {
+  margin-left: auto;
+  display: flex;
+  gap: 20px;
+  font-weight: 600;
+}
+.entete-liens a:hover {
+  color: var(--vert);
+}
+
+.entete-drapeau {
+  display: flex;
+  align-items: center;
+}
+
+.entete-panneau {
+  position: absolute;
+  top: 64px;
+  left: 0;
+  min-width: 260px;
+  background: white;
+  box-shadow: var(--ombre);
+  display: flex;
+  flex-direction: column;
+}
+.entete-panneau a {
+  padding: 16px 24px;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+}
+.entete-panneau a:hover {
+  background: var(--vert-clair);
+}
+
+@media (max-width: 600px) {
+  .entete-liens {
+    display: none;
+  }
+  .entete-drapeau {
+    margin-left: auto;
+  }
+}
+
+.entete-menu {
+  transition: background var(--transition);
+}
+
+/* Soulignement animé des liens */
+.entete-liens a {
+  position: relative;
+  padding: 6px 0;
+}
+.entete-liens a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--jaune);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition);
+}
+.entete-liens a:hover::after,
+.entete-liens a[aria-current='page']::after {
+  transform: scaleX(1);
+}
+
+.entete-lien-bouton {
+  font: inherit;
+  font-weight: 600;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.entete-lien-bouton:hover {
+  color: var(--vert);
+}
