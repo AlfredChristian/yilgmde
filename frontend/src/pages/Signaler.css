@@ -142,3 +142,37 @@ fieldset {
   min-height: 96px;
   font-size: 0.85rem;
 }
+
+.confirmation {
+  background: white;
+  border-left: 6px solid var(--vert);
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: var(--ombre);
+}
+.confirmation h1 {
+  margin: 0 0 12px;
+  color: var(--vert-fonce);
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+.confirmation-code {
+  font-size: clamp(1.8rem, 8vw, 2.8rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: var(--vert-clair);
+  color: var(--vert-fonce);
+  padding: 16px;
+  margin: 12px 0;
+  word-break: break-all;
+}
+.confirmation-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.confirmation-rejet {
+  border-left-color: var(--rouge);
+}
