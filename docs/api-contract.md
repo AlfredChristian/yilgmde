@@ -44,12 +44,30 @@ Toute modification d'API passe par une PR qui met à jour ce fichier. La documen
 
 **GET `/points-regroupement`** → `FeatureCollection` de `Point` + `plan_id` et `scenario_id` du plan courant. Propriétés : `id`, `capacite_kg`, `zone_id` (`null` hors zone ; peut être une zone ajoutée par le scénario), `explication`, `charge_kg_jour` (`null` si inconnue), `stock_entre_passages_kg`, `sature`, `depotoirs_desservis` (ids). Le plan est recalculé d'abord si les dépotoirs, les zones ou les paramètres ont changé. Vide s'il n'y a pas de scénario actif.
 
-**POST `/signalements`** — `multipart/form-data` : `latitude`, `longitude`, `type_dechet`, `volume_estime`, `description` (optionnel), `photo` (fichier, optionnel).
+**POST `/signalements`** — `multipart/form-data`. En-tête `X-Device-Token` : jeton anonyme de l'appareil (8 à 64 caractères `A-Z a-z 0-9 _ -`), limite par appareil et filtre anti-abus.
+
+| Champ | | |
+|---|---|---|
+| `latitude`, `longitude`, `type_dechet`, `volume_estime` | obligatoires | |
+| `description` | facultatif | 500 caractères |
+| `photo` | facultatif | JPEG, PNG ou WebP, `verification.photo_taille_max_mo`. **Toujours masquée** sur le serveur (visages, plaques) et ré-encodée en JPEG sans métadonnées avant d'être gardée (D36) |
+| `note_vocale` | facultatif | WebM, MP4/M4A, Ogg, MP3 ou WAV, `hors_ligne.note_vocale_taille_max_mo` (2 Mo ≈ 60 s ou plus) ; jamais publique |
+| `id_client` | facultatif, **recommandé hors connexion** | identifiant choisi par l'application (8 à 64 caractères `A-Z a-z 0-9 _ . : -`), par exemple la clé de la file d'attente |
+| `capture_le` | facultatif, **recommandé hors connexion** | date ISO 8601 de la prise de vue (avec fuseau, sinon UTC) |
+
 Réponse `201` :
 ```json
-{ "id": 12, "code_suivi": "K7M-4QD", "statut": "en_attente_revue", "motif": null }
+{ "id": 12, "code_suivi": "K7M-4QD", "statut": "en_attente_revue", "motif": null,
+  "photo_masquee": { "visages": 1, "plaques": 0, "methode": "opencv-haar" }, "deja_recu": false }
 ```
-Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d'étude"`.
+- Rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d'étude"` ; ni photo ni note vocale ne sont gardées.
+- **Envoi différé (file d'attente hors connexion)** :
+  - renvoi du même `id_client` par le même appareil (réponse perdue, nouvel essai) → `200` avec le **même** signalement et `"deja_recu": true`, sans doublon. La file peut donc retirer l'élément dès qu'elle reçoit `200` ou `201` ;
+  - la limite par appareil (`max_signalements_par_appareil_heure`) se compte à l'**heure de prise de vue** : une matinée de photos envoyées d'un coup passe ;
+  - `capture_le` plus de `hors_ligne.tolerance_horloge_min` minutes dans le futur → `422` ; plus vieux que `anciennete_max_jours` → accepté avec l'alerte `capture_ancienne` ;
+  - plus de `hors_ligne.max_envois_par_heure` envois reçus en une heure d'un même appareil → `429` avec `Retry-After` : **garder** l'élément dans la file et réessayer plus tard.
+- `503` avec `Retry-After` si le masquage des photos est indisponible sur le serveur : rien n'est enregistré, **garder** l'élément dans la file.
+- `413` (trop gros), `422` (format, photo illisible, champ invalide) : erreur définitive, à montrer au citoyen.
 
 **GET `/signalements/suivi/{code}`** → `{"code_suivi": "K7M-4QD", "statut": "verifie", "motif": null, "depotoir_id": 3}`
 
@@ -78,6 +96,7 @@ Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d
   - sinon : fusion (`nb_signalements` + 1, jamais de doublon). Si le dépotoir est `eradique`, `sous_surveillance` ou `classe`, c'est une **réapparition** : il repasse `actif` et `nb_reapparitions` + 1. Dans les autres statuts, son statut ne change pas.
   - `404` si le signalement ou le dépotoir est inconnu ; `409` si le signalement n'est plus `en_attente_revue`.
 - `POST /admin/signalements/{id}/rejeter` : `{"motif": "photo sans rapport"}` (motif obligatoire, 1 à 300 caractères) → le signalement, statut `rejete`. `404`, `409` comme ci-dessus ; `422` si le motif est vide.
+- Les lignes de `GET /admin/signalements` portent aussi `note_vocale_url` (`/admin/signalements/{id}/note-vocale`, admin seulement), `photo_masquee` et `capture_le`. `GET /admin/signalements/{id}/photo` sert la version **masquée** (JPEG).
 - Valider ou rejeter fait évoluer le `score_confiance` (privé) de l'appareil qui a signalé : validation `s + gain × (1 − s)`, rejet `s − perte × s` (D33). Un appareil sous `verification.seuil_confiance_appareil` voit ses signalements suivants marqués « peu fiable » par la vérification automatique.
 - Chaque validation et chaque rejet est écrit dans `journal_audit` ; un échec n'écrit rien.
 - `POST /admin/signalements/import` (A4) : corps JSON = GeoJSON `FeatureCollection` de `Point`, propriétés `type_dechet`, `volume_estime`, `description` (facultative). Propriété facultative `jeton_appareil` : les règles de cet appareil (limite par heure, score de confiance) s'appliquent ; sans elle, pas de limite par appareil. Chaque entrée passe par **la même vérification automatique** que les citoyens (rejet d'office ou `en_attente_revue` avec alertes) ; les doublons à l'intérieur du lot sont repérés ; des coordonnées hors bornes donnent un `rejete_auto` « position incohérente ». Les entrées sans géométrie Point ou aux propriétés invalides sont listées dans `erreurs` sans bloquer les autres. Le jeu `data/sample/signalements_pieges.geojson` s'importe tel quel et donne les résultats de sa colonne `attendu`. Au plus `import.max_par_lot` entrées (`413` sinon) ; `422` si ce n'est pas une FeatureCollection. Une ligne au journal par lot.

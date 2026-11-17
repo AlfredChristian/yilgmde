@@ -79,3 +79,13 @@
 - [ ] Répétition complète de l'épreuve en direct, de bout en bout, hors ligne comprise
 - [ ] Répétition du pitch, chronométrée
 - [ ] Dépôt propre : README, licence, pas de secret, données ouvertes
+
+## Livrables ajoutés le 2026-11-17
+
+- [x] L1 (back) — Signalement hors connexion : `id_client`, `capture_le`, plafond de réception, note vocale ; masquage serveur des visages et plaques (D36)
+- [ ] L1 (front) — File d'attente : envoyer `id_client` et `capture_le`, garder l'élément sur `429`/`503` ; masquage sur le téléphone avant envoi (Christian)
+- [ ] L2 — Fichier de paramètres documenté (`docs/parametres.md`)
+- [ ] L3 — Plan et simulation d'un arrondissement (back) ; tableau de bord des scénarios (front)
+- [ ] L4 — Données réalistes de Ouaga (12 arrondissements, paramètres sourcés) et jeu de signalements GeoJSON sous ODbL
+- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (script de chiffres côté back)
+- [ ] L6 — Vidéo de 3 min : du signalement à la tournée, puis un changement de paramètres et le plan recalculé

@@ -16,14 +16,14 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** : P2 du back faits (branche `back/p2-depotoirs`) : sites officiels et classement (B5/B6), import par lot (A4), constats Laabal (H4). README et `YILGMDE_VILLE` fusionnés (PR #16) ; licence MIT décidée (D16). `main` contient tout le back P1.
-- **Fichiers modifiés** : `backend/routes/admin_donnees.py` (nouveau), `backend/routes/terrain.py` (constats), `backend/main.py`, `config/default.yaml` (`import.max_par_lot`), `tests/test_admin_donnees.py` (6 tests), `tests/test_terrain.py` (+2) ; suite complète : **257 verts**. Docs : `docs/api-contract.md`, `DECISIONS.md` (D35), `TODO.md`.
-- **Bugs ouverts / limites** : import en GeoJSON seulement (pas de CSV) ; pour Cramer : dans le jeu piégé, l'entrée 6 (« non doublon », à 40 m de la 1) est à 15 m de l'entrée 5 : importée avec tout le lot, elle reçoit à juste titre une alerte doublon de la 5 ; H5 : la réapparition est détectée à la validation (A3) mais aucune alerte n'est envoyée à Laabal (elle remonte seulement dans `/laabal/depotoirs-a-traiter` avec priorité plus haute). Toujours à valider : étiquettes OSM, `collecte.depot`, coefficients [H].
-- **Pour lancer avec des données** : `python scripts/charger_exemples.py`, `uvicorn backend.main:app --reload` ; en admin : `POST /admin/signalements/import` avec le contenu de `data/sample/signalements_pieges.geojson` (testé : les 23 entrées donnent leur `attendu`), `POST /admin/depotoirs` pour un site officiel.
+- **Objectif en cours** : nouveaux livrables du 2026-11-17 (voir `TODO.md`). Fait sur `back/masquage-hors-ligne` : L1 côté serveur (masquage visages et plaques, signalement hors connexion, note vocale, D36). Ordre convenu ensuite : L3 (plan d'un arrondissement), L4 (données réalistes + jeu GeoJSON ODbL), L2 et L5 (paramètres documentés, chiffres du rapport).
+- **Fichiers modifiés** : `backend/masquage.py` (nouveau), `backend/routes/signalements.py` (`id_client`, `capture_le`, `note_vocale`, masquage), `backend/routes/admin_signalements.py` (`/note-vocale`, champs ajoutés), `backend/routes/terrain.py` (photos d'intervention masquées), `backend/verification.py` (limite comptée à la prise de vue), `backend/db.py` (4 colonnes + index unique), `backend/schemas.py`, `config/default.yaml` (`hors_ligne:`, `masquage:`), `requirements.txt` (`opencv-python-headless<5`), tests `test_masquage.py`, `test_hors_ligne.py`, fixture `tests/fixtures/portrait_domaine_public.jpg` (NASA, domaine public) ; suite complète : **282 verts**.
+- **Bugs ouverts / limites** : cascades de Haar imparfaites (visages de trois quarts ou petits, plaques inclinées) : le masquage sur le téléphone reste utile ; durée des notes vocales non vérifiée (taille seulement). **Christian** : la file d'attente (`frontend/src/api/fileAttente.js`) doit envoyer `id_client` (sa `cle`) et `capture_le` (son `creeLe` en ISO), et garder l'élément sur `429` et `503` (voir `docs/api-contract.md`).
+- **Pour lancer avec des données** : `pip install -r requirements.txt` (OpenCV ajouté), `python scripts/charger_exemples.py`, `uvicorn backend.main:app --reload` ; envoyer un signalement avec une photo de personne : la réponse donne `photo_masquee`, et `GET /admin/signalements/{id}/photo` montre la version floutée.
 - **Prochaine étape précise** :
-  1. H5 : alerte de réapparition pour Laabal (`GET /laabal/alertes` : dépotoirs revenus `actif` depuis la dernière consultation, ou champ `reapparu_le`) ;
-  2. import CSV (A4) si Cramer collecte en tableur ;
-  3. brancher le front (avec Christian) sur plan, scénarios, simulation, comparaison, modération.
+  1. L3 : paramètre de scénario `arrondissement` (ou liste de zones) qui limite plan, simulation et comparaison ; `zone.arrondissement` dans les données ;
+  2. L4 : 12 arrondissements réalistes (population RGPH 2019, contours approximatifs), paramètres sourcés, jeu de signalements fictifs réalistes, export public ODbL ;
+  3. L2/L5 : `docs/parametres.md` généré depuis `config/default.yaml`, script `scripts/resultats_scenarios.py` pour le rapport.
 
 ## Cramer (docs / données / présentation)
 
