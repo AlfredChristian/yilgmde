@@ -145,17 +145,29 @@ export async function nombreEnAttente() {
   return (await lister()).length
 }
 
+// Erreurs temporaires du serveur : l'element reste dans la file (docs/api-contract.md).
+function estTemporaire(err) {
+  return err.statut === 429 || err.statut === 503
+}
+
 // Renvoie les signalements en attente. Retourne le nombre envoye.
 export async function viderFile() {
   let envoyes = 0
   for (const item of await lister()) {
     try {
-      await postSignalement(item.donnees)
-      await retirer(item.cle)
+      await postSignalement({
+        ...item.donnees,
+        id_client: item.cle,
+        capture_le: new Date(item.creeLe).toISOString(),
+      })
+      await retirer(item.cle) // 200 (deja recu) ou 201 : l'element peut partir
       envoyes += 1
     } catch (err) {
-      if (estHorsLigne(err)) break // toujours pas de reseau : on arrete
-      await retirer(item.cle) // refus du serveur : inutile de reessayer
+      // Pas de reseau, trop d'envois (429) ou serveur indisponible (503) :
+      // on garde tout dans la file et on reessaiera plus tard.
+      if (estHorsLigne(err) || estTemporaire(err)) break
+      // Erreur definitive (413, 422...) : inutile de reessayer.
+      await retirer(item.cle)
     }
   }
   return envoyes
