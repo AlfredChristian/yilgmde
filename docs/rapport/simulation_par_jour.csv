@@ -1,181 +1,181 @@
 scenario,jour,part_captee_pct,depotoirs_actifs,dechets_sauvages_kg,cout_xof,passage,collecte_suspendue,depotoirs_eradiques,reapparitions,amendes_xof,budget_restant_xof
 Base,1,66.5,16,67571.5,0,False,False,12,1,0,835800
-Base,2,66.0,9,68706.6,0,False,False,12,0,0,1671600
-Base,3,68.6,7,63387.8,0,False,False,5,0,10000,2517400
-Base,4,67.7,7,65215.8,2165715,True,False,3,1,10000,1197485
-Base,5,68.6,6,63387.8,0,False,False,2,0,10000,2043285
-Base,6,68.6,7,63387.8,0,False,False,1,0,0,2879085
-Base,7,68.6,9,63387.8,2165715,True,False,2,0,0,1549170
-Base,8,68.6,9,63387.8,0,False,False,4,0,0,2384970
-Base,9,68.6,6,63387.8,0,False,False,7,3,10000,3230770
-Base,10,68.6,8,63387.8,0,False,False,3,2,0,4066570
-Base,11,67.2,7,66222.5,2165715,True,False,4,1,20000,2756655
-Base,12,68.6,7,63387.8,0,False,False,2,0,0,3592455
-Base,13,68.6,7,63387.8,0,False,False,3,1,0,4428255
-Base,14,68.6,6,63387.8,2165715,True,False,5,3,10000,3108340
-Base,15,68.6,8,63387.8,0,False,False,2,1,30000,3974140
-Base,16,68.6,6,63387.8,0,False,False,5,2,10000,4819940
-Base,17,68.6,7,63387.8,0,False,False,1,0,20000,5675740
-Base,18,67.2,6,66222.5,2165715,True,False,3,1,10000,4355825
-Base,19,68.6,7,63387.8,0,False,False,1,0,10000,5201625
-Base,20,68.6,6,63387.8,0,False,False,4,2,10000,6047425
-Base,21,68.6,8,63387.8,2165715,True,False,2,1,10000,4727510
-Base,22,68.6,6,63387.8,0,False,False,6,3,20000,5583310
-Base,23,68.6,6,63387.8,0,False,False,6,5,30000,6449110
-Base,24,68.6,7,63387.8,0,False,False,1,0,20000,7304910
-Base,25,67.2,8,66222.5,2165715,True,False,4,2,20000,5994995
-Base,26,68.6,7,63387.8,0,False,False,5,2,30000,6860795
-Base,27,68.6,6,63387.8,0,False,False,7,5,10000,7706595
-Base,28,68.6,8,63387.8,2165715,True,False,4,3,30000,6406680
-Base,29,68.6,8,63387.8,0,False,False,6,3,20000,7262480
-Base,30,68.6,8,63387.8,0,False,False,5,2,20000,8118280
+Base,2,66.0,8,68706.6,0,False,False,12,0,0,1671600
+Base,3,68.6,6,63387.8,0,False,False,4,0,10000,2517400
+Base,4,67.7,6,65215.8,2165715,True,False,1,0,0,1187485
+Base,5,68.6,6,63387.8,0,False,False,2,1,10000,2033285
+Base,6,68.6,5,63387.8,0,False,False,1,0,0,2869085
+Base,7,68.6,7,63387.8,2165715,True,False,2,2,10000,1549170
+Base,8,68.6,5,63387.8,0,False,False,4,2,10000,2394970
+Base,9,68.6,5,63387.8,0,False,False,1,1,20000,3250770
+Base,10,68.6,6,63387.8,0,False,False,0,0,10000,4096570
+Base,11,67.2,5,66222.5,2165715,True,False,3,2,0,2766655
+Base,12,68.6,5,63387.8,0,False,False,0,0,50000,3652455
+Base,13,68.6,6,63387.8,0,False,False,0,0,0,4488255
+Base,14,68.6,6,63387.8,2165715,True,False,1,0,10000,3168340
+Base,15,68.6,7,63387.8,0,False,False,1,0,10000,4014140
+Base,16,68.6,5,63387.8,0,False,False,5,3,0,4849940
+Base,17,68.6,6,63387.8,0,False,False,2,2,10000,5695740
+Base,18,67.2,6,66222.5,2165715,True,False,4,3,10000,4375825
+Base,19,68.6,6,63387.8,0,False,False,1,0,0,5211625
+Base,20,68.6,6,63387.8,0,False,False,1,0,0,6047425
+Base,21,68.6,5,63387.8,2165715,True,False,3,2,20000,4737510
+Base,22,68.6,5,63387.8,0,False,False,0,0,10000,5583310
+Base,23,68.6,6,63387.8,0,False,False,0,0,0,6419110
+Base,24,68.6,6,63387.8,0,False,False,2,1,30000,7284910
+Base,25,67.2,5,66222.5,2165715,True,False,1,0,10000,5964995
+Base,26,68.6,6,63387.8,0,False,False,2,2,10000,6810795
+Base,27,68.6,5,63387.8,0,False,False,3,2,20000,7666595
+Base,28,68.6,5,63387.8,2165715,True,False,3,3,0,6336680
+Base,29,68.6,5,63387.8,0,False,False,2,2,20000,7192480
+Base,30,68.6,6,63387.8,0,False,False,0,0,10000,8038280
 Pluies,1,62.3,16,83672.9,0,False,False,12,1,0,835800
-Pluies,2,61.8,9,84843.6,0,False,False,12,0,0,1671600
-Pluies,3,64.7,7,78427.0,0,False,False,5,0,10000,2517400
-Pluies,4,63.2,7,81772.9,2450703,True,False,3,1,10000,912497
-Pluies,5,64.7,6,78427.0,0,False,False,2,0,10000,1758297
-Pluies,6,64.7,7,78427.0,0,False,False,1,0,0,2594097
-Pluies,7,64.7,9,78427.0,2450703,True,False,2,0,0,979194
-Pluies,8,64.7,9,78427.0,0,False,False,4,0,0,1814994
-Pluies,9,64.7,6,78427.0,0,False,False,7,3,10000,2660794
-Pluies,10,64.7,8,78427.0,0,False,False,3,2,0,3496594
-Pluies,11,62.5,7,83248.9,2450703,True,False,4,1,20000,1901691
-Pluies,12,64.7,7,78427.0,0,False,False,2,0,0,2737491
-Pluies,13,64.7,7,78427.0,0,False,False,3,1,0,3573291
-Pluies,14,64.7,6,78427.0,2450703,True,False,5,3,10000,1968388
-Pluies,15,64.7,8,78427.0,0,False,False,2,1,30000,2834188
-Pluies,16,64.7,6,78427.0,0,False,False,5,2,10000,3679988
-Pluies,17,64.7,7,78427.0,0,False,False,1,0,20000,4535788
-Pluies,18,62.5,6,83248.9,2450703,True,False,3,1,10000,2930885
-Pluies,19,64.7,7,78427.0,0,False,False,1,0,10000,3776685
-Pluies,20,64.7,6,78427.0,0,False,False,4,2,10000,4622485
-Pluies,21,64.7,8,78427.0,2450703,True,False,2,1,10000,3017582
-Pluies,22,64.7,6,78427.0,0,False,False,6,3,20000,3873382
-Pluies,23,64.7,6,78427.0,0,False,False,6,5,30000,4739182
-Pluies,24,64.7,7,78427.0,0,False,False,1,0,20000,5594982
-Pluies,25,62.5,8,83248.9,2450703,True,False,4,2,20000,4000079
-Pluies,26,64.7,7,78427.0,0,False,False,5,2,30000,4865879
-Pluies,27,64.7,6,78427.0,0,False,False,7,5,10000,5711679
-Pluies,28,64.7,8,78427.0,2450703,True,False,4,3,30000,4126776
-Pluies,29,64.7,8,78427.0,0,False,False,6,3,20000,4982576
-Pluies,30,64.7,8,78427.0,0,False,False,5,2,20000,5838376
+Pluies,2,61.8,8,84843.6,0,False,False,12,0,0,1671600
+Pluies,3,64.7,7,78427.0,0,False,False,4,0,0,2507400
+Pluies,4,63.2,5,81772.9,2450703,True,False,2,0,0,892497
+Pluies,5,64.7,6,78427.0,0,False,False,1,1,10000,1738297
+Pluies,6,64.7,7,78427.0,0,False,False,1,0,0,2574097
+Pluies,7,64.7,5,78427.0,2450703,True,False,3,1,10000,969194
+Pluies,8,64.7,5,78427.0,0,False,False,2,2,10000,1814994
+Pluies,9,64.7,5,78427.0,0,False,False,1,1,20000,2670794
+Pluies,10,64.7,5,78427.0,0,False,False,4,4,10000,3516594
+Pluies,11,62.5,6,83248.9,2450703,True,False,2,2,0,1901691
+Pluies,12,64.7,5,78427.0,0,False,False,1,0,50000,2787491
+Pluies,13,64.7,6,78427.0,0,False,False,0,0,0,3623291
+Pluies,14,64.7,7,78427.0,2450703,True,False,1,0,10000,2018388
+Pluies,15,64.7,7,78427.0,0,False,False,2,0,10000,2864188
+Pluies,16,64.7,5,78427.0,0,False,False,5,3,0,3699988
+Pluies,17,64.7,6,78427.0,0,False,False,2,2,10000,4545788
+Pluies,18,62.5,6,83248.9,2450703,True,False,5,4,10000,2940885
+Pluies,19,64.7,5,78427.0,0,False,False,1,0,10000,3786685
+Pluies,20,64.7,5,78427.0,0,False,False,0,0,0,4622485
+Pluies,21,64.7,7,78427.0,2450703,True,False,2,2,20000,3027582
+Pluies,22,64.7,5,78427.0,0,False,False,4,2,20000,3883382
+Pluies,23,63.0,6,82108.5,0,False,False,0,0,0,4719182
+Pluies,24,64.7,6,78427.0,0,False,False,2,1,30000,5584982
+Pluies,25,62.5,5,83248.9,2450703,True,False,1,0,10000,3980079
+Pluies,26,64.7,5,78427.0,0,False,False,4,4,10000,4825879
+Pluies,27,64.7,6,78427.0,0,False,False,1,1,10000,5671679
+Pluies,28,64.7,5,78427.0,2450703,True,False,5,4,0,4056776
+Pluies,29,64.7,6,78427.0,0,False,False,1,1,10000,4902576
+Pluies,30,63.0,7,82108.5,0,False,False,3,2,0,5738376
 Panne,1,66.5,16,67571.5,0,False,False,12,1,0,835800
-Panne,2,66.0,9,68706.6,0,False,False,12,0,0,1671600
-Panne,3,68.6,7,63387.8,0,False,False,5,0,10000,2517400
-Panne,4,67.7,7,65215.8,1567250,True,False,3,1,10000,1795950
-Panne,5,63.8,6,73089.9,0,False,False,2,0,10000,2641750
-Panne,6,59.5,7,81672.7,0,False,False,1,0,0,3477550
-Panne,7,58.5,9,83872.9,1567250,True,False,2,0,0,2746100
-Panne,8,58.1,9,84621.0,0,False,False,4,0,0,3581900
-Panne,9,58.1,6,84621.0,0,False,False,7,3,10000,4427700
-Panne,10,58.1,8,84621.0,0,False,False,3,2,0,5263500
-Panne,11,56.9,7,87023.2,1567250,True,False,4,1,20000,4552050
-Panne,12,58.1,7,84621.0,0,False,False,2,0,0,5387850
-Panne,13,58.1,7,84621.0,0,False,False,3,1,0,6223650
-Panne,14,58.1,6,84621.0,1567250,True,False,5,3,10000,5502200
-Panne,15,58.1,8,84621.0,0,False,False,2,1,30000,6368000
-Panne,16,58.1,6,84621.0,0,False,False,5,2,10000,7213800
-Panne,17,58.1,7,84621.0,0,False,False,1,0,20000,8069600
-Panne,18,56.9,6,87023.2,1567250,True,False,3,1,10000,7348150
-Panne,19,58.1,7,84621.0,0,False,False,1,0,10000,8193950
-Panne,20,58.1,6,84621.0,0,False,False,4,2,10000,9039750
-Panne,21,58.1,8,84621.0,1567250,True,False,2,1,10000,8318300
-Panne,22,58.1,6,84621.0,0,False,False,6,3,20000,9174100
-Panne,23,58.1,6,84621.0,0,False,False,6,5,30000,10039900
-Panne,24,58.1,7,84621.0,0,False,False,1,0,20000,10895700
-Panne,25,56.9,8,87023.2,1567250,True,False,4,2,20000,10184250
-Panne,26,58.1,7,84621.0,0,False,False,5,2,30000,11050050
-Panne,27,58.1,6,84621.0,0,False,False,7,5,10000,11895850
-Panne,28,58.1,8,84621.0,1567250,True,False,4,3,30000,11194400
-Panne,29,58.1,8,84621.0,0,False,False,6,3,20000,12050200
-Panne,30,58.1,8,84621.0,0,False,False,5,2,20000,12906000
-Sensibilisation,1,74.9,16,50582.0,0,False,False,12,1,0,835800
-Sensibilisation,2,74.3,9,51858.7,0,False,False,12,0,0,1671600
-Sensibilisation,3,76.4,7,47569.0,0,False,False,5,0,10000,2517400
-Sensibilisation,4,71.9,7,56831.6,2165715,True,False,3,1,10000,1197485
-Sensibilisation,5,76.4,6,47569.0,0,False,False,2,0,10000,2043285
-Sensibilisation,6,76.4,7,47569.0,0,False,False,1,0,0,2879085
-Sensibilisation,7,76.4,9,47569.0,2165715,True,False,2,0,0,1549170
-Sensibilisation,8,76.4,9,47569.0,0,False,False,4,0,0,2384970
-Sensibilisation,9,76.4,6,47569.0,0,False,False,7,3,10000,3230770
-Sensibilisation,10,76.4,8,47569.0,0,False,False,3,2,0,4066570
-Sensibilisation,11,70.9,7,58826.1,2165715,True,False,4,1,20000,2756655
-Sensibilisation,12,76.4,7,47569.0,0,False,False,2,0,0,3592455
-Sensibilisation,13,76.4,7,47569.0,0,False,False,3,1,0,4428255
-Sensibilisation,14,76.4,6,47569.0,2165715,True,False,5,3,10000,3108340
-Sensibilisation,15,76.4,8,47569.0,0,False,False,2,1,30000,3974140
-Sensibilisation,16,76.4,6,47569.0,0,False,False,5,2,10000,4819940
-Sensibilisation,17,76.4,7,47569.0,0,False,False,1,0,20000,5675740
-Sensibilisation,18,70.9,6,58826.1,2165715,True,False,3,1,10000,4355825
-Sensibilisation,19,76.4,7,47569.0,0,False,False,1,0,10000,5201625
-Sensibilisation,20,76.4,6,47569.0,0,False,False,4,2,10000,6047425
-Sensibilisation,21,76.4,8,47569.0,2165715,True,False,2,1,10000,4727510
-Sensibilisation,22,76.4,6,47569.0,0,False,False,6,3,20000,5583310
-Sensibilisation,23,76.4,6,47569.0,0,False,False,6,5,30000,6449110
-Sensibilisation,24,76.4,7,47569.0,0,False,False,1,0,20000,7304910
-Sensibilisation,25,70.9,8,58826.1,2165715,True,False,4,2,20000,5994995
-Sensibilisation,26,76.4,7,47569.0,0,False,False,5,2,30000,6860795
-Sensibilisation,27,76.4,6,47569.0,0,False,False,7,5,10000,7706595
-Sensibilisation,28,76.4,8,47569.0,2165715,True,False,4,3,30000,6406680
-Sensibilisation,29,76.4,8,47569.0,0,False,False,6,3,20000,7262480
-Sensibilisation,30,76.4,8,47569.0,0,False,False,5,2,20000,8118280
-Abonnements,1,76.1,16,48265.4,0,False,False,12,1,0,835800
-Abonnements,2,75.7,9,49076.1,0,False,False,12,0,0,1671600
-Abonnements,3,77.6,7,45277.0,0,False,False,5,0,10000,2517400
-Abonnements,4,70.4,7,59711.1,2165715,True,False,3,1,10000,1197485
-Abonnements,5,77.6,6,45277.0,0,False,False,2,0,10000,2043285
-Abonnements,6,77.6,7,45277.0,0,False,False,1,0,0,2879085
-Abonnements,7,77.5,9,45336.0,2165715,True,False,2,0,0,1549170
-Abonnements,8,77.6,9,45277.0,0,False,False,4,0,0,2384970
-Abonnements,9,77.6,6,45277.0,0,False,False,7,3,10000,3230770
-Abonnements,10,77.5,8,45336.0,0,False,False,3,2,0,4066570
-Abonnements,11,69.5,7,61670.0,2165715,True,False,4,1,20000,2756655
-Abonnements,12,77.6,7,45277.0,0,False,False,2,0,0,3592455
-Abonnements,13,77.6,7,45277.0,0,False,False,3,1,0,4428255
-Abonnements,14,77.5,6,45336.0,2165715,True,False,5,3,10000,3108340
-Abonnements,15,77.6,8,45277.0,0,False,False,2,1,30000,3974140
-Abonnements,16,77.6,6,45277.0,0,False,False,5,2,10000,4819940
-Abonnements,17,77.5,7,45336.0,0,False,False,1,0,20000,5675740
-Abonnements,18,69.5,6,61670.0,2165715,True,False,3,1,10000,4355825
-Abonnements,19,77.6,7,45277.0,0,False,False,1,0,10000,5201625
-Abonnements,20,77.6,6,45277.0,0,False,False,4,2,10000,6047425
-Abonnements,21,77.5,8,45336.0,2165715,True,False,2,1,10000,4727510
-Abonnements,22,77.6,6,45277.0,0,False,False,6,3,20000,5583310
-Abonnements,23,77.6,6,45277.0,0,False,False,6,5,30000,6449110
-Abonnements,24,77.5,7,45336.0,0,False,False,1,0,20000,7304910
-Abonnements,25,69.5,8,61670.0,2165715,True,False,4,2,20000,5994995
-Abonnements,26,77.6,7,45277.0,0,False,False,5,2,30000,6860795
-Abonnements,27,77.6,6,45277.0,0,False,False,7,5,10000,7706595
-Abonnements,28,77.5,8,45336.0,2165715,True,False,4,3,30000,6406680
-Abonnements,29,77.6,8,45277.0,0,False,False,6,3,20000,7262480
-Abonnements,30,77.6,8,45277.0,0,False,False,5,2,20000,8118280
+Panne,2,66.0,8,68706.6,0,False,False,12,0,0,1671600
+Panne,3,68.6,6,63387.8,0,False,False,4,0,10000,2517400
+Panne,4,67.7,6,65215.8,1567250,True,False,1,0,0,1785950
+Panne,5,63.8,6,73089.9,0,False,False,2,1,10000,2631750
+Panne,6,59.5,7,81672.7,0,False,False,1,0,0,3467550
+Panne,7,58.5,7,83872.9,1567250,True,False,4,2,10000,2746100
+Panne,8,58.1,5,84621.0,0,False,False,4,2,10000,3591900
+Panne,9,56.7,5,87350.5,0,False,False,1,1,20000,4447700
+Panne,10,58.1,5,84621.0,0,False,False,4,4,10000,5293500
+Panne,11,56.9,6,87023.2,1567250,True,False,2,2,0,4562050
+Panne,12,58.1,6,84621.0,0,False,False,1,0,20000,5417850
+Panne,13,58.1,5,84621.0,0,False,False,1,0,10000,6263650
+Panne,14,58.1,5,84621.0,1567250,True,False,0,0,10000,5542200
+Panne,15,58.1,5,84621.0,0,False,False,0,0,10000,6388000
+Panne,16,58.1,6,84621.0,0,False,False,1,1,10000,7233800
+Panne,17,58.1,6,84621.0,0,False,False,1,0,0,8069600
+Panne,18,56.9,6,87023.2,1567250,True,False,1,0,10000,7348150
+Panne,19,58.1,7,84621.0,0,False,False,1,0,0,8183950
+Panne,20,58.1,5,84621.0,0,False,False,3,1,20000,9039750
+Panne,21,58.1,7,84621.0,1567250,True,False,1,1,20000,8328300
+Panne,22,58.1,5,84621.0,0,False,False,4,2,20000,9184100
+Panne,23,58.1,6,84621.0,0,False,False,0,0,40000,10059900
+Panne,24,58.1,5,84621.0,0,False,False,2,1,0,10895700
+Panne,25,56.9,5,87023.2,1567250,True,False,2,2,10000,10174250
+Panne,26,58.1,5,84621.0,0,False,False,2,2,10000,11020050
+Panne,27,58.1,7,84621.0,0,False,False,0,0,10000,11865850
+Panne,28,58.1,6,84621.0,1567250,True,False,6,4,20000,11154400
+Panne,29,56.7,6,87350.5,0,False,False,2,1,0,11990200
+Panne,30,58.1,6,84621.0,0,False,False,3,2,10000,12836000
+Sensibilisation,1,74.9,15,50582.0,0,False,False,12,0,10000,845800
+Sensibilisation,2,76.4,6,47569.0,0,False,False,12,0,0,1681600
+Sensibilisation,3,76.4,5,47569.0,0,False,False,1,0,0,2517400
+Sensibilisation,4,71.0,5,58574.2,2165715,True,False,0,0,0,1187485
+Sensibilisation,5,76.4,5,47569.0,0,False,False,0,0,10000,2033285
+Sensibilisation,6,76.4,6,47569.0,0,False,False,0,0,0,2869085
+Sensibilisation,7,76.4,6,47569.0,2165715,True,False,1,0,0,1539170
+Sensibilisation,8,76.4,5,47569.0,0,False,False,1,0,0,2374970
+Sensibilisation,9,76.4,5,47569.0,0,False,False,0,0,0,3210770
+Sensibilisation,10,76.4,5,47569.0,0,False,False,0,0,10000,4056570
+Sensibilisation,11,70.9,5,58826.1,2165715,True,False,1,1,10000,2736655
+Sensibilisation,12,76.4,5,47569.0,0,False,False,1,1,20000,3592455
+Sensibilisation,13,76.4,5,47569.0,0,False,False,0,0,30000,4458255
+Sensibilisation,14,76.4,5,47569.0,2165715,True,False,2,2,20000,3148340
+Sensibilisation,15,76.4,5,47569.0,0,False,False,2,2,0,3984140
+Sensibilisation,16,76.4,5,47569.0,0,False,False,0,0,0,4819940
+Sensibilisation,17,76.4,5,47569.0,0,False,False,1,1,0,5655740
+Sensibilisation,18,70.9,5,58826.1,2165715,True,False,1,1,10000,4335825
+Sensibilisation,19,76.4,5,47569.0,0,False,False,1,1,20000,5191625
+Sensibilisation,20,76.4,6,47569.0,0,False,False,3,3,10000,6037425
+Sensibilisation,21,76.4,5,47569.0,2165715,True,False,2,1,0,4707510
+Sensibilisation,22,76.4,6,47569.0,0,False,False,0,0,0,5543310
+Sensibilisation,23,76.4,6,47569.0,0,False,False,1,0,10000,6389110
+Sensibilisation,24,76.4,6,47569.0,0,False,False,3,2,10000,7234910
+Sensibilisation,25,70.9,6,58826.1,2165715,True,False,2,1,10000,5914995
+Sensibilisation,26,76.4,5,47569.0,0,False,False,2,1,10000,6760795
+Sensibilisation,27,76.4,6,47569.0,0,False,False,2,2,20000,7616595
+Sensibilisation,28,76.4,6,47569.0,2165715,True,False,2,1,20000,6306680
+Sensibilisation,29,76.4,5,47569.0,0,False,False,1,0,0,7142480
+Sensibilisation,30,76.4,5,47569.0,0,False,False,2,2,10000,7988280
+Abonnements,1,76.1,15,48265.4,0,False,False,12,0,10000,845800
+Abonnements,2,77.6,6,45277.0,0,False,False,12,0,0,1681600
+Abonnements,3,77.5,5,45336.0,0,False,False,1,0,0,2517400
+Abonnements,4,69.6,5,61420.2,2165715,True,False,0,0,0,1187485
+Abonnements,5,77.6,5,45277.0,0,False,False,0,0,10000,2033285
+Abonnements,6,77.6,6,45277.0,0,False,False,0,0,0,2869085
+Abonnements,7,77.5,6,45336.0,2165715,True,False,1,0,0,1539170
+Abonnements,8,77.6,5,45277.0,0,False,False,1,0,0,2374970
+Abonnements,9,77.6,5,45277.0,0,False,False,0,0,0,3210770
+Abonnements,10,77.5,5,45336.0,0,False,False,0,0,10000,4056570
+Abonnements,11,69.5,5,61670.0,2165715,True,False,1,1,10000,2736655
+Abonnements,12,77.6,5,45277.0,0,False,False,1,1,20000,3592455
+Abonnements,13,77.6,5,45277.0,0,False,False,0,0,30000,4458255
+Abonnements,14,77.5,5,45336.0,2165715,True,False,2,2,20000,3148340
+Abonnements,15,77.6,5,45277.0,0,False,False,2,2,0,3984140
+Abonnements,16,77.6,5,45277.0,0,False,False,0,0,0,4819940
+Abonnements,17,77.5,5,45336.0,0,False,False,1,1,0,5655740
+Abonnements,18,69.5,5,61670.0,2165715,True,False,1,1,10000,4335825
+Abonnements,19,77.6,5,45277.0,0,False,False,1,1,20000,5191625
+Abonnements,20,77.6,6,45277.0,0,False,False,3,3,10000,6037425
+Abonnements,21,77.5,5,45336.0,2165715,True,False,2,1,0,4707510
+Abonnements,22,77.6,6,45277.0,0,False,False,0,0,0,5543310
+Abonnements,23,77.6,6,45277.0,0,False,False,1,0,10000,6389110
+Abonnements,24,77.5,6,45336.0,0,False,False,3,2,10000,7234910
+Abonnements,25,69.5,6,61670.0,2165715,True,False,2,1,10000,5914995
+Abonnements,26,77.6,5,45277.0,0,False,False,2,1,10000,6760795
+Abonnements,27,77.6,6,45277.0,0,False,False,2,2,20000,7616595
+Abonnements,28,77.5,6,45336.0,2165715,True,False,2,1,20000,6306680
+Abonnements,29,77.6,5,45277.0,0,False,False,1,0,0,7142480
+Abonnements,30,77.6,5,45277.0,0,False,False,2,2,10000,7988280
 Budget ÷ 2,1,66.5,16,67571.5,0,False,False,12,1,0,417900
-Budget ÷ 2,2,66.0,9,68706.6,0,False,False,12,0,0,835800
-Budget ÷ 2,3,68.6,7,63387.8,0,False,False,5,0,10000,1263700
-Budget ÷ 2,4,67.7,7,65215.8,0,False,True,3,1,10000,1691600
-Budget ÷ 2,5,54.9,6,91031.6,0,False,False,2,0,10000,2119500
-Budget ÷ 2,6,39.9,7,121307.8,0,False,False,1,0,0,2537400
-Budget ÷ 2,7,32.6,9,136153.0,2165715,True,False,2,0,0,789585
-Budget ÷ 2,8,68.6,9,63387.8,0,False,False,4,0,0,1207485
-Budget ÷ 2,9,68.6,6,63387.8,0,False,False,7,3,10000,1635385
-Budget ÷ 2,10,68.6,8,63387.8,0,False,False,3,2,0,2053285
-Budget ÷ 2,11,67.2,7,66222.5,2165715,True,False,4,1,20000,325470
-Budget ÷ 2,12,68.6,7,63387.8,0,False,False,2,0,0,743370
-Budget ÷ 2,13,68.6,7,63387.8,0,False,False,3,1,0,1161270
-Budget ÷ 2,14,68.6,6,63387.8,0,False,True,5,3,10000,1589170
-Budget ÷ 2,15,67.2,8,66222.5,0,False,False,2,1,30000,2037070
-Budget ÷ 2,16,53.5,6,93920.3,0,False,False,5,2,10000,2464970
-Budget ÷ 2,17,39.1,7,122870.2,0,False,False,1,0,20000,2902870
-Budget ÷ 2,18,32.3,6,136616.3,2165715,True,False,3,1,10000,1165055
-Budget ÷ 2,19,68.6,7,63387.8,0,False,False,1,0,10000,1592955
-Budget ÷ 2,20,68.6,6,63387.8,0,False,False,4,2,10000,2020855
-Budget ÷ 2,21,68.6,8,63387.8,2165715,True,False,2,1,10000,283040
-Budget ÷ 2,22,68.6,6,63387.8,0,False,False,6,3,20000,720940
-Budget ÷ 2,23,68.6,6,63387.8,0,False,False,6,5,30000,1168840
-Budget ÷ 2,24,68.6,7,63387.8,0,False,False,1,0,20000,1606740
-Budget ÷ 2,25,67.2,8,66222.5,0,False,True,4,2,20000,2044640
-Budget ÷ 2,26,53.5,7,93920.3,0,False,False,5,2,30000,2492540
-Budget ÷ 2,27,39.1,6,122870.2,0,False,False,7,5,10000,2920440
-Budget ÷ 2,28,32.3,8,136616.3,2165715,True,False,4,3,30000,1202625
-Budget ÷ 2,29,68.6,8,63387.8,0,False,False,6,3,20000,1640525
-Budget ÷ 2,30,68.6,8,63387.8,0,False,False,5,2,20000,2078425
+Budget ÷ 2,2,66.0,8,68706.6,0,False,False,12,0,0,835800
+Budget ÷ 2,3,68.6,6,63387.8,0,False,False,4,0,10000,1263700
+Budget ÷ 2,4,67.7,6,65215.8,0,False,True,1,0,0,1681600
+Budget ÷ 2,5,54.9,6,91031.6,0,False,False,2,1,10000,2109500
+Budget ÷ 2,6,39.9,7,121307.8,0,False,False,1,0,0,2527400
+Budget ÷ 2,7,32.6,7,136153.0,2165715,True,False,4,2,10000,789585
+Budget ÷ 2,8,68.6,5,63387.8,0,False,False,4,2,10000,1217485
+Budget ÷ 2,9,67.3,5,66117.4,0,False,False,1,1,20000,1655385
+Budget ÷ 2,10,68.6,5,63387.8,0,False,False,4,4,10000,2083285
+Budget ÷ 2,11,67.2,6,66222.5,2165715,True,False,2,2,0,335470
+Budget ÷ 2,12,68.6,5,63387.8,0,False,False,1,0,50000,803370
+Budget ÷ 2,13,68.6,6,63387.8,0,False,False,2,2,20000,1241270
+Budget ÷ 2,14,68.6,6,63387.8,0,False,True,1,0,10000,1669170
+Budget ÷ 2,15,67.2,5,66222.5,0,False,False,1,0,10000,2097070
+Budget ÷ 2,16,53.5,6,93920.3,0,False,False,1,1,10000,2524970
+Budget ÷ 2,17,39.1,6,122870.2,0,False,False,1,0,0,2942870
+Budget ÷ 2,18,32.3,7,136616.3,2165715,True,False,4,3,10000,1205055
+Budget ÷ 2,19,68.6,7,63387.8,0,False,False,2,0,10000,1632955
+Budget ÷ 2,20,68.6,5,63387.8,0,False,False,3,1,20000,2070855
+Budget ÷ 2,21,68.6,5,63387.8,2165715,True,False,1,1,0,323040
+Budget ÷ 2,22,68.6,5,63387.8,0,False,False,0,0,20000,760940
+Budget ÷ 2,23,68.6,6,63387.8,0,False,False,0,0,30000,1208840
+Budget ÷ 2,24,68.6,6,63387.8,0,False,False,3,2,10000,1636740
+Budget ÷ 2,25,67.2,7,66222.5,0,False,True,3,2,10000,2064640
+Budget ÷ 2,26,53.5,5,93920.3,0,False,False,4,2,10000,2492540
+Budget ÷ 2,27,39.1,7,122870.2,0,False,False,0,0,10000,2920440
+Budget ÷ 2,28,32.3,6,136616.3,2165715,True,False,7,5,20000,1192625
+Budget ÷ 2,29,68.6,5,63387.8,0,False,False,2,1,10000,1620525
+Budget ÷ 2,30,68.6,6,63387.8,0,False,False,1,1,40000,2078425

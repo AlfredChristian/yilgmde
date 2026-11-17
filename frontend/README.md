@@ -16,7 +16,7 @@ Comptes de test du mode mock : `admin@test`, `chauffeur@test`, `laabal@test`, mo
    ```
    set YILGMDE_ADMIN_EMAIL=admin@ouaga.bf          (PowerShell : $env:YILGMDE_ADMIN_EMAIL="admin@ouaga.bf")
    set YILGMDE_ADMIN_PASSWORD=admin12345
-   python scripts/charger_exemples.py --ouaga
+   python scripts/charger_exemples.py --ouaga --demo
    uvicorn backend.main:app --reload
    ```
 
@@ -29,9 +29,9 @@ Comptes de test du mode mock : `admin@test`, `chauffeur@test`, `laabal@test`, mo
 
    puis `npm run dev`. Vite redirige `/api` vers `http://localhost:8000`.
 
-3. Se connecter avec le compte admin. Les comptes chauffeur et Laabal se créent avec
-   `POST /admin/utilisateurs`, puis l'admin affecte une tournée avec
-   `POST /admin/tournees/{id}/affecter` (voir `docs/api-contract.md`, ou `http://localhost:8000/docs`).
+3. Se connecter avec le compte admin. `--demo` a créé `chauffeur@ouaga.bf` / `chauffeur123` et
+   `laabal@ouaga.bf` / `laabal1234`, avec des tournées déjà affectées. Les autres comptes se gèrent
+   dans **Espace mairie → Comptes** (`/admin/utilisateurs`), les affectations dans le plan.
 
 ## Où l'API est appelée
 

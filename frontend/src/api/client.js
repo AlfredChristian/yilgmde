@@ -89,7 +89,11 @@ export async function postSignalement({ type_dechet, volume_estime, description,
     } catch {
       // reponse sans JSON
     }
-    const erreur = new Error(typeof detail === 'string' ? detail : `Erreur ${res.status}`)
+    // 422 de validation : FastAPI renvoie une liste [{ msg, ... }] ; on garde les messages lisibles.
+    const message = typeof detail === 'string' ? detail
+      : Array.isArray(detail) ? detail.map((d) => String(d.msg ?? '').replace(/^Value error, /, '')).filter(Boolean).join(' ; ')
+      : ''
+    const erreur = new Error(message || `Erreur ${res.status}`)
     erreur.statut = res.status // permet de distinguer 429/503 (a reessayer) de 413/422 (definitif)
     throw erreur
   }
@@ -488,17 +492,20 @@ export async function activerScenario(id) {
   return scenario
 }
 
-export async function creerScenario(nom, baseSur) {
+// activer = true : la copie devient le scenario de travail (celui que le formulaire modifie).
+export async function creerScenario(nom, baseSur, activer = false) {
   if (USE_MOCK) {
     const base = MOCK_SCENARIOS.find((scenario) => scenario.id === baseSur)
-    const scenario = { id: PROCHAIN_MOCK_SCENARIO_ID++, nom, parametres: { ...(base?.parametres ?? {}) }, actif: false }
-    MOCK_SCENARIOS = [...MOCK_SCENARIOS, scenario]
+    const scenario = { id: PROCHAIN_MOCK_SCENARIO_ID++, nom, parametres: { ...(base?.parametres ?? {}) }, actif: activer }
+    MOCK_SCENARIOS = [...MOCK_SCENARIOS.map((sc) => (activer ? { ...sc, actif: false } : sc)), scenario]
     return scenario
   }
-  return appelAuth('/scenarios', {
+  const scenario = await appelAuth('/scenarios', {
     method: 'POST',
-    body: JSON.stringify({ nom, base_sur: baseSur, parametres: {}, activer: false }),
+    body: JSON.stringify({ nom, base_sur: baseSur, parametres: {}, activer }),
   })
+  if (activer) SCENARIO_ID = scenario.id
+  return scenario
 }
 
 function simulationMock(jours, graine) {
@@ -563,12 +570,42 @@ export async function getArrondissements() {
   return getJson(`${API_URL}/arrondissements`)
 }
 
+// ---- Comptes (admin, D49) ----
+let MOCK_UTILISATEURS = [
+  { id: 1, nom: 'Administrateur', email: 'admin@test', role: 'admin', actif: true },
+  { id: 11, nom: 'Issa chauffeur', email: 'chauffeur@test', role: 'chauffeur', actif: true },
+  { id: 12, nom: 'Awa Laabal', email: 'laabal@test', role: 'laabal', actif: true },
+]
+
 export async function getUtilisateurs() {
-  if (USE_MOCK) return [
-    { id: 11, nom: 'Issa chauffeur', role: 'chauffeur', actif: true },
-    { id: 12, nom: 'Awa Laabal', role: 'laabal', actif: true },
-  ]
+  if (USE_MOCK) return MOCK_UTILISATEURS.map((u) => ({ ...u }))
   return appelAuth('/admin/utilisateurs')
+}
+
+// { nom, email, mot_de_passe, role } ; erreur 409 si l'e-mail existe deja.
+export async function creerUtilisateur(compte) {
+  if (USE_MOCK) {
+    if (MOCK_UTILISATEURS.some((u) => u.email === compte.email.trim().toLowerCase())) throw new Error('un compte existe déjà avec cet email')
+    const cree = { id: Math.max(...MOCK_UTILISATEURS.map((u) => u.id)) + 1, nom: compte.nom, email: compte.email.trim().toLowerCase(), role: compte.role, actif: true }
+    MOCK_UTILISATEURS = [...MOCK_UTILISATEURS, cree]
+    return cree
+  }
+  return appelAuth('/admin/utilisateurs', { method: 'POST', body: JSON.stringify(compte) })
+}
+
+// changements : { nom?, role?, actif? }. Le serveur refuse (409) qu'un admin se desactive
+// ou se retire son role, ou qu'il ne reste plus d'admin actif.
+export async function modifierUtilisateur(id, changements) {
+  if (USE_MOCK) {
+    MOCK_UTILISATEURS = MOCK_UTILISATEURS.map((u) => (u.id === id ? { ...u, ...changements } : u))
+    return MOCK_UTILISATEURS.find((u) => u.id === id)
+  }
+  return appelAuth(`/admin/utilisateurs/${id}`, { method: 'PATCH', body: JSON.stringify(changements) })
+}
+
+export async function reinitialiserMotDePasse(id, motDePasse) {
+  if (USE_MOCK) return MOCK_UTILISATEURS.find((u) => u.id === id)
+  return appelAuth(`/admin/utilisateurs/${id}/mot-de-passe`, { method: 'POST', body: JSON.stringify({ mot_de_passe: motDePasse }) })
 }
 
 export async function affecterTournee(tourneeId, utilisateurId) {

@@ -37,6 +37,12 @@ laabal:
   nombre_brigades: 3                     # [H]
   capacite_eradication_par_jour: 4       # [H]
 
+simulation:
+  # [H] D48 recalibré (D50) : un secteur de Ouaga laisse 12 à 20 t de déchets sauvages par jour ;
+  # avec 1 500 kg la probabilité restait au plafond dans tous les scénarios. 40 t donne ≈ 15 %/jour
+  # pour un secteur moyen et fait réagir le nombre de nouveaux dépotoirs aux scénarios.
+  seuil_nouveau_depotoir_kg: 40000
+
 mairie:
   budget_mensuel_xof: 180000000          # [H] ≈ 2,2 milliards XOF/an : collecte complète ≈ 137 M/mois (90 camions) + marge ; arrondissement : sa part (D39)
 

@@ -97,6 +97,8 @@
 - [x] L3 (back) — Plan, simulation et comparaison d'un arrondissement (`perimetre`), `GET /arrondissements`, synthèse Markdown du plan (D37)
 - [x] L3 (front) — Tableau de bord des scénarios : choix de l'arrondissement, plan sur la carte, indicateurs, simulation et comparaison (Christian) ; synthèse Markdown reste à exposer dans l'interface
 - [x] L4 — Données réalistes de Ouaga (12 arrondissements, paramètres sourcés) et jeu de signalements GeoJSON sous ODbL — `data/ouaga/`, `GET /donnees/signalements.geojson` (D38–D40)
-- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (Cramer) — structure et recommandations finalisées dans `docs/rapport/resultats.md` ; régénérer les chiffres après D48
+- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (Cramer) — chiffres régénérés après D48/D50 dans `docs/rapport/` (colonne « nouveaux dépotoirs »)
   - [x] chiffres, tableaux, courbes et carte : `python scripts/resultats_scenarios.py` → `docs/rapport/` (D43)
 - [ ] L6 — Vidéo de 3 min : du signalement à la tournée, puis un changement de paramètres et le plan recalculé
+- [x] F5 — Gestion des comptes par l'admin : créer, renommer, rôle, désactiver / réactiver, mot de passe (D49), page `/admin/utilisateurs`
+- [x] Démo prête en une commande : `charger_exemples.py --ouaga --demo`

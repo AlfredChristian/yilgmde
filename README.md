@@ -68,6 +68,7 @@ export YILGMDE_JWT_SECRET=une-longue-chaine-aleatoire
 
 ```bash
 python scripts/charger_exemples.py --ouaga   # démo : 12 arrondissements de Ouaga, 215 dépotoirs, 930 signalements
+python scripts/charger_exemples.py --ouaga --demo   # + comptes chauffeur/Laabal, scénarios prêts, tournées affectées
 python scripts/charger_exemples.py           # ou le petit jeu de data/sample/ (2 zones)
 ```
 Le jeu de Ouaga (`data/ouaga/`, licence ODbL) a un **découpage réel** (12 arrondissements et 55 secteurs relevés sur la carte de l'INSD) et la population réelle par arrondissement (recensement 2019) ; les dépotoirs et signalements sont inventés. Sources et limites : `data/ouaga/LISEZMOI.md`. Sans effet si la base est déjà remplie.

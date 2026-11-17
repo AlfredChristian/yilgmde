@@ -110,9 +110,10 @@ export default function Admin() {
     <main className="admin">
       <h1>Espace mairie</h1>
       <p className="admin-intro">Connecté : {session.nom}</p>
-      <Link to="/admin/plan" className="btn-contour plein" style={{ marginBottom: 24 }}>
-        Plan de gestion
-      </Link>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+        <Link to="/admin/plan" className="btn-contour plein">Plan de gestion</Link>
+        <Link to="/admin/utilisateurs" className="btn-contour">Comptes</Link>
+      </div>
       <h2>Signalements à vérifier {file && `(${file.length})`}</h2>
 
       {erreur && <p className="mod-erreur">{erreur}</p>}
