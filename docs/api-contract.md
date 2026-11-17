@@ -115,6 +115,8 @@ Réponse `201` :
 **Comptes et suivi**
 - `POST /admin/utilisateurs` : `{"nom": "...", "email": "...", "mot_de_passe": "...", "role": "chauffeur"}` → `201` `{"id": 4, "nom": "...", "email": "...", "role": "chauffeur", "actif": true}`. `409` si l'email existe, `422` si mot de passe < 8 caractères ou > 72 octets, email invalide ou rôle inconnu.
 - `GET /admin/utilisateurs` → liste de `{id, nom, email, role, actif}` (jamais de mot de passe)
+- `PATCH /admin/utilisateurs/{id}` : `{"nom"?, "role"?, "actif"?}` (seuls les champs fournis changent) → `200` le compte. Désactiver un compte bloque sa connexion et son jeton en cours ; désactiver ou changer de rôle retire ses tournées affectées. `409` si un admin se désactive ou se retire son rôle, ou s'il ne resterait aucun admin actif ; `404` compte inconnu. Pas de suppression (D49).
+- `POST /admin/utilisateurs/{id}/mot-de-passe` : `{"mot_de_passe": "..."}` (8 caractères minimum) → `200` le compte ; l'ancien mot de passe ne marche plus.
 
 **Dépotoirs (B5, B6)**
 - `POST /admin/depotoirs` : `{"latitude": 12.37, "longitude": -1.52, "volume_estime": "moyen", "legalite": "officiel"}` (`volume_estime` et `legalite` facultatifs, `officiel` par défaut) → `201` le dépotoir, statut `actif`, zone calculée. Sert à saisir les **sites officiels** (jamais proposés à la brigade Laabal ni exportés comme dépôt sauvage).

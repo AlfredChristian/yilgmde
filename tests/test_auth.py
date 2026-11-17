@@ -212,3 +212,60 @@ def test_creer_utilisateur_refuse_un_doublon():
     creer_utilisateur(conn, "A", "a@exemple.bf", MDP, Role.admin)
     with pytest.raises(EmailDejaUtilise):
         creer_utilisateur(conn, "B", "A@exemple.bf", MDP, Role.chauffeur)
+
+
+# ---------- gestion des comptes (D49) ----------
+
+def _admin_et_chauffeur(client):
+    admin = compte()
+    ch = compte(Role.chauffeur)
+    return admin, ch, entetes(client, "admin@exemple.bf")
+
+
+def test_admin_renomme_change_le_role_et_desactive(client):
+    _, ch, h = _admin_et_chauffeur(client)
+    r = client.patch(f"/admin/utilisateurs/{ch['id']}", headers=h, json={"nom": "Issa", "role": "laabal"})
+    assert r.status_code == 200 and r.json()["nom"] == "Issa" and r.json()["role"] == "laabal"
+    assert connexion(client, "chauffeur@exemple.bf").json()["role"] == "laabal"
+    jeton = entetes(client, "chauffeur@exemple.bf")
+    assert client.patch(f"/admin/utilisateurs/{ch['id']}", headers=h, json={"actif": False}).json()["actif"] is False
+    assert connexion(client, "chauffeur@exemple.bf").status_code == 401
+    assert client.get("/auth/moi", headers=jeton).status_code == 401          # le jeton en cours est refusé aussi
+    assert client.patch(f"/admin/utilisateurs/{ch['id']}", headers=h, json={"actif": True}).status_code == 200
+    assert connexion(client, "chauffeur@exemple.bf").status_code == 200
+
+
+def test_admin_ne_peut_pas_se_desactiver_ni_se_retrograder(client):
+    admin, _, h = _admin_et_chauffeur(client)
+    assert client.patch(f"/admin/utilisateurs/{admin['id']}", headers=h, json={"actif": False}).status_code == 409
+    assert client.patch(f"/admin/utilisateurs/{admin['id']}", headers=h, json={"role": "chauffeur"}).status_code == 409
+    assert client.patch(f"/admin/utilisateurs/{admin['id']}", headers=h, json={"nom": "Mairie"}).status_code == 200
+
+
+def test_il_reste_toujours_un_admin_actif(client):
+    _admin_et_chauffeur(client)
+    second = compte(Role.admin, "admin2@exemple.bf")
+    h2 = entetes(client, "admin2@exemple.bf")
+    premier = app.state.db.execute("SELECT id FROM utilisateur WHERE email = 'admin@exemple.bf'").fetchone()[0]
+    assert client.patch(f"/admin/utilisateurs/{premier}", headers=h2, json={"actif": False}).status_code == 200
+    # il ne reste que admin2, qui ne peut pas se retirer lui-même
+    assert client.patch(f"/admin/utilisateurs/{second['id']}", headers=h2, json={"role": "laabal"}).status_code == 409
+
+
+def test_reinitialiser_le_mot_de_passe(client):
+    _, ch, h = _admin_et_chauffeur(client)
+    r = client.post(f"/admin/utilisateurs/{ch['id']}/mot-de-passe", headers=h, json={"mot_de_passe": "nouveau-mdp-123"})
+    assert r.status_code == 200 and "mot_de_passe_hash" not in r.json()
+    assert connexion(client, "chauffeur@exemple.bf").status_code == 401
+    assert connexion(client, "chauffeur@exemple.bf", "nouveau-mdp-123").status_code == 200
+    assert client.post(f"/admin/utilisateurs/{ch['id']}/mot-de-passe", headers=h, json={"mot_de_passe": "court"}).status_code == 422
+    actions = [l[0] for l in app.state.db.execute("SELECT action FROM journal_audit")]
+    assert "reinitialiser_mot_de_passe" in actions
+
+
+def test_gestion_des_comptes_reservee_a_l_admin(client):
+    _, ch, _ = _admin_et_chauffeur(client)
+    hc = entetes(client, "chauffeur@exemple.bf")
+    assert client.patch(f"/admin/utilisateurs/{ch['id']}", headers=hc, json={"role": "admin"}).status_code == 403
+    assert client.post(f"/admin/utilisateurs/{ch['id']}/mot-de-passe", headers=hc, json={"mot_de_passe": MDP}).status_code == 403
+    assert client.patch("/admin/utilisateurs/999", headers=entetes(client, "admin@exemple.bf"), json={"nom": "x"}).status_code == 404

@@ -204,6 +204,28 @@ class UtilisateurCreation(BaseModel):
         return v
 
 
+def _verifier_longueur_bcrypt(v: str) -> str:
+    if len(v.encode("utf-8")) > 72:  # bcrypt ignore ou refuse au-delà de 72 octets
+        raise ValueError("mot de passe trop long (72 octets maximum)")
+    return v
+
+
+class UtilisateurModification(BaseModel):
+    """PATCH /admin/utilisateurs/{id} : seuls les champs fournis changent (D49)."""
+    nom: str | None = Field(default=None, min_length=1, max_length=100)
+    role: Role | None = None
+    actif: bool | None = None
+
+
+class MotDePasseReinitialisation(BaseModel):
+    mot_de_passe: str = Field(min_length=8)
+
+    @field_validator("mot_de_passe")
+    @classmethod
+    def _limite_bcrypt(cls, v: str) -> str:
+        return _verifier_longueur_bcrypt(v)
+
+
 # --- Scénarios (C4, D1–D4) -----------------------------------------------------------
 
 class ScenarioCreation(BaseModel):
