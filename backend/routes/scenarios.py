@@ -9,10 +9,13 @@ Chaque création, modification ou activation est écrite dans `journal_audit` (r
 from __future__ import annotations
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from fastapi.responses import PlainTextResponse
 
 from backend import db, plans
 from backend.config import ConfigError
 from backend.deps import acces_db
+from backend.synthese import synthese_markdown
+from backend.zones import lire_zones
 from backend.schemas import Role, ScenarioCreation, ScenarioSortie, SimulationEntree
 from backend.securite import exiger_role
 from backend.utilisateurs import journaliser
@@ -198,6 +201,19 @@ def calculer(request: Request, scenario_id: int, _=Depends(admin)):
 def plan_du_scenario(request: Request, scenario_id: int, _=Depends(admin)):
     """Dernier plan, recalculé d'abord si les données ou les paramètres ont changé."""
     return _plan(request, scenario_id)
+
+
+@router.get("/scenarios/{scenario_id}/plan/synthese", response_class=PlainTextResponse)
+def synthese(request: Request, scenario_id: int, _=Depends(admin)):
+    """Livrable 3 : plan de gestion lisible (Markdown), pour l'arrondissement du scénario ou la commune."""
+    plan = _plan(request, scenario_id)
+    with acces_db(request) as conn:
+        scenario = plans.lire_scenario(conn, scenario_id)
+        zones = lire_zones(conn)
+    config = plans.config_effective(request.app.state.config, scenario)
+    texte = synthese_markdown(plan, scenario, zones, config)
+    return PlainTextResponse(texte, media_type="text/markdown; charset=utf-8",
+                             headers={"Content-Disposition": f'inline; filename="plan_scenario_{scenario_id}.md"'})
 
 
 @router.post("/scenarios/{scenario_id}/simuler")

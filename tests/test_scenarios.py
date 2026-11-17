@@ -245,3 +245,19 @@ def test_arrondissements_et_plan_d_un_arrondissement(client):
                      headers=h).json()
     comp = client.get("/scenarios/comparer", params={"ids": f"1,{s2['id']}", "jours": 5}, headers=h).json()
     assert [d["plan"]["perimetre"]["zones"] for d in comp["details"]] == [[2], [1]]
+
+
+def test_synthese_du_plan_en_markdown(client):
+    h = entetes(client)
+    client.put("/scenarios/1/parametres", json={"perimetre": {"arrondissements": [1]},
+                                                "camions": [{"id": "camion_2", "disponible": False}]}, headers=h)
+    r = client.get("/scenarios/1/plan/synthese", headers=h)
+    assert r.status_code == 200 and r.headers["content-type"].startswith("text/markdown")
+    texte = r.text
+    assert texte.startswith("# Plan de gestion des déchets — arrondissement 1")
+    for attendu in ("## En bref", "## Points de regroupement", "## Tournées de collecte", "## Brigade Laabal",
+                    "## Ce qui n'est pas couvert", "camion_2", "Zone exemple A", "Pourquoi ces points ?"):
+        assert attendu in texte, attendu
+    assert "Zone exemple B" not in texte                               # hors périmètre
+    assert client.get("/scenarios/1/plan/synthese", headers=entetes(client, Role.chauffeur)).status_code == 403
+    assert client.get("/scenarios/99/plan/synthese", headers=h).status_code == 404
