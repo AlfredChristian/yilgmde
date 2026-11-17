@@ -260,3 +260,84 @@ def surveillance(request: Request, depotoir_id: int, utilisateur=Depends(laabal)
                          (_maintenant(), depotoir_id))
             journaliser(conn, utilisateur["id"], "surveillance", "depotoir", depotoir_id)
         return {"depotoir_id": depotoir_id, "statut_depotoir": "sous_surveillance"}
+
+
+# --- Constats et amendes (P2) ------------------------------------------------------------
+
+MAX_PREUVES = 5
+
+
+def _constat_sortie(ligne) -> dict:
+    d = dict(ligne)
+    d["preuves"] = len(db.depuis_json(d["preuves"], []))   # nombre seulement : les fichiers ne sont jamais publics
+    return d
+
+
+@router.post("/laabal/constats", status_code=201)
+def creer_constat(
+    request: Request,
+    depotoir_id: int = Form(...),
+    description: str | None = Form(None, max_length=500),
+    montant_xof: float | None = Form(None, ge=0),
+    preuves: list[UploadFile] | None = File(None),
+    utilisateur=Depends(laabal),
+):
+    """Constat d'un dépôt illégal pris sur le fait, avec amende et preuves photo (0 à 5).
+
+    `montant_xof` par défaut : `laabal.montant_amende_xof`. Un site officiel ne donne pas
+    lieu à constat (409). Les preuves suivent les mêmes règles que les photos (D11).
+    """
+    config = request.app.state.config
+    fichiers = [p for p in (preuves or []) if p is not None and p.filename]
+    if len(fichiers) > MAX_PREUVES:
+        raise HTTPException(422, f"{MAX_PREUVES} preuves au plus")
+    taille_max = int(float(config.get("verification", {}).get("photo_taille_max_mo", TAILLE_PHOTO_MAX_MO_DEFAUT))
+                     * 1024 * 1024)
+    contenus = []
+    for p in fichiers:
+        contenu = p.file.read(taille_max + 1)
+        if len(contenu) > taille_max:
+            raise HTTPException(413, "preuve trop volumineuse")
+        extension = _extension_photo(contenu)
+        if extension is None:
+            raise HTTPException(422, "preuve invalide (JPEG, PNG ou WebP attendu)")
+        contenus.append((contenu, extension))
+    montant = float(config["laabal"].get("montant_amende_xof", 0)) if montant_xof is None else montant_xof
+
+    with acces_db(request) as conn:
+        depotoir = _lire_depotoir(conn, depotoir_id)
+        if depotoir["legalite"] != "illegal":
+            raise HTTPException(409, "pas de constat sur un site officiel")
+        with db.transaction(conn):
+            curseur = conn.execute(
+                "INSERT INTO constat (depotoir_id, laabal_id, date, description, montant_xof) VALUES (?, ?, ?, ?, ?)",
+                (depotoir_id, utilisateur["id"], _maintenant(), description or None, montant),
+            )
+            constat_id = curseur.lastrowid
+            noms = []
+            if contenus:
+                dossier = dossier_uploads() / "constats"
+                dossier.mkdir(parents=True, exist_ok=True)
+                for n, (contenu, extension) in enumerate(contenus, start=1):
+                    nom = f"constats/{constat_id}_{n}{extension}"
+                    (dossier_uploads() / nom).write_bytes(contenu)
+                    noms.append(nom)
+                conn.execute("UPDATE constat SET preuves = ? WHERE id = ?", (db.en_json(noms), constat_id))
+            journaliser(conn, utilisateur["id"], "creer_constat", "constat", constat_id)
+        return _constat_sortie(conn.execute("SELECT * FROM constat WHERE id = ?", (constat_id,)).fetchone())
+
+
+@router.get("/laabal/constats")
+def mes_constats(request: Request, utilisateur=Depends(laabal)):
+    with acces_db(request) as conn:
+        return [_constat_sortie(l) for l in conn.execute(
+            "SELECT * FROM constat WHERE laabal_id = ? ORDER BY id DESC", (utilisateur["id"],))]
+
+
+@router.get("/admin/constats")
+def tous_les_constats(request: Request, _=Depends(admin)):
+    """Tous les constats, avec le total des amendes."""
+    with acces_db(request) as conn:
+        constats = [_constat_sortie(l) for l in conn.execute("SELECT * FROM constat ORDER BY id DESC")]
+    return {"nombre": len(constats), "montant_total_xof": sum(c["montant_xof"] or 0 for c in constats),
+            "constats": constats}

@@ -80,11 +80,23 @@ Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d
 - `POST /admin/signalements/{id}/rejeter` : `{"motif": "photo sans rapport"}` (motif obligatoire, 1 à 300 caractères) → le signalement, statut `rejete`. `404`, `409` comme ci-dessus ; `422` si le motif est vide.
 - Valider ou rejeter fait évoluer le `score_confiance` (privé) de l'appareil qui a signalé : validation `s + gain × (1 − s)`, rejet `s − perte × s` (D33). Un appareil sous `verification.seuil_confiance_appareil` voit ses signalements suivants marqués « peu fiable » par la vérification automatique.
 - Chaque validation et chaque rejet est écrit dans `journal_audit` ; un échec n'écrit rien.
-- `POST /admin/signalements/import` (P2) : GeoJSON `FeatureCollection` de `Point`, propriétés `type_dechet`, `volume_estime`, `description`.
+- `POST /admin/signalements/import` (A4) : corps JSON = GeoJSON `FeatureCollection` de `Point`, propriétés `type_dechet`, `volume_estime`, `description` (facultative). Propriété facultative `jeton_appareil` : les règles de cet appareil (limite par heure, score de confiance) s'appliquent ; sans elle, pas de limite par appareil. Chaque entrée passe par **la même vérification automatique** que les citoyens (rejet d'office ou `en_attente_revue` avec alertes) ; les doublons à l'intérieur du lot sont repérés ; des coordonnées hors bornes donnent un `rejete_auto` « position incohérente ». Les entrées sans géométrie Point ou aux propriétés invalides sont listées dans `erreurs` sans bloquer les autres. Le jeu `data/sample/signalements_pieges.geojson` s'importe tel quel et donne les résultats de sa colonne `attendu`. Au plus `import.max_par_lot` entrées (`413` sinon) ; `422` si ce n'est pas une FeatureCollection. Une ligne au journal par lot.
+```json
+{ "importes": 4, "par_statut": {"en_attente_revue": 3, "rejete_auto": 1},
+  "erreurs": [{"index": 4, "raison": "géométrie Point attendue"}, {"index": 5, "raison": "propriétés invalides : type_dechet"}],
+  "signalements": [{"index": 0, "id": 12, "code_suivi": "K7M-4QD", "statut": "en_attente_revue", "motif": null, "alertes": []}] }
+```
 
 **Comptes et suivi**
 - `POST /admin/utilisateurs` : `{"nom": "...", "email": "...", "mot_de_passe": "...", "role": "chauffeur"}` → `201` `{"id": 4, "nom": "...", "email": "...", "role": "chauffeur", "actif": true}`. `409` si l'email existe, `422` si mot de passe < 8 caractères ou > 72 octets, email invalide ou rôle inconnu.
 - `GET /admin/utilisateurs` → liste de `{id, nom, email, role, actif}` (jamais de mot de passe)
+
+**Dépotoirs (B5, B6)**
+- `POST /admin/depotoirs` : `{"latitude": 12.37, "longitude": -1.52, "volume_estime": "moyen", "legalite": "officiel"}` (`volume_estime` et `legalite` facultatifs, `officiel` par défaut) → `201` le dépotoir, statut `actif`, zone calculée. Sert à saisir les **sites officiels** (jamais proposés à la brigade Laabal ni exportés comme dépôt sauvage).
+- `PATCH /admin/depotoirs/{id}` : `{"legalite": "officiel"}` et/ou `{"statut": "classe"}` → le dépotoir. `classe` seulement depuis `sous_surveillance` (`409` sinon) ; tout autre statut → `422` (ils suivent les interventions Laabal). `404` si inconnu. Chaque changement est journalisé.
+
+**Constats**
+- `GET /admin/constats` → `{"nombre": 2, "montant_total_xof": 12500, "constats": [<constat>]}`.
 - `GET /admin/journal?limit=50`
 - `GET /admin/export/depotoirs.geojson?statut=actif&statut=eradique` (admin) : dépotoirs vérifiés en GeoJSON téléchargeable (`application/geo+json`, `depotoirs_yilgmde.geojson`), prêt à ouvrir dans JOSM. Par défaut : statuts `actif` et `intervention_planifiee` (présents sur le terrain), au moins `export_osm.min_signalements` signalements. Les propriétés ne sont **que des étiquettes OSM**, sans aucune donnée personnelle ; l'id interne est dans le `id` de la Feature. Export tracé dans le journal (D30).
 ```json
@@ -197,4 +209,5 @@ Tout porte sur le **plan courant** (scénario actif, recalculé si les entrées 
 - `POST /laabal/depotoirs/{id}/intervention` : `multipart/form-data`, `statut` = `en_cours` (dépotoir → `intervention_planifiee`) ou `eradique` (dépotoir → `eradique`), `photo` optionnelle (JPEG/PNG/WebP, jamais publique) → `{"intervention_id", "depotoir_id", "statut_depotoir", "photo": true}`. `409` si site officiel ou dépotoir ni `actif` ni `intervention_planifiee` ; `404`, `413`, `422` (photo).
 - `POST /laabal/depotoirs/{id}/surveillance` : `eradique` → `sous_surveillance` ; `409` sinon.
 - Chaque intervention et mise sous surveillance est tracée dans le journal. Un signalement validé ensuite près du dépotoir le fait réapparaître (A3).
-- `POST /laabal/constats` (P2, à faire) : `{"depotoir_id": 3, "description": "...", "montant_xof": 10000}` (preuves en multipart).
+- `POST /laabal/constats` (H4) : `multipart/form-data`, `depotoir_id`, `description` (facultative, 500 caractères), `montant_xof` (≥ 0, par défaut `laabal.montant_amende_xof`), `preuves` (0 à 5 photos JPEG/PNG/WebP, jamais publiques) → `201` `{"id", "depotoir_id", "laabal_id", "date", "description", "preuves": 2, "montant_xof", "statut": "enregistre"}`. `409` sur un site officiel ; `404`, `413`, `422`. Journalisé.
+- `GET /laabal/constats` → ses propres constats, du plus récent au plus ancien.

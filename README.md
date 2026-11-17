@@ -145,7 +145,7 @@ Pour aller plus loin : `CONTEXT.md` (vue d'ensemble et règles de cohérence), `
 
 ## Licence
 
-**À trancher par l'équipe avant la démo** : le fichier `LICENSE` est sous **MIT**, mais la décision D16 de `DECISIONS.md` (encore « proposée ») parle d'**Apache-2.0**. Les deux sont libres et permettent la réutilisation par d'autres communes ; il faut juste choisir et aligner `LICENSE`, ce README et D16.
+Code : **MIT** (voir `LICENSE`, décision D16). Réutilisable librement, y compris par d'autres communes.
 
 Données dérivées d'OpenStreetMap : **ODbL**. Licence des données de signalement (`export_osm.licence` dans la config) : à décider, compatible ODbL pour pouvoir les verser dans OSM.
 

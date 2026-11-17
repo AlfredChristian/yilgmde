@@ -9,7 +9,7 @@
 - [x] Dépôt créé, structure en place, API `/health` qui tourne (Christian)
 - [ ] Faissal et Cramer ont cloné le dépôt et lancé l'API
 - [ ] Contrat d'API (`docs/api-contract.md`) relu et validé par Christian et Faissal
-- [ ] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence) — simulation tranchée (D18)
+- [ ] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence) — simulation (D18) et licence MIT (D16) tranchées
 - [ ] Jeux de données d'exemple dans `data/sample/` utilisés par le front et le back
 - [ ] Questions ouvertes de `CONTEXT.md` posées aux organisateurs (Cramer)
 
@@ -25,8 +25,8 @@
 - [x] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
 - [x] A2 — Vérification automatique : doublon, hors zone, position incohérente, limite par appareil, score + motif (P1)
 - [x] A3 — Modération : valider, rejeter avec motif, fusionner (P1) — + score de confiance des appareils (D33)
-- [x] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1) — réapparition (A3), transitions Laabal (D28) ; reste le passage `classe` et la saisie d'un site officiel par l'admin
-- [ ] A4 — Import par lot CSV/GeoJSON pour l'admin (P2)
+- [x] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1) — réapparition (A3), transitions Laabal (D28), sites officiels et `classe` par l'admin (D35)
+- [x] A4 — Import par lot CSV/GeoJSON pour l'admin (P2) — GeoJSON seulement (D35) ; CSV à ajouter si Cramer en a besoin
 
 **Plan**
 - [x] C1 — Estimation de la demande par zone (P1) — fonction pure `simulation/demande.py`, intégrée au plan (C4)
@@ -42,7 +42,7 @@
 - [x] E1–E3 — Moteur journalier, 4 agents, indicateurs (P1) — `simulation/agents.py`, `POST /scenarios/{id}/simuler` (D29)
 - [x] E4 — Reproductibilité par graine aléatoire (P2)
 - [ ] G1 — Export GeoJSON des dépotoirs vérifiés (P1)
-- [ ] H4/H5 — Constats d'infraction, détection de réapparition (P2)
+- [ ] H4/H5 — Constats d'infraction, détection de réapparition (P2) — H4 fait (D35) ; H5 : la réapparition est détectée (A3) mais pas encore signalée à Laabal
 
 ## Christian — front-end
 
@@ -63,7 +63,7 @@
 
 ## Cramer — présentation, documentation, données, tests
 
-- [x] README complété (présentation, installation, lancement, licence) (P1) — licence encore à trancher : `LICENSE` en MIT, D16 propose Apache-2.0
+- [x] README complété (présentation, installation, lancement, licence) (P1) — licence MIT (D16)
 - [ ] `docs/enonce.md` vérifié contre le sujet officiel (P1)
 - [ ] Collecte des signalements de notre secteur (une fois le secteur confirmé) (P1)
 - [ ] Hypothèses de `config/ouagadougou.yaml` documentées avec leurs sources (P1)
