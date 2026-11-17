@@ -17,7 +17,7 @@ from backend.schemas import Role, ScenarioCreation, ScenarioSortie, SimulationEn
 from backend.securite import exiger_role
 from backend.utilisateurs import journaliser
 from simulation.agents import simuler
-from simulation.plan import zones_du_scenario
+from simulation.plan import restreindre_perimetre, zones_du_scenario
 
 router = APIRouter(tags=["scenarios"])
 admin = exiger_role(Role.admin)
@@ -44,10 +44,13 @@ def _scenario_ou_404(conn, scenario_id: int) -> dict:
 
 
 def _valider(request: Request, parametres: dict) -> None:
-    """422 si la config effective ou un nouveau quartier est invalide (rien n'est enregistré)."""
+    """422 si la config effective, un nouveau quartier ou le périmètre est invalide (rien n'est enregistré)."""
     try:
         config = plans.config_effective(request.app.state.config, {"parametres": parametres})
         zones_du_scenario([], config)
+        if config.get("perimetre"):
+            with acces_db(request) as conn:
+                restreindre_perimetre(plans.lire_donnees(conn), config)
     except (ConfigError, ValueError) as e:
         raise HTTPException(422, f"paramètres invalides : {e}")
 

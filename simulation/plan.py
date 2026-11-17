@@ -78,9 +78,53 @@ def _rattacher(depotoirs: Sequence[dict], zones: Sequence[dict]) -> list[dict]:
     return resultat
 
 
-def calculer_plan(donnees: dict, config: dict) -> dict:
+def preparer(donnees: dict, config: dict) -> tuple[list[dict], list[dict], dict | None]:
+    """Zones et dépotoirs du scénario, dans son périmètre (livrable 3).
+
+    1. ajoute les nouveaux quartiers (D4) à **toutes** les zones de la commune, pour
+       qu'ils reçoivent un identifiant libre ; rattache les dépotoirs sans zone ;
+    2. applique `config["perimetre"]` = `{"arrondissements": [4], "zones": [12]}` (union ;
+       absent ou vide = toute la commune) : garde les zones choisies, **toujours** les
+       nouveaux quartiers, et les dépotoirs de ces zones.
+
+    Renvoie `(zones, depotoirs, resume_du_perimetre)` ; le résumé vaut None sans périmètre.
+    Lève ValueError si le périmètre ne contient aucune zone.
+    """
     zones = zones_du_scenario(donnees.get("zones", []), config)
     depotoirs = _rattacher(donnees.get("depotoirs", []), zones)
+
+    perimetre = config.get("perimetre") or {}
+    if not isinstance(perimetre, dict):
+        raise ValueError("perimetre : objet attendu, ex. {\"arrondissements\": [4]}")
+    arrondissements = set(perimetre.get("arrondissements") or [])
+    ids_demandes = set(perimetre.get("zones") or [])
+    if not arrondissements and not ids_demandes:
+        return zones, depotoirs, None
+
+    choisies = [z for z in zones if not z.get("ajoutee")
+                and (z.get("arrondissement") in arrondissements or z["id"] in ids_demandes)]
+    if not choisies:
+        raise ValueError(
+            f"périmètre vide : aucune zone pour les arrondissements {sorted(arrondissements)}"
+            f" ni les zones {sorted(ids_demandes)}"
+        )
+    gardees = [z for z in zones if z in choisies or z.get("ajoutee")]
+    ids = {z["id"] for z in gardees}
+    resume = {
+        "arrondissements": sorted(arrondissements),
+        "zones": sorted(z["id"] for z in choisies),
+        "population": sum(z.get("population") or 0 for z in choisies),
+    }
+    return gardees, [d for d in depotoirs if d.get("zone_id") in ids], resume
+
+
+def restreindre_perimetre(donnees: dict, config: dict) -> dict | None:
+    """Vérifie le périmètre sur les données (ValueError s'il est vide) ; renvoie son résumé."""
+    return preparer(donnees, config)[2]
+
+
+def calculer_plan(donnees: dict, config: dict) -> dict:
+    zones, depotoirs, perimetre = preparer(donnees, config)
     actifs = [d for d in depotoirs if d.get("statut", "actif") == "actif"]   # règle 3
 
     demandes = estimer_demande(zones, config)
@@ -126,6 +170,7 @@ def calculer_plan(donnees: dict, config: dict) -> dict:
         "budget_depasse": bool(budget is not None and cout_mensuel > budget),
         "saison": config["scenario"]["saison"],
         "methode_tournees": collecte["methode"],
+        "perimetre": perimetre,
     }
     return {
         "points_regroupement": points,

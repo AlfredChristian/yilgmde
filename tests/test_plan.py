@@ -116,3 +116,61 @@ def test_sans_donnees(config):
     plan = calculer_plan({"zones": [], "depotoirs": []}, config)
     assert plan["points_regroupement"] == [] and plan["tournees"] == []
     assert plan["indicateurs"]["dechets_collectes_pct"] == 100.0
+
+
+# --- Livrable 3 : plan d'un arrondissement ------------------------------------------------
+
+from simulation.plan import restreindre_perimetre  # noqa: E402
+
+PAR_ARR = {
+    "zones": [dict(DONNEES["zones"][0], arrondissement=4), dict(DONNEES["zones"][1], arrondissement=7)],
+    "depotoirs": DONNEES["depotoirs"],
+}
+
+
+def test_sans_perimetre_toute_la_commune(config):
+    assert restreindre_perimetre(PAR_ARR, config) is None
+    assert calculer_plan(PAR_ARR, config)["indicateurs"]["perimetre"] is None
+
+
+def test_plan_d_un_arrondissement(config):
+    arr4 = appliquer_surcharges(config, {"perimetre": {"arrondissements": [4]}})
+    plan = calculer_plan(PAR_ARR, arr4)
+    assert {p["zone_id"] for p in plan["points_regroupement"]} == {1}
+    assert plan["indicateurs"]["perimetre"] == {"arrondissements": [4], "zones": [1], "population": 6000}
+    assert plan["indicateurs"]["demande_totale_kg_jour"] == pytest.approx(6000 * config["population"]["production_dechets_kg_hab_jour"])
+    # les dépotoirs hors périmètre (zone 2, hors zone) ne sont ni desservis ni traités par Laabal
+    assert plan["indicateurs"]["depotoirs_actifs"] == 1
+    cibles = {a["cible_id"] for t in plan["tournees"] if t["type"] == "intervention" for a in t["arrets"]}
+    assert cibles <= {1}
+    assert all(set(p["depotoirs_desservis"]) <= {1} for p in plan["points_regroupement"])
+
+
+def test_perimetre_par_zones_et_union(config):
+    par_zone = appliquer_surcharges(config, {"perimetre": {"zones": [2]}})
+    assert restreindre_perimetre(PAR_ARR, par_zone)["zones"] == [2]
+    union = appliquer_surcharges(config, {"perimetre": {"arrondissements": [4], "zones": [2]}})
+    assert restreindre_perimetre(PAR_ARR, union)["zones"] == [1, 2]
+
+
+def test_perimetre_vide_ou_invalide(config):
+    with pytest.raises(ValueError, match="périmètre vide"):
+        restreindre_perimetre(PAR_ARR, appliquer_surcharges(config, {"perimetre": {"arrondissements": [99]}}))
+    with pytest.raises(ValueError):
+        restreindre_perimetre(PAR_ARR, dict(config, perimetre="x"))
+
+
+def test_nouveau_quartier_garde_dans_le_perimetre(config):
+    avec = appliquer_surcharges(config, {"perimetre": {"arrondissements": [4]}, "zones_ajoutees": [NOUVEAU_QUARTIER]})
+    plan = calculer_plan(PAR_ARR, avec)
+    assert plan["zones_ajoutees"] == [3]                     # id libre dans toute la commune, pas 2
+    assert {p["zone_id"] for p in plan["points_regroupement"]} == {1, 3}   # la zone 2, hors périmètre, est exclue
+    assert any(3 in p["depotoirs_desservis"] for p in plan["points_regroupement"] if p["zone_id"] == 3)
+
+
+def test_simulation_d_un_arrondissement(config):
+    from simulation.agents import simuler
+    arr7 = appliquer_surcharges(config, {"perimetre": {"arrondissements": [7]}})
+    r = simuler(PAR_ARR, arr7, 5, 1)
+    assert r["indicateurs"][0]["production_kg"] == pytest.approx(4000 * config["population"]["production_dechets_kg_hab_jour"])
+    assert r["resume"]["depotoirs_actifs_debut"] == 0          # le seul dépotoir de la zone 2 est éradiqué

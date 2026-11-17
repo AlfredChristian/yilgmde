@@ -223,3 +223,25 @@ def test_comparer_erreurs(client):
         assert client.get("/scenarios/comparer", params={"ids": ids}, headers=h).status_code == 422, ids
     assert client.get("/scenarios/comparer", params={"ids": "1,99"}, headers=h).status_code == 404
     assert client.get("/scenarios/comparer", params={"ids": "1,2"}, headers=entetes(client, Role.chauffeur)).status_code == 403
+
+
+def test_arrondissements_et_plan_d_un_arrondissement(client):
+    arr = client.get("/arrondissements").json()                       # public
+    assert [a["arrondissement"] for a in arr] == [1, 2]
+    assert arr[0]["zones"] == [1] and arr[0]["population"] > 0 and arr[0]["demande_kg_jour"] > 0
+    h = entetes(client)
+    plan = client.put("/scenarios/1/parametres", json={"perimetre": {"arrondissements": [2]}}, headers=h).json()
+    assert plan["indicateurs"]["perimetre"]["zones"] == [2]
+    assert {p["zone_id"] for p in plan["points_regroupement"]} == {2}
+    sim = client.post("/scenarios/1/simuler", json={"jours": 5, "graine": 1}, headers=h).json()
+    assert sim["indicateurs"][0]["production_kg"] < client.get("/arrondissements").json()[0]["demande_kg_jour"] + \
+        client.get("/arrondissements").json()[1]["demande_kg_jour"]
+    # périmètre inconnu : refusé, rien n'est enregistré
+    r = client.put("/scenarios/1/parametres", json={"perimetre": {"arrondissements": [42]}}, headers=h)
+    assert r.status_code == 422 and "périmètre vide" in r.json()["detail"]
+    assert client.get("/scenarios/1", headers=h).json()["parametres"]["perimetre"] == {"arrondissements": [2]}
+    # comparer deux arrondissements
+    s2 = client.post("/scenarios", json={"nom": "arr. 1", "parametres": {"perimetre": {"arrondissements": [1]}}},
+                     headers=h).json()
+    comp = client.get("/scenarios/comparer", params={"ids": f"1,{s2['id']}", "jours": 5}, headers=h).json()
+    assert [d["plan"]["perimetre"]["zones"] for d in comp["details"]] == [[2], [1]]
