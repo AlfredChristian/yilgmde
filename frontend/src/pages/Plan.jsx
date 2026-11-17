@@ -60,7 +60,7 @@ function Courbe({ indicateurs }) {
   )
 }
 
-function FlotteSimulation({ tournees }) {
+function FlotteSimulation({ tournees, onRetourCarte }) {
   const [temps, setTemps] = useState(38)
   const collectes = tournees.filter((t) => t.type === 'collecte').slice(0, 8)
 
@@ -71,21 +71,21 @@ function FlotteSimulation({ tournees }) {
 
   if (!collectes.length) {
     return (
-      <section className="carte plan-bloc flotte-bloc">
+      <section className="flotte-ecran flotte-ecran-vide">
         <div>
-          <div className="flotte-entete"><h2 className="carte-titre">Suivi de la flotte</h2><span className="flotte-badge">Simulation locale</span></div>
-          <p className="carte-texte">Aucun camion n'est mobilisé dans le plan actuel. Les véhicules apparaîtront ici dès qu'une tournée de collecte sera calculée.</p>
+          <div className="flotte-entete"><div><h2 className="carte-titre">Suivi de la flotte</h2><p className="flotte-sous-titre">Simulation de déplacement des véhicules</p></div><span className="flotte-badge">Simulation locale</span></div>
+          <div className="flotte-vide-contenu"><p className="carte-texte">Aucun camion n'est mobilisé dans le plan actuel. Les véhicules apparaîtront ici dès qu'une tournée de collecte sera calculée.</p><button className="btn-contour" onClick={onRetourCarte}>Retour à la carte</button></div>
         </div>
       </section>
     )
   }
 
   return (
-    <section className="carte plan-bloc flotte-bloc">
+    <section className="flotte-ecran">
       <div>
         <div className="flotte-entete">
           <div><h2 className="carte-titre">Suivi de la flotte</h2><p className="flotte-sous-titre"><span className="flotte-live" /> Déplacement simulé, mise à jour automatique</p></div>
-          <span className="flotte-badge">Simulation locale</span>
+          <div className="flotte-entete-actions"><span className="flotte-badge">Simulation locale</span><button className="flotte-retour" onClick={onRetourCarte}>Retour à la carte</button></div>
         </div>
         <div className="flotte-scene" aria-label="Simulation isométrique des camions">
           <div className="flotte-route flotte-route-a" />
@@ -129,6 +129,7 @@ export default function Plan() {
   const [scenarioCompare, setScenarioCompare] = useState('')
   const [utilisateurs, setUtilisateurs] = useState([])
   const [affectations, setAffectations] = useState({})
+  const [flotteOuverte, setFlotteOuverte] = useState(false)
   const [affectationEnCours, setAffectationEnCours] = useState(null)
   const delai = useRef(null)
 
@@ -408,7 +409,7 @@ export default function Plan() {
 
         <section className="carte plan-bloc">
           <div>
-            <h2 className="carte-titre">Affecter les tournées</h2>
+            <div className="plan-section-entete"><h2 className="carte-titre">Affecter les tournées</h2><button className="btn-contour plan-flotte-bouton" onClick={() => setFlotteOuverte(true)}>Voir la flotte en grand</button></div>
             {plan.tournees.length === 0 && <p className="carte-texte">Aucune tournée à affecter.</p>}
             {plan.tournees.map((tournee) => {
               const candidats = tournee.type === 'collecte' ? chauffeurs : brigades
@@ -431,11 +432,10 @@ export default function Plan() {
             })}
           </div>
         </section>
-        <FlotteSimulation tournees={plan.tournees} />
       </aside>
 
-      <div className="plan-carte">
-        <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
+      <div className={`plan-carte ${flotteOuverte ? 'plan-carte-flotte' : ''}`}>
+        {flotteOuverte ? <FlotteSimulation tournees={plan.tournees} onRetourCarte={() => setFlotteOuverte(false)} /> : <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -451,7 +451,7 @@ export default function Plan() {
               pathOptions={{ color: COULEURS[i % COULEURS.length], weight: 2 }} />
           ))}
           <Recadrer points={plan.points_regroupement} />
-        </MapContainer>
+        </MapContainer>}
       </div>
     </main>
   )

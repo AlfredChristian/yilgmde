@@ -29,13 +29,15 @@ export default function Laabal() {
     }
   }
 
-  if (!liste) return <main className="role-page"><p>{erreur ?? 'Chargement…'}</p></main>
+  if (!liste) return <main className="role-page"><div className="role-chargement"><span className="role-spinner" /> {erreur ?? 'Chargement de la file d’intervention'}</div></main>
 
   return (
     <main className="role-page role-page-large">
       <h1>Brigade Laabal</h1>
       <p className="role-intro">{session.nom} · dépotoirs illégaux à traiter</p>
       {erreur && <p className="mod-erreur">{erreur}</p>}
+
+      {liste.length === 0 && <section className="role-empty carte"><div className="role-empty-icon"><Icone nom="bouclier" taille={34} /></div><span className="statut statut-ok">Tout est sous contrôle</span><h1>Aucun dépotoir à traiter</h1><p>La file d’intervention est vide pour le moment. Les nouveaux dépotoirs vérifiés apparaîtront ici avec leur priorité.</p></section>}
 
       <div className="role-liste">
         {liste.map((d) => {

@@ -116,8 +116,8 @@ export default function Admin() {
       <h2>Signalements à vérifier {file && `(${file.length})`}</h2>
 
       {erreur && <p className="mod-erreur">{erreur}</p>}
-      {file === null && !erreur && <p>Chargement…</p>}
-      {file?.length === 0 && <p>Rien à modérer pour le moment.</p>}
+      {file === null && !erreur && <div className="admin-etat"><span className="admin-etat-icone"><Icone nom="suivi" taille={28} /></span><strong>Chargement de la file</strong><span>Nous récupérons les signalements à vérifier.</span></div>}
+      {file?.length === 0 && <div className="admin-etat"><span className="admin-etat-icone admin-etat-ok"><Icone nom="check" taille={28} /></span><strong>Tout est à jour</strong><span>Rien à modérer pour le moment. Les nouveaux signalements apparaîtront ici.</span><Link to="/admin/plan" className="btn-contour">Ouvrir le plan de gestion</Link></div>}
 
       <div className="mod-grille">
         {file?.map((s) => (

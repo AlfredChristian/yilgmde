@@ -7,6 +7,9 @@
 .plan-panneau h1 { margin: 0; font-family: var(--serif); color: var(--vert-fonce); font-size: 1.6rem; }
 .plan-carte { height: 100%; }
 .plan-bloc { grid-template-columns: 1fr; padding-right: 20px; }
+.plan-section-entete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.plan-section-entete .carte-titre { margin: 0; }
+.plan-flotte-bouton { font-size: .74rem; padding: 8px 10px; white-space: nowrap; }
 .plan-champ { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--bordure); font-size: 0.9rem; font-weight: 600; }
 .plan-champ input[type='number'] { width: 110px; font: inherit; padding: 8px; border: 1.5px solid #d5dde0; border-radius: 10px; text-align: right; }
 .plan-champ input:focus { outline: none; border-color: var(--vert); box-shadow: 0 0 0 3px rgba(27,107,74,.15); }
@@ -39,12 +42,20 @@
 .plan-affectation > div { display: flex; gap: 8px; }
 .plan-affectation select { flex: 1; min-width: 0; font: inherit; padding: 8px; border: 1.5px solid #d5dde0; border-radius: 10px; background: white; }
 .flotte-bloc { overflow: hidden; }
+.plan-carte-flotte { background: #dcece3; }
+.flotte-ecran { height: 100%; min-height: 420px; box-sizing: border-box; padding: 22px; overflow: auto; background: #f6f8f7; }
+.flotte-ecran > div { max-width: 1100px; margin: 0 auto; }
+.flotte-ecran-vide { display: grid; place-items: center; text-align: center; }
+.flotte-vide-contenu { max-width: 500px; margin: 80px auto 0; }
+.flotte-entete-actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.flotte-retour { border: 1px solid var(--vert); border-radius: 10px; padding: 7px 10px; background: white; color: var(--vert-fonce); font: inherit; font-size: .76rem; font-weight: 800; cursor: pointer; }
+.flotte-retour:hover { background: var(--vert-clair); }
 .flotte-entete { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
 .flotte-entete .carte-titre { margin: 0; }
 .flotte-sous-titre { margin: 5px 0 0; color: var(--gris); font-size: .75rem; }
 .flotte-badge { flex: 0 0 auto; color: #14623f; background: #e1f3e8; border: 1px solid #bce2ca; border-radius: 999px; padding: 5px 8px; font-size: .68rem; font-weight: 800; }
 .flotte-live { display: inline-block; width: 7px; height: 7px; margin-right: 4px; border-radius: 50%; background: #2eb872; box-shadow: 0 0 0 4px rgba(46,184,114,.14); }
-.flotte-scene { position: relative; height: 260px; margin: 16px -20px 12px; overflow: hidden; background: linear-gradient(145deg, #dcece3 0%, #c6dfd1 100%); perspective: 600px; }
+.flotte-scene { position: relative; height: min(62vh, 560px); min-height: 300px; margin: 22px 0 14px; overflow: hidden; border-radius: 18px; background: linear-gradient(145deg, #dcece3 0%, #c6dfd1 100%); perspective: 600px; box-shadow: inset 0 0 0 1px rgba(18,74,52,.08), 0 12px 30px rgba(18,74,52,.1); }
 .flotte-scene::before { content: ''; position: absolute; inset: 0; opacity: .28; background-image: linear-gradient(30deg, transparent 48%, #94bca5 49%, #94bca5 51%, transparent 52%), linear-gradient(150deg, transparent 48%, #94bca5 49%, #94bca5 51%, transparent 52%); background-size: 48px 28px; transform: rotateX(55deg) scale(1.7); transform-origin: center bottom; }
 .flotte-route { position: absolute; height: 12px; border-radius: 20px; background: #f4f7f4; box-shadow: 0 2px 0 rgba(55,91,70,.12); transform: rotate(-28deg); }
 .flotte-route-a { width: 125%; left: -15%; top: 48%; }
@@ -67,4 +78,10 @@
 .flotte-note { margin: 12px 0 0; color: var(--gris); font-size: .72rem; line-height: 1.4; }
 @media (max-width: 800px) {
   .plan-page { grid-template-columns: 1fr; grid-template-rows: auto 60vh; height: auto; }
+  .plan-carte-flotte { min-height: 75vh; }
+  .flotte-ecran { min-height: 75vh; padding: 16px; }
+  .flotte-entete { align-items: flex-start; }
+  .flotte-entete-actions { flex-direction: column; align-items: flex-end; }
+  .flotte-scene { height: 58vh; min-height: 360px; }
+  .plan-section-entete { align-items: flex-start; flex-direction: column; }
 }
