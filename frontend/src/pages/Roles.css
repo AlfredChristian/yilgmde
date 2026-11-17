@@ -1,0 +1,16 @@
+.role-page { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+.role-page h1 { margin: 0 0 6px; font-family: var(--serif); color: var(--vert-fonce); }
+.role-intro { color: var(--gris); margin: 0 0 24px; line-height: 1.5; }
+.role-liste { display: grid; gap: 14px; }
+
+/* Grands écrans : la page Laabal utilise la largeur disponible.
+   Le mobile ne change pas. */
+@media (min-width: 900px) {
+  .role-page-large {
+    max-width: 1100px;
+  }
+  .role-page-large .role-liste {
+    grid-template-columns: repeat(2, 1fr);
+    align-items: start;
+  }
+}

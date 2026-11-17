@@ -272,3 +272,104 @@ export async function rejeterSignalement(id, motif) {
     body: JSON.stringify({ motif }),
   })
 }
+
+// ---- Scenarios et plan (admin) ----
+let MOCK_PARAMS = { camions: 3, camions_en_panne: 0, saison_pluies: false, menages_nouveau_quartier: 0, budget_xof: 500000 }
+
+// Plan simule a partir des parametres (mock uniquement).
+function planMock(p) {
+  const actifs = Math.max(p.camions - p.camions_en_panne, 0)
+  const facteur = (p.saison_pluies ? 1.4 : 1) * (1 + p.menages_nouveau_quartier / 20000)
+  const tournees = []
+  for (let i = 0; i < actifs; i++) {
+    const dec = i * 0.012
+    tournees.push({
+      id: i + 1, type: 'collecte', camion_id: `camion_${i + 1}`,
+      distance_km: Math.round((14.2 * facteur) / Math.max(actifs, 1) * 3 * 10) / 10,
+      duree_min: Math.round((95 * facteur) / Math.max(actifs, 1) * 3),
+      cout_xof: Math.round((21000 * facteur) / Math.max(actifs, 1) * 3),
+      arrets: [
+        { ordre: 1, latitude: 12.369 + dec, longitude: -1.525 + dec, statut: 'a_faire' },
+        { ordre: 2, latitude: 12.372 + dec, longitude: -1.515 - dec, statut: 'a_faire' },
+        { ordre: 3, latitude: 12.378 + dec, longitude: -1.505 + dec, statut: 'a_faire' },
+      ],
+    })
+  }
+  const cout = tournees.reduce((t, x) => t + x.cout_xof, 0)
+  return {
+    duree_calcul_ms: 120 + Math.round(Math.random() * 300),
+    points_regroupement: [
+      { id: 1, latitude: 12.369, longitude: -1.525, capacite_kg: 3000, explication: 'Proche de 2 dépotoirs actifs' },
+      { id: 2, latitude: 12.380, longitude: -1.505, capacite_kg: 3000, explication: 'Zone dense, près du marché' },
+    ],
+    tournees,
+    indicateurs: {
+      couverture_pct: Math.max(0, Math.min(100, Math.round(100 - (p.camions_en_panne * 18 + (p.saison_pluies ? 12 : 0) + p.menages_nouveau_quartier / 400)))),
+      cout_total_xof: cout,
+      hors_budget: cout > p.budget_xof,
+    },
+  }
+}
+
+export async function getParametres() {
+  if (USE_MOCK) return { ...MOCK_PARAMS }
+  return appelAuth('/scenarios/1') // [H] scenario courant = 1
+}
+
+// Modification partielle des parametres ; renvoie le plan recalcule.
+export async function majParametres(partiel) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 250))
+    MOCK_PARAMS = { ...MOCK_PARAMS, ...partiel }
+    return planMock(MOCK_PARAMS)
+  }
+  return appelAuth('/scenarios/1/parametres', { method: 'PUT', body: JSON.stringify(partiel) })
+}
+
+export async function getPlan() {
+  if (USE_MOCK) return planMock(MOCK_PARAMS)
+  return appelAuth('/scenarios/1/plan') // [H] route a confirmer
+}
+
+// ---- Chauffeur ----
+let MOCK_TOURNEE = {
+  id: 1, camion_id: 'camion_1', distance_km: 14.2, duree_min: 95,
+  arrets: [
+    { ordre: 1, nom: 'Point de regroupement n°1', latitude: 12.369, longitude: -1.525, statut: 'a_faire' },
+    { ordre: 2, nom: 'Point de regroupement n°2', latitude: 12.38, longitude: -1.505, statut: 'a_faire' },
+    { ordre: 3, nom: 'Marché de quartier', latitude: 12.375, longitude: -1.51, statut: 'a_faire' },
+  ],
+}
+
+export async function getTournee() {
+  if (USE_MOCK) return JSON.parse(JSON.stringify(MOCK_TOURNEE))
+  return appelAuth('/chauffeur/tournee') // [H]
+}
+
+export async function marquerArret(ordre, statut) {
+  if (USE_MOCK) {
+    MOCK_TOURNEE.arrets = MOCK_TOURNEE.arrets.map((a) => (a.ordre === ordre ? { ...a, statut } : a))
+    return { ok: true }
+  }
+  return appelAuth(`/chauffeur/arrets/${ordre}/${statut === 'effectue' ? 'effectue' : 'reset'}`, { method: 'POST' }) // [H]
+}
+
+// ---- Laabal ----
+let MOCK_LAABAL = [
+  { id: 1, latitude: 12.3714, longitude: -1.5197, volume_estime: 'moyen', legalite: 'illegal', statut: 'actif' },
+  { id: 2, latitude: 12.365, longitude: -1.53, volume_estime: 'gros', legalite: 'illegal', statut: 'actif' },
+  { id: 4, latitude: 12.39, longitude: -1.51, volume_estime: 'petit', legalite: 'illegal', statut: 'surveille' },
+]
+
+export async function getDepotoirsLaabal() {
+  if (USE_MOCK) return MOCK_LAABAL.map((d) => ({ ...d }))
+  return appelAuth('/laabal/depotoirs') // [H]
+}
+
+export async function changerStatutDepotoir(id, statut) {
+  if (USE_MOCK) {
+    MOCK_LAABAL = MOCK_LAABAL.map((d) => (d.id === id ? { ...d, statut } : d))
+    return { ok: true }
+  }
+  return appelAuth(`/laabal/depotoirs/${id}/${statut}`, { method: 'POST' }) // [H]
+}

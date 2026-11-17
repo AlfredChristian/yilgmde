@@ -9,6 +9,9 @@ import Signaler from './pages/Signaler'
 import Suivi from './pages/Suivi'
 import Connexion from './pages/Connexion'
 import Admin from './pages/Admin'
+import Plan from './pages/Plan'
+import Chauffeur from './pages/Chauffeur'
+import Laabal from './pages/Laabal'
 
 export default function App() {
   return (
@@ -37,6 +40,16 @@ export default function App() {
               </RouteProtegee>
             }
           />
+          <Route 
+            path="/admin/plan" 
+            element={
+              <RouteProtegee roles={['admin']}>
+                <Plan />
+              </RouteProtegee>
+            } 
+          />
+          <Route path="/chauffeur" element={<RouteProtegee roles={['chauffeur']}><Chauffeur /></RouteProtegee>} />
+          <Route path="/laabal" element={<RouteProtegee roles={['laabal']}><Laabal /></RouteProtegee>} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

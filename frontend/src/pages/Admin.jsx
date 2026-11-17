@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { getFileModeration, validerSignalement, rejeterSignalement } from '../api/client'
-import './Admin.css'
 import Icone from '../components/Icone'
+import './Admin.css'
 
 const MOTIFS = ['Photo sans rapport', 'Position incohérente', 'Doublon', 'Pas un dépotoir', 'Autre']
 
@@ -32,7 +33,7 @@ function Carte({ s, onTraite, onErreur }) {
   const doublon = s.alertes.find((a) => a.startsWith('doublon_probable:'))
   const idDoublon = doublon ? Number(doublon.split(':')[1]) : null
 
-    const grade = s.score_auto >= 0.75 ? 'A' : s.score_auto >= 0.5 ? 'B' : 'C'
+  const grade = s.score_auto >= 0.75 ? 'A' : s.score_auto >= 0.5 ? 'B' : 'C'
   const heure = new Date(s.cree_le).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
   return (
@@ -108,6 +109,9 @@ export default function Admin() {
     <main className="admin">
       <h1>Espace mairie</h1>
       <p className="admin-intro">Connecté : {session.nom}</p>
+      <Link to="/admin/plan" className="btn-contour plein" style={{ marginBottom: 24 }}>
+        Plan de gestion
+      </Link>
       <h2>Signalements à vérifier {file && `(${file.length})`}</h2>
 
       {erreur && <p className="mod-erreur">{erreur}</p>}
