@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -15,7 +16,8 @@ from backend.utilisateurs import creer_admin_si_absent
 async def lifespan(app: FastAPI):
     # La config est lue une fois au démarrage ; chaque scénario la surcharge ensuite
     # de façon partielle (voir backend/config.py), sans jamais la modifier.
-    app.state.config = charger_config("ouagadougou")
+    # G2 : la commune se choisit sans toucher au code (config/<ville>.yaml).
+    app.state.config = charger_config(os.environ.get("YILGMDE_VILLE", "ouagadougou") or None)
     app.state.db = db.connecter()
     db.initialiser(app.state.db)
     # Premier admin : variables d'environnement, jamais de compte dans le dépôt (D11).

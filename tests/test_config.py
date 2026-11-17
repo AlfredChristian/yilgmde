@@ -81,3 +81,18 @@ def test_bbox_incoherente_refusee():
 def test_fichier_ville_introuvable():
     with pytest.raises(ConfigError):
         charger_config("ville_inconnue")
+
+
+def test_ville_choisie_par_variable_d_environnement(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from backend import db
+    from backend.main import app
+
+    monkeypatch.setattr(db, "CHEMIN_DB_DEFAUT", tmp_path / "test.sqlite3")
+    monkeypatch.setenv("YILGMDE_VILLE", "")                     # vide : default.yaml seul
+    with TestClient(app):
+        assert app.state.config.get("ville") is None
+    monkeypatch.delenv("YILGMDE_VILLE")
+    with TestClient(app):
+        assert app.state.config["ville"] == "Ouagadougou"

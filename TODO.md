@@ -9,7 +9,7 @@
 - [x] Dépôt créé, structure en place, API `/health` qui tourne (Christian)
 - [ ] Faissal et Cramer ont cloné le dépôt et lancé l'API
 - [ ] Contrat d'API (`docs/api-contract.md`) relu et validé par Christian et Faissal
-- [ ] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence) — simulation tranchée (D18)
+- [ ] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence) — simulation (D18) et licence MIT (D16) tranchées
 - [ ] Jeux de données d'exemple dans `data/sample/` utilisés par le front et le back
 - [ ] Questions ouvertes de `CONTEXT.md` posées aux organisateurs (Cramer)
 
@@ -63,7 +63,7 @@
 
 ## Cramer — présentation, documentation, données, tests
 
-- [ ] README complété (présentation, installation, lancement, licence) (P1)
+- [x] README complété (présentation, installation, lancement, licence) (P1) — licence MIT (D16)
 - [ ] `docs/enonce.md` vérifié contre le sujet officiel (P1)
 - [ ] Collecte des signalements de notre secteur (une fois le secteur confirmé) (P1)
 - [ ] Hypothèses de `config/ouagadougou.yaml` documentées avec leurs sources (P1)
