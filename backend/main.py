@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend import db
 from backend.config import charger_config
+from backend.limitation import creer_limiteurs
 from backend.plans import creer_scenario_base_si_absent
 from backend.routes import admin_export, admin_signalements, admin_utilisateurs, auth, depotoirs, scenarios, signalements, terrain, zones
 from backend.utilisateurs import creer_admin_si_absent
@@ -21,6 +22,8 @@ async def lifespan(app: FastAPI):
     creer_admin_si_absent(app.state.db)
     # Scénario « base » (sans surcharge), actif : donne le plan courant dès le départ.
     creer_scenario_base_si_absent(app.state.db)
+    # Compteurs d'échecs de connexion (D32), en mémoire : remis à zéro au démarrage.
+    app.state.limiteurs_login = creer_limiteurs(app.state.config)
     yield
     app.state.db.close()
 

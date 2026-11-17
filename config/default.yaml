@@ -25,6 +25,8 @@ verification:
   penalite_depotoir_proche: 0.1          # [H] retranchée du score si un dépotoir connu est proche
   seuil_confiance_appareil: 0.3          # [H] en dessous, l'appareil est jugé peu fiable
   penalite_appareil_peu_fiable: 0.2      # [H]
+  gain_confiance_validation: 0.1         # [H] signalement validé : score ← score + gain × (1 − score)
+  perte_confiance_rejet: 0.25            # [H] signalement rejeté : score ← score − perte × score
 
 points_regroupement:
   capacite_kg: 3000                      # [H]
@@ -87,3 +89,7 @@ mairie:
 
 securite:
   duree_token_min: 480                   # [H] durée de validité d'une connexion (8 h)
+  max_echecs_par_email: 5                # [H] échecs de connexion avant blocage temporaire de l'e-mail
+  max_echecs_par_ip: 20                  # [H] idem par adresse IP (plusieurs comptes visés)
+  fenetre_echecs_min: 15                 # [H] fenêtre glissante de comptage des échecs
+  blocage_min: 15                        # [H] durée du blocage
