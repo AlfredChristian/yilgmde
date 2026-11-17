@@ -9,21 +9,26 @@ export default function Chauffeur() {
   const [tournee, setTournee] = useState(null)
   const [erreur, setErreur] = useState(null)
 
+  const [charge, setCharge] = useState(false)
+
   useEffect(() => {
-    getTournee().then(setTournee).catch((e) => setErreur(e.message))
+    getTournee().then(setTournee).catch((e) => setErreur(e.message)).finally(() => setCharge(true))
   }, [])
 
-  async function basculer(a) {
-    const statut = a.statut === 'effectue' ? 'a_faire' : 'effectue'
+  // Un arret coche ne se decoche pas (le serveur garde la trace du passage).
+  async function cocher(a) {
     try {
-      await marquerArret(a.ordre, statut)
-      setTournee((t) => ({ ...t, arrets: t.arrets.map((x) => (x.ordre === a.ordre ? { ...x, statut } : x)) }))
+      await marquerArret(a)
+      setTournee((t) => ({ ...t, arrets: t.arrets.map((x) => (x.ordre === a.ordre ? { ...x, statut: 'effectue' } : x)) }))
     } catch (e) {
       setErreur(e.message)
     }
   }
 
-  if (!tournee) return <main className="role-page"><p>{erreur ?? 'Chargement…'}</p></main>
+  if (!tournee) {
+    const texte = !charge ? 'Chargement…' : erreur ?? "Aucune tournée ne vous est affectée aujourd'hui. Demandez à l'administrateur."
+    return <main className="role-page"><p>{texte}</p></main>
+  }
   const faits = tournee.arrets.filter((a) => a.statut === 'effectue').length
 
   return (
@@ -53,9 +58,11 @@ export default function Chauffeur() {
                 <h3 className="carte-titre">{a.nom}</h3>
                 <p className="carte-texte">{a.latitude.toFixed(5)}, {a.longitude.toFixed(5)}</p>
                 <div className="carte-actions">
-                  <button className={fait ? 'btn-contour' : 'btn-contour plein'} onClick={() => basculer(a)}>
-                    <Icone nom="check" taille={18} /> {fait ? 'Annuler' : 'Marquer effectué'}
-                  </button>
+                  {!fait && (
+                    <button className="btn-contour plein" onClick={() => cocher(a)}>
+                      <Icone nom="check" taille={18} /> Marquer effectué
+                    </button>
+                  )}
                   <a
                     className="btn-contour"
                     target="_blank"

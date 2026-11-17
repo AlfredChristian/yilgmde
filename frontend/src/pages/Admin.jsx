@@ -33,7 +33,8 @@ function Carte({ s, onTraite, onErreur }) {
   const doublon = s.alertes.find((a) => a.startsWith('doublon_probable:'))
   const idDoublon = doublon ? Number(doublon.split(':')[1]) : null
 
-  const grade = s.score_auto >= 0.75 ? 'A' : s.score_auto >= 0.5 ? 'B' : 'C'
+  // score_auto peut etre null (signalement importe ou ancien) : pas de note
+  const grade = s.score_auto == null ? '–' : s.score_auto >= 0.75 ? 'A' : s.score_auto >= 0.5 ? 'B' : 'C'
   const heure = new Date(s.cree_le).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
 
   return (
@@ -89,7 +90,7 @@ function Carte({ s, onTraite, onErreur }) {
         )}
       </div>
 
-      <span className="badge" title={`Score automatique : ${Math.round(s.score_auto * 100)} %`}>{grade}</span>
+      <span className="badge" title={s.score_auto == null ? 'Pas de score automatique' : `Score automatique : ${Math.round(s.score_auto * 100)} %`}>{grade}</span>
     </article>
   )
 }

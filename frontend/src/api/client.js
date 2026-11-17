@@ -24,13 +24,12 @@ export function getDepotoirs() {
   return getJson(url)
 }
 
-// Renvoie un GeoJSON FeatureCollection de signalements (bruts, avant moderation).
-// [H] route reelle a confirmer dans docs/api-contract.md
+// Renvoie un GeoJSON FeatureCollection de signalements de test (mock seulement).
+// Avec l'API, les signalements bruts ne sont jamais publics (D11) : couche vide.
+// Le jeu ouvert anonymise est a `${API_URL}/donnees/signalements.geojson` (D40).
 export function getSignalements() {
-  const url = USE_MOCK
-    ? '/mock/signalements_exemple.geojson'
-    : `${API_URL}/signalements`
-  return getJson(url)
+  if (!USE_MOCK) return Promise.resolve({ type: 'FeatureCollection', features: [] })
+  return getJson('/mock/signalements_exemple.geojson')
 }
 
 // Jeton anonyme propre a l'appareil (citoyen sans compte).
@@ -67,7 +66,8 @@ export async function postSignalement({ type_dechet, volume_estime, description,
   form.append('volume_estime', volume_estime)
   form.append('description', description ?? '')
   form.append('latitude', String(latitude))
-  
+  form.append('longitude', String(longitude))
+
   if (id_client) form.append('id_client', id_client)
   if (capture_le) form.append('capture_le', capture_le)
   if (audio) {
@@ -235,18 +235,33 @@ export async function login(email, mot_de_passe) {
     e.identifiants = true
     throw e
   }
+  if (res.status === 429) {
+    const minutes = Math.ceil(Number(res.headers.get('Retry-After') ?? 900) / 60)
+    throw new Error(`Trop d'essais : réessayez dans ${minutes} min`)
+  }
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
   const data = await res.json()
-  return { ...data, nom: data.nom ?? email.trim() }
+  // Le nom n'est pas dans la reponse de connexion : on le lit sur /auth/moi.
+  let nom = email.trim()
+  try {
+    const moi = await fetch(`${API_URL}/auth/moi`, { headers: { Authorization: `Bearer ${data.access_token}` } })
+    if (moi.ok) nom = (await moi.json()).nom ?? nom
+  } catch {
+    // nom par defaut : l'e-mail
+  }
+  return { ...data, nom }
 }
 
 // Appel authentifie (en-tete Bearer) pour les routes /admin, /chauffeur, /laabal.
+// Corps FormData (photo) : pas de Content-Type, le navigateur ajoute la frontiere multipart.
+// Les erreurs portent le statut HTTP et le message du serveur (champ `detail`).
 export async function appelAuth(chemin, options = {}) {
   const s = lireSession()
+  const multipart = options.body instanceof FormData
   const res = await fetch(`${API_URL}${chemin}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(multipart ? {} : { 'Content-Type': 'application/json' }),
       ...(options.headers ?? {}),
       Authorization: `Bearer ${s?.token ?? ''}`,
     },
@@ -255,8 +270,27 @@ export async function appelAuth(chemin, options = {}) {
     ecrireSession(null) // session expiree
     window.location.assign('/connexion')
   }
-  if (!res.ok) throw new Error(`Erreur ${res.status}`)
+  if (!res.ok) {
+    let detail = null
+    try {
+      detail = (await res.json()).detail
+    } catch {
+      // reponse sans JSON
+    }
+    const e = new Error(typeof detail === 'string' ? detail : `Erreur ${res.status}`)
+    e.statut = res.status
+    throw e
+  }
   return res.json()
+}
+
+// Fichier protege (photo, note vocale) : les balises <img>/<audio> n'envoient pas
+// le jeton, on le telecharge donc avec l'en-tete et on renvoie une URL locale.
+async function urlProtegee(chemin) {
+  if (!chemin) return null
+  const s = lireSession()
+  const res = await fetch(`${API_URL}${chemin}`, { headers: { Authorization: `Bearer ${s?.token ?? ''}` } })
+  return res.ok ? URL.createObjectURL(await res.blob()) : null
 }
 
 // ---- Moderation (admin) ----
@@ -277,7 +311,14 @@ export async function getFileModeration() {
     await new Promise((r) => setTimeout(r, 300))
     return [...MOCK_FILE]
   }
-  return appelAuth('/admin/signalements?statut=en_attente_revue')
+  const liste = await appelAuth('/admin/signalements?statut=en_attente_revue')
+  return Promise.all(
+    liste.map(async (s) => ({
+      ...s,
+      photo_url: await urlProtegee(s.photo_url),
+      audio_url: await urlProtegee(s.note_vocale_url),
+    })),
+  )
 }
 
 export async function validerSignalement(id, fusionnerAvec = null) {
@@ -303,12 +344,12 @@ export async function rejeterSignalement(id, motif) {
 }
 
 // ---- Scenarios et plan (admin) ----
-let MOCK_PARAMS = { camions: 3, camions_en_panne: 0, saison_pluies: false, menages_nouveau_quartier: 0, budget_xof: 500000 }
+let MOCK_PARAMS = { arrondissement: 0, camions_en_panne: 0, saison_pluies: false, budget_xof: 500000, nb_camions: 3 }
 
 // Plan simule a partir des parametres (mock uniquement).
 function planMock(p) {
-  const actifs = Math.max(p.camions - p.camions_en_panne, 0)
-  const facteur = (p.saison_pluies ? 1.4 : 1) * (1 + p.menages_nouveau_quartier / 20000)
+  const actifs = Math.max(p.nb_camions - p.camions_en_panne, 0)
+  const facteur = p.saison_pluies ? 1.4 : 1
   const tournees = []
   for (let i = 0; i < actifs; i++) {
     const dec = i * 0.012
@@ -333,16 +374,73 @@ function planMock(p) {
     ],
     tournees,
     indicateurs: {
-      couverture_pct: Math.max(0, Math.min(100, Math.round(100 - (p.camions_en_panne * 18 + (p.saison_pluies ? 12 : 0) + p.menages_nouveau_quartier / 400)))),
-      cout_total_xof: cout,
-      hors_budget: cout > p.budget_xof,
+      // memes noms que l'API (D41)
+      capacite_collecte_pct: Math.max(0, Math.min(100, 100 - p.camions_en_panne * 18)),
+      part_captee_estimee_pct: p.saison_pluies ? 55.2 : 60.2,
+      nb_points_regroupement: 2,
+      camions_utilises: tournees.map((t) => t.camion_id),
+      cout_mensuel_estime_xof: cout * 8,
+      budget_mensuel_xof: p.budget_xof,
+      budget_depasse: cout * 8 > p.budget_xof,
+      camions_flotte: ['camion_1', 'camion_2', 'camion_3'],
     },
+  }
+}
+
+// Avec l'API, le formulaire travaille sur le scenario actif. Ses parametres sont des
+// surcharges de la config (docs/api-contract.md) ; on les traduit dans les deux sens.
+let SCENARIO_ID = null
+let FLOTTE = [] // ids de tous les camions, lus dans le dernier plan (indicateurs.camions_flotte)
+
+async function scenarioActif() {
+  if (SCENARIO_ID == null) {
+    const liste = await appelAuth('/scenarios')
+    SCENARIO_ID = (liste.find((sc) => sc.actif) ?? liste[0]).id
+  }
+  return SCENARIO_ID
+}
+
+function retenirFlotte(plan) {
+  if (plan?.indicateurs?.camions_flotte) FLOTTE = plan.indicateurs.camions_flotte
+  return plan
+}
+
+// Surcharges du scenario -> champs du formulaire (Plan.jsx).
+function versFormulaire(p, plan) {
+  const ind = plan.indicateurs
+  return {
+    arrondissement: p.perimetre?.arrondissements?.[0] ?? 0, // 0 = toute la commune
+    saison_pluies: (p.scenario?.saison ?? p.saison) === 'pluies',
+    camions_en_panne: (p.camions ?? []).filter((c) => c.disponible === false).length,
+    // budget de la commune : celui du perimetre divise par sa part (D39)
+    budget_xof: Math.round(ind.budget_mensuel_xof / (ind.perimetre?.part_budget ?? 1)),
+    nb_camions: FLOTTE.length,
+  }
+}
+
+// Champ du formulaire -> surcharge envoyee a PUT /scenarios/{id}/parametres.
+function versApi(cle, valeur) {
+  switch (cle) {
+    case 'arrondissement':
+      return { perimetre: { arrondissements: valeur ? [valeur] : [] } }
+    case 'saison_pluies':
+      return { scenario: { saison: valeur ? 'pluies' : 'seche' } }
+    case 'camions_en_panne': // les N premiers camions de la flotte sont en panne
+      // Jamais de liste vide : elle remplacerait toute la flotte de la config.
+      if (!FLOTTE.length) throw new Error('flotte inconnue : rechargez la page')
+      return { camions: FLOTTE.map((id, i) => ({ id, disponible: i >= valeur })) }
+    case 'budget_xof':
+      return { mairie: { budget_mensuel_xof: valeur } }
+    default:
+      return { [cle]: valeur }
   }
 }
 
 export async function getParametres() {
   if (USE_MOCK) return { ...MOCK_PARAMS }
-  return appelAuth('/scenarios/1') // [H] scenario courant = 1
+  const id = await scenarioActif()
+  const [scenario, plan] = await Promise.all([appelAuth(`/scenarios/${id}`), getPlan()])
+  return versFormulaire(scenario.parametres ?? {}, plan)
 }
 
 // Modification partielle des parametres ; renvoie le plan recalcule.
@@ -352,12 +450,25 @@ export async function majParametres(partiel) {
     MOCK_PARAMS = { ...MOCK_PARAMS, ...partiel }
     return planMock(MOCK_PARAMS)
   }
-  return appelAuth('/scenarios/1/parametres', { method: 'PUT', body: JSON.stringify(partiel) })
+  const id = await scenarioActif()
+  const [[cle, valeur]] = Object.entries(partiel)
+  const plan = await appelAuth(`/scenarios/${id}/parametres`, {
+    method: 'PUT',
+    body: JSON.stringify(versApi(cle, valeur)),
+  })
+  return retenirFlotte(plan)
 }
 
 export async function getPlan() {
   if (USE_MOCK) return planMock(MOCK_PARAMS)
-  return appelAuth('/scenarios/1/plan') // [H] route a confirmer
+  const id = await scenarioActif()
+  return retenirFlotte(await appelAuth(`/scenarios/${id}/plan`))
+}
+
+// Liste des arrondissements pour le choix du perimetre (livrable 3).
+export async function getArrondissements() {
+  if (USE_MOCK) return []
+  return getJson(`${API_URL}/arrondissements`)
 }
 
 // ---- Chauffeur ----
@@ -370,35 +481,63 @@ let MOCK_TOURNEE = {
   ],
 }
 
+// Toutes les rotations affectees au chauffeur, mises bout a bout dans une seule liste.
+// Renvoie null si aucune tournee ne lui est affectee.
 export async function getTournee() {
   if (USE_MOCK) return JSON.parse(JSON.stringify(MOCK_TOURNEE))
-  return appelAuth('/chauffeur/tournee') // [H]
+  const { tournees } = await appelAuth('/chauffeur/tournee')
+  if (!tournees.length) return null
+  let ordre = 0
+  return {
+    id: tournees[0].id,
+    camion_id: [...new Set(tournees.map((t) => t.camion_id))].join(', '),
+    distance_km: Math.round(tournees.reduce((s, t) => s + t.distance_km, 0) * 10) / 10,
+    duree_min: Math.round(tournees.reduce((s, t) => s + t.duree_min, 0)),
+    arrets: tournees.flatMap((t) =>
+      t.arrets.map((a) => ({
+        ...a,
+        ordre: ++ordre,
+        nom: `Point de regroupement n°${a.cible_id}` + (tournees.length > 1 ? ` (rotation ${t.rotation ?? 1})` : ''),
+      })),
+    ),
+  }
 }
 
-export async function marquerArret(ordre, statut) {
+// Le serveur ne sait que cocher un arret (pas d'annulation).
+export async function marquerArret(arret) {
   if (USE_MOCK) {
-    MOCK_TOURNEE.arrets = MOCK_TOURNEE.arrets.map((a) => (a.ordre === ordre ? { ...a, statut } : a))
+    MOCK_TOURNEE.arrets = MOCK_TOURNEE.arrets.map((a) => (a.ordre === arret.ordre ? { ...a, statut: 'effectue' } : a))
     return { ok: true }
   }
-  return appelAuth(`/chauffeur/arrets/${ordre}/${statut === 'effectue' ? 'effectue' : 'reset'}`, { method: 'POST' }) // [H]
+  return appelAuth(`/chauffeur/arrets/${arret.id}/effectue`, { method: 'POST' })
 }
 
 // ---- Laabal ----
 let MOCK_LAABAL = [
   { id: 1, latitude: 12.3714, longitude: -1.5197, volume_estime: 'moyen', legalite: 'illegal', statut: 'actif' },
   { id: 2, latitude: 12.365, longitude: -1.53, volume_estime: 'gros', legalite: 'illegal', statut: 'actif' },
-  { id: 4, latitude: 12.39, longitude: -1.51, volume_estime: 'petit', legalite: 'illegal', statut: 'surveille' },
+  { id: 4, latitude: 12.39, longitude: -1.51, volume_estime: 'petit', legalite: 'illegal', statut: 'intervention_planifiee' },
 ]
 
+// Depotoirs illegaux a traiter, du plus prioritaire au moins prioritaire (avec la raison).
 export async function getDepotoirsLaabal() {
   if (USE_MOCK) return MOCK_LAABAL.map((d) => ({ ...d }))
-  return appelAuth('/laabal/depotoirs') // [H]
+  const liste = await appelAuth('/laabal/depotoirs-a-traiter')
+  return liste.map((d) => ({ ...d, legalite: 'illegal' }))
 }
 
-export async function changerStatutDepotoir(id, statut) {
+// action : 'intervention_planifiee' (intervention en cours), 'eradique' ou 'sous_surveillance'.
+// Cycle cote serveur (B5) : actif -> intervention_planifiee -> eradique -> sous_surveillance.
+export async function changerStatutDepotoir(id, action, photo = null) {
   if (USE_MOCK) {
-    MOCK_LAABAL = MOCK_LAABAL.map((d) => (d.id === id ? { ...d, statut } : d))
+    MOCK_LAABAL = MOCK_LAABAL.map((d) => (d.id === id ? { ...d, statut: action } : d))
     return { ok: true }
   }
-  return appelAuth(`/laabal/depotoirs/${id}/${statut}`, { method: 'POST' }) // [H]
+  if (action === 'sous_surveillance') {
+    return appelAuth(`/laabal/depotoirs/${id}/surveillance`, { method: 'POST' })
+  }
+  const form = new FormData()
+  form.append('statut', action === 'eradique' ? 'eradique' : 'en_cours')
+  if (photo) form.append('photo', photo)
+  return appelAuth(`/laabal/depotoirs/${id}/intervention`, { method: 'POST', body: form })
 }

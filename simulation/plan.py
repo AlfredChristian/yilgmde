@@ -181,6 +181,7 @@ def calculer_plan(donnees: dict, config: dict) -> dict:
         "depotoirs_en_attente_laabal": len(laabal["en_attente"]),
         "camions_utilises": camions_utilises,
         "camions_indisponibles": [c["id"] for c in config.get("camions", []) if not c.get("disponible", True)],
+        "camions_flotte": [c["id"] for c in config.get("camions", [])],   # pour régler les pannes depuis le front
         "distance_totale_km": round(sum(t["distance_km"] for t in tournees), 2),
         "cout_total_xof": round(cout_passage),
         "cout_mensuel_estime_xof": round(cout_mensuel),
