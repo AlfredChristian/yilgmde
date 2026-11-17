@@ -10,14 +10,16 @@ plus proche voisin, toujours disponible.
 Modèle [H] :
 - tous les camions partent du dépôt `collecte.depot` et y reviennent (vidage) ;
 - un camion indisponible n'est **jamais** utilisé (règle 4) ;
-- chaque camion fait au plus `collecte.rotations_max_par_jour` rotations, chacune
-  limitée par sa capacité et par `duree_max_tournee_min / rotations` ;
+- un passage s'étale sur `jours_par_passage` jours (`jours_ouvres_par_semaine /
+  frequence_passages_par_semaine`, D39) ; chaque jour, chaque camion fait au plus
+  `collecte.rotations_max_par_jour` rotations, chacune limitée par sa capacité et par
+  `duree_max_tournee_min / rotations` ;
 - à chaque passage, un point contient le stock accumulé depuis le passage
   précédent (`stock_entre_passages_kg`, C2) ; s'il est inconnu (point hors zone),
   on suppose le point plein (`capacite_kg`) ;
 - distance routière = vol d'oiseau × `collecte.coef_detour` ; vitesse =
   `vitesse_moyenne_kmh × coef_vitesse_camion(saison)` ; `temps_arret_min` par arrêt ;
-- coût = `cout_km_xof × km + cout_jour_xof` par camion utilisé dans la journée.
+- coût = `cout_km_xof × km + cout_jour_xof` par camion et par jour travaillé.
 
 Les points qu'aucune tournée ne peut prendre vont dans `non_couverts` avec leur raison.
 """
@@ -38,6 +40,20 @@ PENALITE_ABANDON = 10_000_000   # coût d'un arrêt non desservi : on ne l'aband
 
 
 # --- Données d'entrée ----------------------------------------------------------------
+
+def jours_par_passage(config: dict) -> int:
+    """Jours dont disposent les camions pour faire le tour des points entre deux passages.
+
+    `jours_ouvres_par_semaine / frequence_passages_par_semaine`, arrondi à l'inférieur, au moins 1 :
+    collecte 2 fois par semaine et 6 jours ouvrés = 3 jours (lundi à mercredi, jeudi à samedi).
+    Sans `jours_ouvres_par_semaine`, un passage se fait en une journée.
+    """
+    c = config["collecte"]
+    ouvres = c.get("jours_ouvres_par_semaine")
+    if not ouvres:
+        return 1
+    return max(1, int(float(ouvres) // float(c["frequence_passages_par_semaine"])))
+
 
 def vitesse_m_par_min(config: dict) -> float:
     saison = config["saisons"][config["scenario"]["saison"]]
@@ -194,19 +210,21 @@ def planifier_tournees(points: Sequence[dict], config: dict, methode: str = "aut
     temps_arret = float(collecte.get("temps_arret_min", 10))
     temps_max_s = float(collecte.get("temps_calcul_max_s", 5))
 
+    jours = jours_par_passage(config)
     camions_hs = [c["id"] for c in config.get("camions", []) if not c.get("disponible", True)]
     camions = [c for c in config.get("camions", []) if c.get("disponible", True)]   # règle 4
     vehicules = []
-    for c in camions:
-        for r in range(1, rotations + 1):
-            vehicules.append(
-                {
-                    "camion": c, "rotation": r, "capacite": c["capacite_kg"],
-                    "duree_max": duree_jour / rotations,
-                    # le coût journalier n'est payé qu'une fois : porté par la 1re rotation
-                    "cout_fixe": c.get("cout_jour_xof", 0) if r == 1 else 0,
-                }
-            )
+    for jour in range(1, jours + 1):
+        for c in camions:
+            for r in range(1, rotations + 1):
+                vehicules.append(
+                    {
+                        "camion": c, "jour": jour, "rotation": r, "capacite": c["capacite_kg"],
+                        "duree_max": duree_jour / rotations,
+                        # le coût journalier n'est payé qu'une fois par jour : porté par la 1re rotation
+                        "cout_fixe": c.get("cout_jour_xof", 0) if r == 1 else 0,
+                    }
+                )
 
     sites = [_depot(config)] + [(p["latitude"], p["longitude"]) for p in points]
     demandes = [0.0] + [
@@ -238,6 +256,7 @@ def planifier_tournees(points: Sequence[dict], config: dict, methode: str = "aut
             {
                 "type": "collecte",
                 "camion_id": c["id"],
+                "jour": veh["jour"],
                 "rotation": veh["rotation"],
                 "distance_km": round(km, 2),
                 "duree_min": round(minutes, 1),
@@ -259,11 +278,11 @@ def planifier_tournees(points: Sequence[dict], config: dict, methode: str = "aut
         )
         desservis.update(route)
 
-    # Coût journalier : une fois par camion réellement utilisé, sur sa première tournée.
+    # Coût journalier : une fois par camion et par jour réellement travaillé, sur sa première tournée du jour.
     vus = set()
     for t in tournees:
-        if t["camion_id"] not in vus:
-            vus.add(t["camion_id"])
+        if (t["camion_id"], t["jour"]) not in vus:
+            vus.add((t["camion_id"], t["jour"]))
             t["cout_xof"] += round(next(c for c in camions if c["id"] == t["camion_id"]).get("cout_jour_xof", 0))
     for i, t in enumerate(tournees, start=1):
         t["id"] = i

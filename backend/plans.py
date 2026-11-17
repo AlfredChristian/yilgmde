@@ -148,8 +148,8 @@ _CLES_ARRET = ("ordre", "cible_type", "cible_id", "latitude", "longitude", "stat
 
 
 def cle_tournee(t: dict) -> tuple:
-    """Identité d'une tournée d'un plan à l'autre : camion et rotation, ou brigade."""
-    return (t["type"], t.get("camion_id"), t.get("rotation"), t.get("brigade"))
+    """Identité d'une tournée d'un plan à l'autre : camion, jour du passage et rotation, ou brigade."""
+    return (t["type"], t.get("camion_id"), t.get("jour"), t.get("rotation"), t.get("brigade"))
 
 
 def cle_arret(a: dict) -> tuple:

@@ -209,3 +209,21 @@ def test_grande_instance_solution_de_depart_deterministe(config):
     complet = planifier_tournees(POINTS, config)
     total = lambda r: sum(t["distance_km"] for t in r["tournees"])
     assert total(complet) <= total(a) + 0.01                      # la recherche locale ne fait pas pire
+
+
+def test_passage_etale_sur_plusieurs_jours(config):
+    """Collecte 2 fois par semaine sur 6 jours ouvrés : 3 jours pour faire le tour des points (D39)."""
+    from simulation.tournees import jours_par_passage
+    assert jours_par_passage(config) == 1                                      # sans le paramètre
+    six = appliquer_surcharges(config, {"collecte": {"jours_ouvres_par_semaine": 6}})
+    assert jours_par_passage(six) == 3
+    assert jours_par_passage(appliquer_surcharges(six, {"collecte": {"frequence_passages_par_semaine": 7}})) == 1
+    gros = [point(i, 12.37 + 0.002 * i, -1.52, stock=5000) for i in range(1, 7)]   # 30 t, 1 camion de 6 t
+    un_camion = appliquer_surcharges(six, {"camions": [{"id": "camion_2", "disponible": False},
+                                                       {"id": "camion_3", "disponible": False}]})
+    r = planifier_tournees(gros, un_camion)
+    assert len(ids_desservis(r)) == 6 and r["non_couverts"] == []               # 3 jours × 2 rotations
+    assert sorted({t["jour"] for t in r["tournees"]}) == [1, 2, 3]
+    c = next(x for x in config["camions"] if x["id"] == "camion_1")
+    km = sum(t["distance_km"] for t in r["tournees"])
+    assert sum(t["cout_xof"] for t in r["tournees"]) == pytest.approx(km * c["cout_km_xof"] + 3 * c["cout_jour_xof"], abs=10)
