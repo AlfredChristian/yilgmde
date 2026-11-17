@@ -44,8 +44,7 @@ Toute modification d'API passe par une PR qui met à jour ce fichier. La documen
 
 **GET `/points-regroupement`** → `FeatureCollection` de `Point` + `plan_id` et `scenario_id` du plan courant. Propriétés : `id`, `capacite_kg`, `zone_id` (`null` hors zone ; peut être une zone ajoutée par le scénario), `explication`, `charge_kg_jour` (`null` si inconnue), `stock_entre_passages_kg`, `sature`, `depotoirs_desservis` (ids). Le plan est recalculé d'abord si les dépotoirs, les zones ou les paramètres ont changé. Vide s'il n'y a pas de scénario actif.
 
-**POST `/signalements`** — `multipart/form-data` : `latitude`, `longitude`, `type_dechet`, `volume_estime`, `description` (optionnel), `photo` (fichier, optionnel).
-Réponse `201` :
+**POST `/signalements`** — `multipart/form-data` : `latitude`, `longitude`, `type_dechet`, `volume_estime`, `description` (optionnel), `photo` (fichier, optionnel), `note_vocale` (fichier audio webm ou mp4, optionnel, 60 s max). En-tête `X-Device-Token` : jeton anonyme de l'appareil (limite par appareil, filtre anti-abus).Réponse `201` :
 ```json
 { "id": 12, "code_suivi": "K7M-4QD", "statut": "en_attente_revue", "motif": null }
 ```
