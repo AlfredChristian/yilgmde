@@ -24,6 +24,24 @@ function RecadrerTournee({ arrets }) {
   return null
 }
 
+function RecalculerTailleCarte() {
+  const map = useMap()
+
+  useEffect(() => {
+    const actualiser = () => map.invalidateSize({ animate: false })
+    const premier = requestAnimationFrame(actualiser)
+    const second = window.setTimeout(actualiser, 120)
+    window.addEventListener('resize', actualiser)
+    return () => {
+      cancelAnimationFrame(premier)
+      window.clearTimeout(second)
+      window.removeEventListener('resize', actualiser)
+    }
+  }, [map])
+
+  return null
+}
+
 export default function Chauffeur() {
   const { session } = useAuth()
   const [tournee, setTournee] = useState(null)
@@ -99,11 +117,12 @@ export default function Chauffeur() {
         </div>
         {itineraireOuvert && (
           <div className="chauffeur-carte-itineraire">
-            <MapContainer center={positions[0] ?? CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
+            <MapContainer center={positions[0] ?? CENTRE} zoom={13} style={{ height: '420px', width: '100%' }}>
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
+              <RecalculerTailleCarte />
               <RecadrerTournee arrets={tournee.arrets} />
               {positions.length > 1 && <Polyline positions={positions} pathOptions={{ color: '#1b6b4a', weight: 5, opacity: 0.85 }} />}
               {tournee.arrets.map((a) => {
