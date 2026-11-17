@@ -69,6 +69,11 @@ function positionPrevue(plan, minute) {
   }
 }
 
+// Arrêts que l'horaire prévu place avant `minute` (le camion est déjà passé).
+function arretsPrevus(plan, minute) {
+  return plan.segments.filter((s) => s.arret && s.fin <= minute).length
+}
+
 function Recadrer({ positions }) {
   const map = useMap()
   const cle = positions.length
@@ -163,6 +168,12 @@ function VueSuivi({ onRetourCarte }) {
         <p><strong>{r.tournees_affectees}</strong> tournées affectées · <strong>{r.tournees_terminees}</strong> terminées</p>
       </div>
 
+      <p className="suivi-aide">
+        Un <strong>passage</strong> de collecte s'étale sur {suivi.jours.length} jour{suivi.jours.length > 1 ? 's' : ''} : la commune
+        travaille 6 jours par semaine et chaque point est vidé 2 fois par semaine (réglages du plan). Le même plan se répète
+        à chaque passage ; les jours ci-dessous sont ceux d'un passage.
+      </p>
+
       <div className="suivi-commandes">
         <div className="suivi-jours" role="group" aria-label="Jour du passage">
           {suivi.jours.map((j) => (
@@ -214,17 +225,26 @@ function VueSuivi({ onRetourCarte }) {
         <ol className="suivi-liste" aria-label={`Camions du jour ${jour}`}>
           {camions.map((c) => {
             const pct = c.total ? Math.round((100 * c.faits) / c.total) : 0
+            const prevus = arretsPrevus(c.plan, minute)
+            const pctPrevu = c.total ? Math.round((100 * prevus) / c.total) : 0
+            const retard = c.agent && prevus > c.faits
             return (
               <li key={c.id}>
                 <div className="suivi-ligne">
                   <strong>{c.id}</strong>
-                  <span>{c.faits}/{c.total} arrêts</span>
+                  {retard && <span className="suivi-retard">en retard sur le prévu</span>}
                 </div>
-                <div className="suivi-barre" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${c.id} : ${pct} %`}>
+                <div className="suivi-compte">
+                  <span>Réel : <strong>{c.faits}/{c.total}</strong></span>
+                  <span>Prévu à {heure(minute)} : {prevus}/{c.total}</span>
+                </div>
+                <div className="suivi-barre" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}
+                  aria-label={`${c.id} : ${pct} % réel, ${pctPrevu} % prévu`}>
+                  <i style={{ width: `${pctPrevu}%` }} />
                   <span style={{ width: `${pct}%` }} />
                 </div>
                 <small>
-                  {c.agent ?? 'Non affecté'} · {c.rotations.length} rotation{c.rotations.length > 1 ? 's' : ''} · fin prévue {heure(c.plan.fin)}
+                  {c.agent ?? 'Non affecté : personne ne peut cocher ses arrêts'} · {c.rotations.length} rotation{c.rotations.length > 1 ? 's' : ''} · fin prévue {heure(c.plan.fin)}
                   {c.derniere && ` · dernier arrêt coché à ${heureReelle(c.derniere)}`}
                 </small>
               </li>
@@ -238,10 +258,12 @@ function VueSuivi({ onRetourCarte }) {
         <span><i className="flotte-dot" style={{ background: '#fff', border: '1.5px solid #6b7c72' }} /> Arrêt à faire</span>
         <span><i className="flotte-dot" style={{ background: '#e0a100' }} /> Camion affecté, position prévue</span>
         <span><i className="flotte-dot" style={{ background: '#52514e' }} /> Camion non affecté, position prévue</span>
+        <span><i className="suivi-cle-barre" /> Barre : vert = arrêts cochés (réel), gris = arrêts prévus à l'heure choisie</span>
       </div>
       <p className="flotte-note">
-        Les positions des camions sont celles de l'horaire prévu par le plan (départ du dépôt à 7 h), pas un GPS.
-        L'avancement réel vient des arrêts cochés par les chauffeurs ; un traceur GPS pourra remplacer l'horaire prévu.
+        « Rejouer la journée » déplace les camions selon l'horaire prévu (départ du dépôt à 7 h) : ce n'est pas un GPS,
+        et cela ne coche aucun arrêt. Le compteur « Réel » ne bouge que lorsqu'un chauffeur coche un arrêt sur son téléphone ;
+        un camion non affecté reste donc à 0. Affectez les tournées dans le plan pour les suivre.
       </p>
     </section>
   )
