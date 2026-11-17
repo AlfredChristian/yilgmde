@@ -57,7 +57,7 @@
 - [ ] H1–H3 — Vue Laabal : dépotoirs à traiter, intervention, surveillance (P1)
 - [ ] E3 — Tableau de bord des indicateurs (P1)
 - [ ] A5 — Suivi d'un signalement avec le code (P2)
-- [ ] D6 — Comparaison de scénarios côte à côte (P2)
+- [x] D6 — Comparaison de scénarios côte à côte (P2) — `GET /scenarios/comparer` (D31) ; reste la vue front
 - [ ] A6 — Mode hors ligne : file d'attente d'envoi (P2)
 - [ ] B3/B4 — Fiche dépotoir et filtres (P2)
 

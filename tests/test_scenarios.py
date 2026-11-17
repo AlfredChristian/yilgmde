@@ -196,3 +196,30 @@ def test_comparer_deux_scenarios_par_simulation(client):
     base = client.post("/scenarios/1/simuler", json={"jours": 30, "graine": 1}, headers=h).json()["resume"]
     pluies = client.post(f"/scenarios/{s2['id']}/simuler", json={"jours": 30, "graine": 1}, headers=h).json()["resume"]
     assert pluies["dechets_sauvages_kg"] > base["dechets_sauvages_kg"]
+
+
+def test_comparer(client):
+    h = entetes(client)
+    s2 = client.post("/scenarios", json={"nom": "2 camions en moins", "parametres": {
+        "camions": [{"id": "camion_1", "disponible": False}, {"id": "camion_2", "disponible": False}]}}, headers=h).json()
+    r = client.get("/scenarios/comparer", params={"ids": f"1,{s2['id']}", "jours": 30, "graine": 3}, headers=h)
+    assert r.status_code == 200, r.text
+    corps = r.json()
+    assert corps["graine"] == 3 and [s["id"] for s in corps["scenarios"]] == [1, s2["id"]]
+    lignes = {(l["source"], l["indicateur"]): l for l in corps["indicateurs"]}
+    pct = lignes[("plan", "dechets_collectes_pct")]
+    assert pct["ecart_a_la_reference"][0] == 0 and pct["meilleur"] == [1]       # la base collecte plus
+    sauvage = lignes[("simulation", "dechets_sauvages_kg")]
+    assert sauvage["valeurs"][1] > sauvage["valeurs"][0] and sauvage["meilleur"] == [1]
+    assert lignes[("plan", "nb_points_regroupement")]["meilleur"] is None       # pas de sens « meilleur »
+    # même graine, mêmes résultats que /simuler
+    seul = client.post("/scenarios/1/simuler", json={"jours": 30, "graine": 3}, headers=h).json()["resume"]
+    assert corps["details"][0]["simulation"] == seul
+
+
+def test_comparer_erreurs(client):
+    h = entetes(client)
+    for ids in ("1", "1,1", "1,a", "1,2,3,4,5"):
+        assert client.get("/scenarios/comparer", params={"ids": ids}, headers=h).status_code == 422, ids
+    assert client.get("/scenarios/comparer", params={"ids": "1,99"}, headers=h).status_code == 404
+    assert client.get("/scenarios/comparer", params={"ids": "1,2"}, headers=entetes(client, Role.chauffeur)).status_code == 403

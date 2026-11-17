@@ -8,7 +8,7 @@ Chaque création, modification ou activation est écrite dans `journal_audit` (r
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
 from backend import db, plans
 from backend.config import ConfigError
@@ -77,6 +77,75 @@ def creer(request: Request, entree: ScenarioCreation, utilisateur=Depends(admin)
                 plans.activer_scenario(conn, sid)
                 journaliser(conn, utilisateur["id"], "activer_scenario", "scenario", sid)
         return plans.lire_scenario(conn, sid)
+
+
+# Indicateurs comparés (D6) : chemin dans la réponse, et sens « meilleur ».
+INDICATEURS_COMPARES = [
+    ("plan", "dechets_collectes_pct", "plus"),
+    ("plan", "nb_points_regroupement", None),
+    ("plan", "distance_totale_km", "moins"),
+    ("plan", "cout_total_xof", "moins"),
+    ("plan", "cout_mensuel_estime_xof", "moins"),
+    ("simulation", "pct_collecte_moyen", "plus"),
+    ("simulation", "depotoirs_actifs_fin", "moins"),
+    ("simulation", "dechets_sauvages_kg", "moins"),
+    ("simulation", "cout_total_xof", "moins"),
+    ("simulation", "passages_suspendus_budget", "moins"),
+]
+
+
+@router.get("/scenarios/comparer")
+def comparer(
+    request: Request,
+    ids: str = Query(..., description="ids séparés par des virgules, ex. 1,2"),
+    jours: int = Query(30, ge=1, le=365),
+    graine: int | None = None,
+    _=Depends(admin),
+):
+    """D6 : plan et simulation de 2 à 4 scénarios côte à côte, **même graine** pour une comparaison juste.
+
+    Pour chaque indicateur : valeur par scénario, écart au premier scénario (la référence)
+    et scénario le meilleur quand le sens est clair.
+    """
+    try:
+        liste = [int(x) for x in ids.split(",") if x.strip()]
+    except ValueError:
+        raise HTTPException(422, "ids : entiers séparés par des virgules")
+    if not 2 <= len(liste) <= 4 or len(set(liste)) != len(liste):
+        raise HTTPException(422, "comparer 2 à 4 scénarios distincts")
+    graine = int(request.app.state.config["scenario"].get("graine_aleatoire", 0) if graine is None else graine)
+
+    colonnes = []
+    for sid in liste:
+        plan = _plan(request, sid)
+        with acces_db(request) as conn:
+            scenario = plans.lire_scenario(conn, sid)
+            donnees = plans.lire_donnees(conn)
+        config = plans.config_effective(request.app.state.config, scenario)
+        sim = simuler(donnees, config, jours, graine, plan=plan)
+        colonnes.append({"scenario": scenario, "plan_id": plan["id"], "plan": plan["indicateurs"],
+                         "simulation": sim["resume"]})
+
+    lignes = []
+    for source, cle, sens in INDICATEURS_COMPARES:
+        valeurs = [c[source].get(cle) for c in colonnes]
+        ref = valeurs[0]
+        ecarts = [None if v is None or ref is None else round(v - ref, 2) for v in valeurs]
+        meilleur = None
+        if sens and all(v is not None for v in valeurs) and len(set(valeurs)) > 1:
+            choisi = max(valeurs) if sens == "plus" else min(valeurs)
+            meilleur = [c["scenario"]["id"] for c, v in zip(colonnes, valeurs) if v == choisi]
+        lignes.append({"source": source, "indicateur": cle, "valeurs": valeurs, "ecart_a_la_reference": ecarts,
+                       "sens": sens, "meilleur": meilleur})
+
+    return {
+        "jours": jours,
+        "graine": graine,
+        "scenarios": [{"id": c["scenario"]["id"], "nom": c["scenario"]["nom"], "parametres": c["scenario"]["parametres"],
+                       "plan_id": c["plan_id"]} for c in colonnes],
+        "indicateurs": lignes,
+        "details": [{"scenario_id": c["scenario"]["id"], "plan": c["plan"], "simulation": c["simulation"]} for c in colonnes],
+    }
 
 
 @router.get("/scenarios/{scenario_id}", response_model=ScenarioSortie)

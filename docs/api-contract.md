@@ -84,7 +84,18 @@ Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d
 - `POST /admin/utilisateurs` : `{"nom": "...", "email": "...", "mot_de_passe": "...", "role": "chauffeur"}` → `201` `{"id": 4, "nom": "...", "email": "...", "role": "chauffeur", "actif": true}`. `409` si l'email existe, `422` si mot de passe < 8 caractères ou > 72 octets, email invalide ou rôle inconnu.
 - `GET /admin/utilisateurs` → liste de `{id, nom, email, role, actif}` (jamais de mot de passe)
 - `GET /admin/journal?limit=50`
-- `GET /admin/export/depotoirs.geojson` : dépotoirs vérifiés, prêt pour OSM
+- `GET /admin/export/depotoirs.geojson?statut=actif&statut=eradique` (admin) : dépotoirs vérifiés en GeoJSON téléchargeable (`application/geo+json`, `depotoirs_yilgmde.geojson`), prêt à ouvrir dans JOSM. Par défaut : statuts `actif` et `intervention_planifiee` (présents sur le terrain), au moins `export_osm.min_signalements` signalements. Les propriétés ne sont **que des étiquettes OSM**, sans aucune donnée personnelle ; l'id interne est dans le `id` de la Feature. Export tracé dans le journal (D30).
+```json
+{ "type": "FeatureCollection",
+  "metadata": { "genere_le": "...", "commune": "Ouagadougou", "statuts": ["actif", "intervention_planifiee"],
+                "min_signalements": 1, "nombre": 1, "licence": null, "avertissement": "..." },
+  "features": [{ "type": "Feature", "id": "yilgmde/depotoir/1",
+                 "geometry": { "type": "Point", "coordinates": [-1.5201, 12.3701] },
+                 "properties": { "amenity": "waste_dump_site", "waste": "plastic",
+                                 "description": "Déchets plastiques, gravats",
+                                 "check_date": "2026-11-15", "source": "survey;YilGmdé" } }] }
+```
+  Illégal → `amenity=waste_dump_site` ; officiel → `landuse=landfill`. `waste` seulement pour `menager` (`trash`), `plastiques` (`plastic`), `organique` (`organic`) ; tous les types vont dans `description`, le plus fréquent d'abord (signalements `verifie` seulement).
 - `POST /admin/tournees/{id}/affecter` : `{"utilisateur_id": 4}` → la tournée avec `affectee_a`. Collecte → compte `chauffeur`, intervention → compte `laabal` (`422` sinon) ; `404` si la tournée n'est pas dans le plan courant ou si le compte est inconnu ou désactivé. Tracé dans le journal.
 
 **Scénarios et plan**
@@ -116,7 +127,15 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
               "distance_totale_km": 1110.2, "amendes_total_xof": 150000, "constats": 15, "budget_restant_xof": 4345952 } }
 ```
   - `pct_collecte` : part de la production du jour arrivée aux points (pré-collecte + apport volontaire − débordement). `cout_xof`, `distance_km` : non nuls les seuls jours de passage. `budget_restant_xof` : `null` si pas de budget dans la config.
-- `GET /scenarios/comparer?ids=1,2` (P2, à faire)
+- `GET /scenarios/comparer?ids=1,2&jours=30&graine=42` (D6) : 2 à 4 scénarios distincts (`422` sinon, `404` si l'un est inconnu), plan à jour et simulation de chacun avec la **même graine** (par défaut celle de la config).
+```json
+{ "jours": 30, "graine": 42,
+  "scenarios": [{ "id": 1, "nom": "base", "parametres": {}, "plan_id": 7 }, { "id": 2, "nom": "2 camions en moins", "parametres": {...}, "plan_id": 8 }],
+  "indicateurs": [{ "source": "simulation", "indicateur": "dechets_sauvages_kg", "valeurs": [66921, 93300],
+                    "ecart_a_la_reference": [0, 26379], "sens": "moins", "meilleur": [1] }],
+  "details": [{ "scenario_id": 1, "plan": { <indicateurs du plan> }, "simulation": { <résumé de /simuler> } }] }
+```
+  Le premier scénario est la référence des écarts. `sens` : `plus` ou `moins` est meilleur, `null` si ça dépend ; `meilleur` liste le ou les scénarios gagnants, `null` si égalité ou sans sens. Indicateurs comparés : plan (`dechets_collectes_pct`, `nb_points_regroupement`, `distance_totale_km`, `cout_total_xof`, `cout_mensuel_estime_xof`) et simulation (`pct_collecte_moyen`, `depotoirs_actifs_fin`, `dechets_sauvages_kg`, `cout_total_xof`, `passages_suspendus_budget`).
 
 **Plan (réponse)**
 ```json
