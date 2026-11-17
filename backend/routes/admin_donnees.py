@@ -5,7 +5,8 @@
 - B5 : `classe` (affaire réglée, plus suivi) seulement depuis `sous_surveillance` ;
   un signalement vérifié ensuite le fait quand même réapparaître (A3).
 - A4 : `POST /admin/signalements/import` charge un lot de signalements (GeoJSON) qui
-  passe par **la même vérification automatique** que les citoyens (A2), sans la
+  passe par **la même vérification automatique** que les citoyens (A2) — rejet
+  d'office ou mise en revue avec alertes, jamais de validation seule —, sans la
   limite par appareil ; les doublons à l'intérieur du lot sont détectés aussi.
 
 Tout est tracé dans `journal_audit` (règle 5).
@@ -114,7 +115,7 @@ def importer_signalements(request: Request, lot: dict = Body(...), utilisateur=D
     """A4 : FeatureCollection de `Point` avec `type_dechet`, `volume_estime`, `description`.
 
     Chaque signalement valide passe par la vérification automatique (A2) et finit
-    `soumis`, `en_attente_revue` ou `rejete_auto` ; les entrées invalides sont listées
+    `en_attente_revue` (avec ses alertes) ou `rejete_auto` ; les entrées invalides sont listées
     dans `erreurs` (index dans le lot) sans bloquer les autres. Un seul enregistrement
     au journal pour le lot.
     """
@@ -167,7 +168,8 @@ def importer_signalements(request: Request, lot: dict = Body(...), utilisateur=D
                 )
                 par_statut[verdict.statut.value] = par_statut.get(verdict.statut.value, 0) + 1
                 resultats.append({"index": i, "id": curseur.lastrowid, "code_suivi": code,
-                                  "statut": verdict.statut.value, "motif": verdict.motif})
+                                  "statut": verdict.statut.value, "motif": verdict.motif,
+                                  "alertes": verdict.alertes})
             if resultats:
                 journaliser(conn, utilisateur["id"], "importer_signalements", "signalement", None)
     return {"importes": len(resultats), "par_statut": par_statut, "erreurs": erreurs, "signalements": resultats}
