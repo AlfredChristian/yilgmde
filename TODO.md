@@ -102,3 +102,4 @@
 - [ ] L6 — Vidéo de 3 min : du signalement à la tournée, puis un changement de paramètres et le plan recalculé
 - [x] F5 — Gestion des comptes par l'admin : créer, renommer, rôle, désactiver / réactiver, mot de passe (D49), page `/admin/utilisateurs`
 - [x] Démo prête en une commande : `charger_exemples.py --ouaga --demo`
+- [x] Suivi de la flotte réel : arrêts cochés en direct, horaire prévu rejouable par jour (D51)

@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from '
 import 'leaflet/dist/leaflet.css'
 import { activerScenario, affecterTournee, comparerScenarios, creerScenario, getArrondissements, getParametres, getPlan, getScenarios, getUtilisateurs, majParametres, simulerScenario } from '../api/client'
 import './Plan.css'
+import SuiviFlotte from '../components/SuiviFlotte'
 
 const CENTRE = [12.3714, -1.5197]
 const COULEURS = ['#1b6b4a', '#f4b942', '#7b2cbf', '#0077b6', '#d62828']
@@ -69,58 +70,6 @@ function Courbe({ indicateurs }) {
       </svg>
       <small>min. {fmtNombre(min)} % · max. {fmtNombre(max)} %</small>
     </figure>
-  )
-}
-
-function FlotteSimulation({ tournees, onRetourCarte }) {
-  const [temps, setTemps] = useState(38)
-  const collectes = tournees.filter((t) => t.type === 'collecte').slice(0, 8)
-
-  useEffect(() => {
-    const intervalle = setInterval(() => setTemps((valeur) => (valeur + 1) % 100), 1800)
-    return () => clearInterval(intervalle)
-  }, [])
-
-  if (!collectes.length) {
-    return (
-      <section className="flotte-ecran flotte-ecran-vide">
-        <div>
-          <div className="flotte-entete"><div><h2 className="carte-titre">Suivi de la flotte</h2><p className="flotte-sous-titre">Simulation de déplacement des véhicules</p></div><span className="flotte-badge">Simulation locale</span></div>
-          <div className="flotte-vide-contenu"><p className="carte-texte">Aucun camion n'est mobilisé dans le plan actuel. Les véhicules apparaîtront ici dès qu'une tournée de collecte sera calculée.</p><button className="btn-contour" onClick={onRetourCarte}>Retour à la carte</button></div>
-        </div>
-      </section>
-    )
-  }
-
-  return (
-    <section className="flotte-ecran">
-      <div>
-        <div className="flotte-entete">
-          <div><h2 className="carte-titre">Suivi de la flotte</h2><p className="flotte-sous-titre"><span className="flotte-live" /> Déplacement simulé, mise à jour automatique</p></div>
-          <div className="flotte-entete-actions"><span className="flotte-badge">Simulation locale</span><button className="flotte-retour" onClick={onRetourCarte}>Retour à la carte</button></div>
-        </div>
-        <div className="flotte-scene" aria-label="Simulation isométrique des camions">
-          <div className="flotte-route flotte-route-a" />
-          <div className="flotte-route flotte-route-b" />
-          <div className="flotte-route flotte-route-c" />
-          <div className="flotte-zone flotte-zone-a">ZONE 09</div>
-          <div className="flotte-zone flotte-zone-b">ZONE 12</div>
-          {collectes.map((tournee, index) => {
-            const progress = (temps + index * 13) % 100
-            const statut = progress > 82 ? 'Retour dépôt' : progress > 55 ? 'Collecte en cours' : 'En route'
-            return (
-              <div key={tournee.id} className="flotte-camion" style={{ left: `${12 + progress * 0.72}%`, top: `${18 + progress * 0.45}%` }}>
-                <span className="flotte-camion-ombre" />
-                <span className="flotte-camion-corps"><span className="flotte-camion-cabine" /><span className="flotte-camion-roue roue-a" /><span className="flotte-camion-roue roue-b" /></span>
-                <span className="flotte-camion-label">{tournee.camion_id}<small>{statut}</small></span>
-              </div>
-            )
-          })}
-        </div>
-        <div className="flotte-legende"><span><i className="flotte-dot flotte-dot-vert" /> En route</span><span><i className="flotte-dot flotte-dot-jaune" /> Collecte en cours</span><span><i className="flotte-dot flotte-dot-gris" /> Retour dépôt</span></div>
-        <p className="flotte-note">Cette vue simule la position des véhicules. Elle sera alimentée par GPS lorsque les capteurs seront connectés.</p>
-      </div>
-    </section>
   )
 }
 
@@ -432,7 +381,7 @@ export default function Plan() {
 
         <section className="carte plan-bloc">
           <div>
-            <div className="plan-section-entete"><h2 className="carte-titre">Affecter les tournées</h2><button className="btn-contour plan-flotte-bouton" onClick={() => setFlotteOuverte(true)}>Voir la flotte en grand</button></div>
+            <div className="plan-section-entete"><h2 className="carte-titre">Affecter les tournées</h2><button className="btn-contour plan-flotte-bouton" onClick={() => setFlotteOuverte(true)}>Suivi de la flotte</button></div>
             {plan.tournees.length === 0 && <p className="carte-texte">Aucune tournée à affecter.</p>}
             {plan.tournees.map((tournee) => {
               const candidats = tournee.type === 'collecte' ? chauffeurs : brigades
@@ -458,7 +407,7 @@ export default function Plan() {
       </aside>
 
       <div className={`plan-carte ${flotteOuverte ? 'plan-carte-flotte' : ''}`}>
-        {flotteOuverte ? <FlotteSimulation tournees={plan.tournees} onRetourCarte={() => setFlotteOuverte(false)} /> : <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
+        {flotteOuverte ? <SuiviFlotte onRetourCarte={() => setFlotteOuverte(false)} /> : <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"

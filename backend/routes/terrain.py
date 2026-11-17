@@ -101,6 +101,64 @@ def affecter(request: Request, tournee_id: int, entree: AffecterEntree, utilisat
     return dict(tournee, affectee_a=entree.utilisateur_id)
 
 
+# --- Suivi de la flotte (admin) -------------------------------------------------------
+
+@router.get("/admin/suivi")
+def suivi_flotte(request: Request, _=Depends(admin)):
+    """Avancement réel du plan courant, pour la vue « Suivi de la flotte » (D51).
+
+    Chaque tournée avec ses arrêts (position, statut, heure où le chauffeur ou la brigade
+    l'a coché, lue dans le journal d'audit) et l'agent affecté. Le dépôt sert au tracé
+    départ / retour. Pas de GPS : la position d'un camion entre deux arrêts cochés n'est
+    pas connue, le front la montre comme un horaire prévu, distinct de l'avancement réel.
+    """
+    plan = _plan_courant(request)
+    ids = [a["id"] for t in plan["tournees"] for a in t["arrets"]]
+    with acces_db(request) as conn:
+        noms = {l["id"]: l["nom"] for l in conn.execute("SELECT id, nom FROM utilisateur")}
+        coches = {}
+        for debut in range(0, len(ids), 500):          # limite de paramètres SQLite
+            lot = ids[debut:debut + 500]
+            for l in conn.execute(
+                f"SELECT objet_id, MAX(date) AS quand FROM journal_audit WHERE action = 'arret_effectue' "
+                f"AND objet_type = 'arret_tournee' AND objet_id IN ({','.join('?' * len(lot))}) GROUP BY objet_id",
+                lot,
+            ):
+                coches[l["objet_id"]] = l["quand"]
+    tournees = []
+    for t in plan["tournees"]:
+        arrets = [
+            {"id": a["id"], "ordre": a["ordre"], "latitude": a.get("latitude"), "longitude": a.get("longitude"),
+             "cible_type": a["cible_type"], "cible_id": a["cible_id"], "statut": a["statut"],
+             "effectue_le": coches.get(a["id"])}
+            for a in t["arrets"]
+        ]
+        faits = sum(1 for a in arrets if a["statut"] == "effectue")
+        tournees.append({
+            "id": t["id"], "type": t["type"], "camion_id": t.get("camion_id"), "brigade": t.get("brigade"),
+            "jour": t.get("jour", 1), "rotation": t.get("rotation", 1),
+            "distance_km": t["distance_km"], "duree_min": t["duree_min"],
+            "affectee_a": t.get("affectee_a"), "affectee_nom": noms.get(t.get("affectee_a")),
+            "arrets_effectues": faits, "arrets_total": len(arrets),
+            "derniere_activite": max((a["effectue_le"] for a in arrets if a["effectue_le"]), default=None),
+            "arrets": arrets,
+        })
+    depot = request.app.state.config["collecte"].get("depot") or {}
+    total = sum(t["arrets_total"] for t in tournees)
+    faits = sum(t["arrets_effectues"] for t in tournees)
+    return {
+        "plan_id": plan["id"],
+        "depot": {"latitude": depot.get("latitude"), "longitude": depot.get("longitude")},
+        "jours": sorted({t["jour"] for t in tournees if t["type"] == "collecte"}) or [1],
+        "resume": {
+            "arrets_total": total, "arrets_effectues": faits,
+            "tournees_affectees": sum(1 for t in tournees if t["affectee_a"]),
+            "tournees_terminees": sum(1 for t in tournees if t["arrets_total"] and t["arrets_effectues"] == t["arrets_total"]),
+        },
+        "tournees": tournees,
+    }
+
+
 # --- C6 : chauffeur ------------------------------------------------------------------
 
 @router.get("/chauffeur/tournee")

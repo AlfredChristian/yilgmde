@@ -199,3 +199,21 @@ def test_constat_refuse(client):
     _, hc = compte(client, Role.chauffeur)
     assert client.post("/laabal/constats", data={"depotoir_id": "1"}, headers=hc).status_code == 403
     assert client.get("/admin/constats", headers=hl).status_code == 403
+
+
+def test_suivi_de_la_flotte(client):
+    """D51 : l'admin voit l'avancement réel (arrêts cochés, heure, agent), réservé à l'admin."""
+    uid, hc = compte(client, Role.chauffeur)
+    _, ha = compte(client, Role.admin)
+    assert client.get("/admin/suivi", headers=hc).status_code == 403
+    t = premiere(plan(client), "collecte")
+    affecter(client, t["id"], uid)
+    client.post(f"/chauffeur/arrets/{t['arrets'][0]['id']}/effectue", headers=hc)
+    suivi = client.get("/admin/suivi", headers=ha).json()
+    assert suivi["depot"]["latitude"] is not None and suivi["jours"]
+    vue = next(x for x in suivi["tournees"] if x["id"] == t["id"])
+    assert vue["affectee_nom"] == "chauffeur" and vue["arrets_effectues"] == 1
+    assert vue["arrets"][0]["statut"] == "effectue" and vue["arrets"][0]["effectue_le"]
+    assert vue["arrets"][0]["latitude"] is not None and vue["derniere_activite"] == vue["arrets"][0]["effectue_le"]
+    assert all(a["effectue_le"] is None for a in vue["arrets"][1:])
+    assert suivi["resume"]["arrets_effectues"] == 1 and suivi["resume"]["tournees_affectees"] == 1
