@@ -7,7 +7,7 @@ Calcule, sur le jeu de Ouagadougou (`data/ouaga/`) et la config de Ouaga, le pla
 simulation de chaque scénario, et écrit dans `docs/rapport/` :
 - `resultats.md` : scénarios, indicateurs du plan, résumé des simulations (à copier dans le rapport) ;
 - `resultats.csv` et `simulation_par_jour.csv` : les mêmes chiffres, pour un tableur ;
-- `courbes_*.png` : évolution jour par jour (part captée, dépotoirs actifs, coût cumulé) ;
+- `courbes_*.png` : évolution jour par jour (part captée, déchets sauvages et coût cumulés) ;
 - `carte_plan.png` : secteurs, points de regroupement et tournées du scénario de base ;
 - `plan_de_gestion.md` : la synthèse lisible du plan de base (même texte que l'API).
 
@@ -119,17 +119,22 @@ def ecrire_tableaux(resultats, arrondissement, jours, graine) -> None:
         "| Coût mensuel (M XOF) | Budget de l'arr. (M XOF) | Calcul |",
         "|---|---|---|---|---|---|---|---|---|", *lignes_plan, "",
         f"## Simulation sur {jours} jours", "",
-        "| Scénario | Part captée moyenne | Déchets sauvages | Dépotoirs actifs (début → fin) | Éradiqués "
+        "| Scénario | Part captée moyenne | Déchets sauvages | Dépotoirs actifs (début → fin) | Éradications (cumul) "
         "| Passages faits / annulés | Coût (M XOF) | Amendes (XOF) |",
         "|---|---|---|---|---|---|---|---|", *lignes_sim, "",
-        "Courbes : `courbes_part_captee.png`, `courbes_depotoirs.png`, `courbes_cout.png`. "
+        "Les dépotoirs suivent le même chemin dans tous les scénarios : dès qu'une zone produit "
+        f"des déchets sauvages au-delà de `seuil_nouveau_depotoir_kg`, un nouveau dépotoir y apparaît chaque jour "
+        "(c'est le cas des 4 secteurs dans tous les scénarios), et les brigades Laabal, dont la capacité "
+        "dépasse ces apparitions, ne dépendent pas des camions. L'effet des "
+        "scénarios se lit donc sur les tonnes de déchets sauvages, pas sur le nombre de dépotoirs.", "",
+        "Courbes : `courbes_part_captee.png`, `courbes_dechets_sauvages.png`, `courbes_cout.png`. "
         "Plan de base détaillé : `plan_de_gestion.md`, carte : `carte_plan.png`.", "",
         "Les hypothèses `[H]` sont listées dans `docs/parametres.md` ; les sources dans `data/ouaga/LISEZMOI.md`.", "",
     ]
     (DOSSIER_SORTIE / "resultats.md").write_text("\n".join(texte), encoding="utf-8")
 
     with open(DOSSIER_SORTIE / "resultats.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         w.writerow(["scenario", "capacite_collecte_pct", "part_captee_estimee_pct", "points", "camions_utilises",
                     "distance_km", "cout_mensuel_xof", "budget_mensuel_xof", "part_captee_moyenne_pct",
                     "dechets_sauvages_kg", "depotoirs_actifs_debut", "depotoirs_actifs_fin", "depotoirs_eradiques",
@@ -143,7 +148,7 @@ def ecrire_tableaux(resultats, arrondissement, jours, graine) -> None:
                         s["passages_collecte"], s["passages_suspendus_budget"], s["cout_total_xof"],
                         s["amendes_total_xof"]])
     with open(DOSSIER_SORTIE / "simulation_par_jour.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator="\n")
         champs = ["jour", "part_captee_pct", "depotoirs_actifs", "dechets_sauvages_kg", "cout_xof", "passage",
                   "collecte_suspendue", "depotoirs_eradiques", "reapparitions", "amendes_xof", "budget_restant_xof"]
         w.writerow(["scenario", *champs])
@@ -240,7 +245,7 @@ def carte(donnees, resultats, arrondissement) -> None:
     illegaux = [d for d in donnees["depotoirs"] if d.get("arrondissement") == arrondissement
                 and d["legalite"] == "illegal" and d["statut"] == "actif"]
     ax.scatter([d["longitude"] for d in illegaux], [d["latitude"] for d in illegaux], s=28, marker="x",
-               color=COULEURS[1], linewidths=1.6, zorder=4, label="dépotoir illégal actif")
+               color="#6250d6", linewidths=1.6, zorder=4, label="dépotoir illégal actif")
     for jour in sorted({t.get("jour", 1) for t in plan["tournees"] if t["type"] == "collecte"}):
         ax.plot([], [], color=COULEURS[(jour - 1) % 3], linewidth=2, label=f"tournées du jour {jour}")
     ax.set_title(f"Plan de base — arrondissement {arrondissement} : {len(plan['points_regroupement'])} points, "
@@ -267,7 +272,8 @@ def main() -> None:
     ecrire_plan(donnees, resultats, args.arrondissement)
     courbes(resultats, "part_captee_pct", "Part des déchets captée, jour par jour", "% de la production",
             "courbes_part_captee.png")
-    courbes(resultats, "depotoirs_actifs", "Dépotoirs illégaux actifs", "dépotoirs", "courbes_depotoirs.png")
+    courbes(resultats, "dechets_sauvages_kg", "Déchets sauvages cumulés (hors des points et des camions)", "tonnes",
+            "courbes_dechets_sauvages.png", cumul=True, echelle=1000)
     courbes(resultats, "cout_xof", "Coût cumulé de la collecte", "millions de XOF", "courbes_cout.png",
             cumul=True, echelle=1e6)
     carte(donnees, resultats, args.arrondissement)

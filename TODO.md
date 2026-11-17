@@ -88,5 +88,6 @@
 - [x] L3 (back) — Plan, simulation et comparaison d'un arrondissement (`perimetre`), `GET /arrondissements`, synthèse Markdown du plan (D37)
 - [ ] L3 (front) — Tableau de bord des scénarios : choix de l'arrondissement, plan sur la carte, indicateurs, simulation, comparaison, synthèse (Christian)
 - [x] L4 — Données réalistes de Ouaga (12 arrondissements, paramètres sourcés) et jeu de signalements GeoJSON sous ODbL — `data/ouaga/`, `GET /donnees/signalements.geojson` (D38–D40)
-- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (script de chiffres côté back)
+- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (Cramer)
+  - [x] chiffres, tableaux, courbes et carte : `python scripts/resultats_scenarios.py` → `docs/rapport/` (D43)
 - [ ] L6 — Vidéo de 3 min : du signalement à la tournée, puis un changement de paramètres et le plan recalculé
