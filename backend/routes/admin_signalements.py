@@ -33,6 +33,7 @@ from backend.schemas import (
     ValiderEntree,
 )
 from backend.securite import exiger_role
+from backend.confiance import ajuster_confiance_signalement
 from backend.utilisateurs import journaliser
 from backend.zones import zone_id_pour_point
 
@@ -172,6 +173,7 @@ def valider_signalement(
                 (depotoir_id, admin["id"], maintenant, signalement_id),
             )
             journaliser(conn, admin["id"], "valider_signalement", "signalement", signalement_id)
+            ajuster_confiance_signalement(conn, signalement_id, "valide", request.app.state.config)
 
         sig = _lire_signalement(conn, signalement_id)
         depotoir = conn.execute("SELECT * FROM depotoir WHERE id = ?", (depotoir_id,)).fetchone()
@@ -196,4 +198,5 @@ def rejeter_signalement(
                 (donnees.motif, admin["id"], maintenant, signalement_id),
             )
             journaliser(conn, admin["id"], "rejeter_signalement", "signalement", signalement_id)
+            ajuster_confiance_signalement(conn, signalement_id, "rejete", request.app.state.config)
         return _signalement_sortie(_lire_signalement(conn, signalement_id))

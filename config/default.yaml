@@ -25,6 +25,8 @@ verification:
   penalite_depotoir_proche: 0.1          # [H] retranchée du score si un dépotoir connu est proche
   seuil_confiance_appareil: 0.3          # [H] en dessous, l'appareil est jugé peu fiable
   penalite_appareil_peu_fiable: 0.2      # [H]
+  gain_confiance_validation: 0.1         # [H] signalement validé : score ← score + gain × (1 − score)
+  perte_confiance_rejet: 0.25            # [H] signalement rejeté : score ← score − perte × score
 
 points_regroupement:
   capacite_kg: 3000                      # [H]
