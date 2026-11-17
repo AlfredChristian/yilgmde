@@ -28,6 +28,7 @@ from backend.schemas import (
     ResultatValidation,
     Role,
     SignalementAdmin,
+    SignalementDetail,
     StatutDepotoir,
     StatutSignalement,
     ValiderEntree,
@@ -36,6 +37,7 @@ from backend.securite import exiger_role
 from backend.confiance import ajuster_confiance_signalement
 from backend.utilisateurs import journaliser
 from backend.zones import zone_id_pour_point
+from simulation.geometrie import distance_m
 
 router = APIRouter(prefix="/admin", tags=["moderation"])
 
@@ -110,6 +112,59 @@ def lister_signalements(
     with acces_db(request) as conn:
         lignes = conn.execute(requete, valeurs).fetchall()
     return [_signalement_sortie(l) for l in lignes]
+
+
+RAYON_PROXIMITE_M = 300
+
+
+@router.get("/signalements/{signalement_id}", response_model=SignalementDetail)
+def detail_signalement(signalement_id: int, request: Request, _admin: dict = Depends(exiger_role(Role.admin))):
+    """D54 : fiche complète pour décider. Quartier, fiabilité de l'appareil (sans l'identifier),
+    dépotoirs connus et autres signalements à moins de 300 m (doublon probable, fusion possible)."""
+    with acces_db(request) as conn:
+        ligne = _lire_signalement(conn, signalement_id)
+        extra = conn.execute("SELECT description, contributeur_id FROM signalement WHERE id = ?", (signalement_id,)).fetchone()
+        lat, lon = ligne["latitude"], ligne["longitude"]
+        zone_id = zone_id_pour_point(conn, lat, lon)
+        zone = conn.execute("SELECT nom, arrondissement FROM zone WHERE id = ?", (zone_id,)).fetchone() if zone_id else None
+        contributeur = None
+        if extra["contributeur_id"] is not None:
+            c = conn.execute("SELECT nb_signalements, score_confiance, bloque FROM contributeur WHERE id = ?",
+                             (extra["contributeur_id"],)).fetchone()
+            comptes = dict(conn.execute(
+                "SELECT statut, COUNT(*) FROM signalement WHERE contributeur_id = ? GROUP BY statut",
+                (extra["contributeur_id"],)).fetchall())
+            contributeur = {"score_confiance": c["score_confiance"], "nb_signalements": c["nb_signalements"],
+                            "verifies": comptes.get("verifie", 0),
+                            "rejetes": comptes.get("rejete", 0) + comptes.get("rejete_auto", 0),
+                            "bloque": bool(c["bloque"])}
+        # Boîte large puis distance exacte (≈ 0,003° ≈ 330 m à cette latitude).
+        d = RAYON_PROXIMITE_M / 111_000 * 1.2
+        boite = (lat - d, lat + d, lon - d, lon + d)
+        depotoirs = [
+            {"id": r["id"], "distance_m": round(distance_m(lat, lon, r["latitude"], r["longitude"])),
+             "latitude": r["latitude"], "longitude": r["longitude"], "statut": r["statut"], "legalite": r["legalite"],
+             "volume_estime": r["volume_estime"], "nb_signalements": r["nb_signalements"]}
+            for r in conn.execute("SELECT * FROM depotoir WHERE latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ?", boite)
+        ]
+        voisins = [
+            {"id": r["id"], "distance_m": round(distance_m(lat, lon, r["latitude"], r["longitude"])),
+             "latitude": r["latitude"], "longitude": r["longitude"], "statut": r["statut"],
+             "type_dechet": r["type_dechet"], "volume_estime": r["volume_estime"], "cree_le": r["cree_le"]}
+            for r in conn.execute(
+                "SELECT id, latitude, longitude, statut, type_dechet, volume_estime, cree_le FROM signalement "
+                "WHERE id != ? AND latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ?", (signalement_id, *boite))
+        ]
+    sortie = _signalement_sortie(ligne).model_dump()
+    return SignalementDetail(
+        **sortie,
+        description=extra["description"],
+        secteur=zone["nom"] if zone else None,
+        arrondissement=zone["arrondissement"] if zone else None,
+        contributeur=contributeur,
+        depotoirs_proches=sorted((x for x in depotoirs if x["distance_m"] <= RAYON_PROXIMITE_M), key=lambda x: x["distance_m"]),
+        signalements_proches=sorted((x for x in voisins if x["distance_m"] <= RAYON_PROXIMITE_M), key=lambda x: x["distance_m"])[:10],
+    )
 
 
 @router.get("/signalements/{signalement_id}/photo")

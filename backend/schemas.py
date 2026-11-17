@@ -104,6 +104,17 @@ class SignalementAdmin(Position):
     cree_le: datetime
 
 
+class SignalementDetail(SignalementAdmin):
+    """GET /admin/signalements/{id} : tout ce qui aide à valider ou rejeter (D54)."""
+
+    description: str | None = None
+    secteur: str | None = None
+    arrondissement: int | None = None
+    contributeur: dict | None = None        # {score_confiance, nb_signalements, verifies, rejetes, bloque}
+    depotoirs_proches: list[dict] = []      # {id, distance_m, statut, legalite, volume_estime, nb_signalements}
+    signalements_proches: list[dict] = []   # {id, distance_m, statut, type_dechet, volume_estime, cree_le}
+
+
 class Verdict(BaseModel):
     """Résultat de la vérification automatique d'un signalement (A2)."""
 

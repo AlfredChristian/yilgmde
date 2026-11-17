@@ -90,6 +90,7 @@ Réponse `201` :
 
 **Modération**
 - `GET /admin/signalements?statut=en_attente_revue` : file de modération, **les plus anciens d'abord** ; sans `statut`, tous les signalements. `422` si le statut est inconnu.
+- `GET /admin/signalements/{id}` (admin) → fiche pour décider (D54) : les champs de la file + `description`, `secteur`, `arrondissement`, `contributeur` (`score_confiance`, `nb_signalements`, `verifies`, `rejetes`, `bloque` ; jamais le jeton de l'appareil), `depotoirs_proches` et `signalements_proches` à moins de 300 m (`id`, `distance_m`, position, statut…), pour repérer un doublon et choisir `fusionner_avec`. `404` inconnu.
 ```json
 [{ "id": 12, "latitude": 12.3714, "longitude": -1.5197, "type_dechet": "menager",
    "volume_estime": "moyen", "photo_url": "/admin/signalements/12/photo", "statut": "en_attente_revue",
