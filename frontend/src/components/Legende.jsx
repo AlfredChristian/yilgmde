@@ -1,12 +1,13 @@
 import './Legende.css'
+import { COULEURS_DEPOTOIR, COULEURS_SIGNALEMENT } from '../config/couleurs'
 
-// Les couleurs doivent rester identiques à celles de Carte.jsx.
+// Les couleurs viennent de config/couleurs.js, comme dans Carte.jsx.
 const ELEMENTS = [
-  { couleur: '#d62828', texte: 'Dépotoir actif' },
-  { couleur: '#2a9d8f', texte: 'Dépotoir éradiqué' },
-  { couleur: '#f77f00', texte: 'Signalement en attente', petit: true },
-  { couleur: '#7b2cbf', texte: 'Signalement avec alerte', petit: true },
-  { couleur: '#6c757d', texte: 'Signalement rejeté', petit: true },
+  { couleur: COULEURS_DEPOTOIR.actif, texte: 'Dépotoir actif' },
+  { couleur: COULEURS_DEPOTOIR.eradique, texte: 'Dépotoir éradiqué' },
+  { couleur: COULEURS_SIGNALEMENT.enAttente, texte: 'Signalement en attente', petit: true },
+  { couleur: COULEURS_SIGNALEMENT.alerte, texte: 'Signalement avec alerte', petit: true },
+  { couleur: COULEURS_SIGNALEMENT.rejete, texte: 'Signalement rejeté', petit: true },
 ]
 
 export default function Legende() {
