@@ -16,15 +16,15 @@
 
 ## Faissal (back / moteur)
 
-- **Objectif en cours** : export OSM (G1) et comparaison de scénarios (D6) faits (branche `back/export-osm`). `main` contient tout le reste du back P1 : plan (C2–C4, C7), scénarios (D1–D4), terrain (C6, H1–H3), simulation (E1–E4). Reste surtout du P2 et l'aide au front.
-- **Fichiers modifiés** : `backend/export_osm.py`, `backend/routes/admin_export.py`, `backend/routes/scenarios.py` (`/scenarios/comparer`, déclarée avant `/scenarios/{id}`), `backend/main.py`, `config/default.yaml` (bloc `export_osm:`), `tests/test_export_osm.py` (6 tests) et 2 tests dans `tests/test_scenarios.py` ; suite complète : **236 verts**. Docs : `docs/api-contract.md`, `DECISIONS.md` (D30, D31), `TODO.md`.
-- **Bugs ouverts / limites** : étiquettes OSM et licence des données (D16 proposé, `export_osm.licence: null`) à valider avant tout versement ; un versement OSM = un import à annoncer à la communauté OSM du Burkina. `/scenarios/comparer` recalcule les simulations à chaque appel (~1 s par scénario). Coefficients `[H]` de simulation et `collecte.depot` toujours à confirmer. Pas de limitation des tentatives de connexion ; `score_confiance` jamais mis à jour.
-- **Pour lancer avec des données** : `python scripts/charger_exemples.py`, `uvicorn backend.main:app --reload` ; en admin : `GET /admin/export/depotoirs.geojson`, `GET /scenarios/comparer?ids=1,2&jours=30&graine=42` (après avoir créé un 2e scénario).
+- **Objectif en cours** : sécurité de la connexion et score de confiance faits (branche `back/securite-login`). `main` contient tout le back P1 : signalements et modération (A1–A3), plan (C1–C4, C7), scénarios et comparaison (D1–D4, D6), terrain (C6, H1–H3), simulation (E1–E4), export OSM (G1).
+- **Fichiers modifiés** : `backend/limitation.py` (D32), `backend/routes/auth.py`, `backend/main.py` (limiteurs remis à zéro au démarrage), `backend/confiance.py` (D33), `backend/routes/admin_signalements.py`, `config/default.yaml` (`securite:` et `verification:`), `tests/test_limitation.py` (9 tests), `tests/test_confiance.py` (4 tests) ; suite complète : **249 verts**. Docs : `docs/api-contract.md`, `DECISIONS.md` (D32, D33), `TODO.md`.
+- **Bugs ouverts / limites** : compteurs de connexion en mémoire (un seul processus ; remis à zéro au redémarrage) ; derrière un proxy, l'IP vue est celle du proxy (à traiter si déploiement derrière nginx). À valider : étiquettes OSM et licence des données (D16, D30), `collecte.depot`, coefficients [H] de simulation.
+- **Pour lancer avec des données** : `python scripts/charger_exemples.py`, `uvicorn backend.main:app --reload`. Essai : 5 mauvais mots de passe sur `POST /auth/login` → `429` avec `Retry-After`.
 - **Prochaine étape précise** :
-  1. sécurité (P1 transverse) : limiter les tentatives de `POST /auth/login` (compteur par e-mail et IP, blocage temporaire, paramètres dans la config) ;
-  2. `score_confiance` des contributeurs : monter à la validation, baisser au rejet (A3), et l'utiliser dans le score automatique (A2) ;
-  3. P2 : `/laabal/constats` (amendes réelles), passage `classe`, saisie d'un site officiel par l'admin, import par lot A4 ;
-  4. aider Christian à brancher le front sur `/points-regroupement`, `/scenarios/{id}/plan`, `/simuler`, `/comparer`.
+  1. P2 : `/laabal/constats` (amende réelle, preuves en multipart, table à créer), passage `classe` et saisie d'un site officiel par l'admin (B5/B6) ;
+  2. A4 : import par lot de signalements (GeoJSON/CSV) passant par la même vérification (A2) ;
+  3. aider Christian à brancher le front sur les routes du plan, de la simulation et de la comparaison ;
+  4. README (installation, lancement, licence) avant la démo.
 
 ## Cramer (docs / données / présentation)
 

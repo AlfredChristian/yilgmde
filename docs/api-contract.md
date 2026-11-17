@@ -56,6 +56,7 @@ Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d
 ## Authentification
 
 - `POST /auth/login` : `{"email": "...", "mot_de_passe": "..."}` → `{"access_token": "...", "token_type": "bearer", "role": "admin"}`
+  - Après `securite.max_echecs_par_email` échecs pour un même e-mail, ou `max_echecs_par_ip` depuis une même adresse IP, en `fenetre_echecs_min` minutes : `429` `{"detail": "trop de tentatives, réessayez dans 15 min"}` avec l'en-tête `Retry-After` (secondes), **même avec le bon mot de passe**, pendant `blocage_min` minutes. Même comportement que le compte existe ou non. Une connexion réussie remet à zéro le compteur de l'e-mail. Le blocage est tracé dans le journal (D32).
 - `GET /auth/moi` → `{"id": 1, "nom": "...", "role": "admin"}`
 - Identifiants faux, email inconnu ou compte désactivé : même réponse `401 {"detail": "identifiants invalides"}`.
 - Jeton absent, invalide ou expiré : `401`. Rôle insuffisant : `403`. Le rôle et l'état du compte sont relus en base à chaque requête.
@@ -77,6 +78,7 @@ Si rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d
   - sinon : fusion (`nb_signalements` + 1, jamais de doublon). Si le dépotoir est `eradique`, `sous_surveillance` ou `classe`, c'est une **réapparition** : il repasse `actif` et `nb_reapparitions` + 1. Dans les autres statuts, son statut ne change pas.
   - `404` si le signalement ou le dépotoir est inconnu ; `409` si le signalement n'est plus `en_attente_revue`.
 - `POST /admin/signalements/{id}/rejeter` : `{"motif": "photo sans rapport"}` (motif obligatoire, 1 à 300 caractères) → le signalement, statut `rejete`. `404`, `409` comme ci-dessus ; `422` si le motif est vide.
+- Valider ou rejeter fait évoluer le `score_confiance` (privé) de l'appareil qui a signalé : validation `s + gain × (1 − s)`, rejet `s − perte × s` (D33). Un appareil sous `verification.seuil_confiance_appareil` voit ses signalements suivants marqués « peu fiable » par la vérification automatique.
 - Chaque validation et chaque rejet est écrit dans `journal_audit` ; un échec n'écrit rien.
 - `POST /admin/signalements/import` (P2) : GeoJSON `FeatureCollection` de `Point`, propriétés `type_dechet`, `volume_estime`, `description`.
 
