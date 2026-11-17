@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS zone (
     nom TEXT NOT NULL,
     geometrie TEXT NOT NULL,          -- polygone GeoJSON
     population INTEGER,
-    densite REAL
+    densite REAL,
+    arrondissement INTEGER            -- arrondissement de la commune (plan d'un arrondissement, livrable 3)
 );
 
 CREATE TABLE IF NOT EXISTS depotoir (
@@ -75,7 +76,11 @@ CREATE TABLE IF NOT EXISTS signalement (
     depotoir_id INTEGER REFERENCES depotoir(id),
     valide_par INTEGER REFERENCES utilisateur(id),
     valide_le TEXT,
-    cree_le TEXT NOT NULL
+    cree_le TEXT NOT NULL,                -- réception par le serveur
+    capture_le TEXT,                      -- prise de vue sur le téléphone (envoi différé, hors connexion)
+    id_client TEXT,                       -- identifiant choisi par l'application : un renvoi n'est pas un doublon
+    note_vocale TEXT,                     -- fichier audio (jamais public)
+    masquage TEXT                         -- JSON : visages et plaques floutés sur la photo
 );
 CREATE INDEX IF NOT EXISTS idx_signalement_statut ON signalement(statut);
 CREATE INDEX IF NOT EXISTS idx_signalement_contributeur ON signalement(contributeur_id, cree_le);
@@ -85,7 +90,8 @@ CREATE TABLE IF NOT EXISTS scenario (
     nom TEXT NOT NULL,
     parametres TEXT NOT NULL DEFAULT '{}',   -- JSON, fusionné sur config/
     cree_par INTEGER REFERENCES utilisateur(id),
-    cree_le TEXT NOT NULL
+    cree_le TEXT NOT NULL,
+    actif INTEGER NOT NULL DEFAULT 0         -- scénario dont le plan est le « plan courant »
 );
 
 CREATE TABLE IF NOT EXISTS plan (
@@ -94,7 +100,9 @@ CREATE TABLE IF NOT EXISTS plan (
     calcule_le TEXT NOT NULL,
     duree_calcul_ms INTEGER,
     indicateurs TEXT NOT NULL DEFAULT '{}',
-    non_couverts TEXT NOT NULL DEFAULT '[]'
+    non_couverts TEXT NOT NULL DEFAULT '[]',
+    signature TEXT,                          -- empreinte des entrées (données + paramètres)
+    details TEXT NOT NULL DEFAULT '{}'       -- JSON : reste de la sortie du moteur
 );
 
 CREATE TABLE IF NOT EXISTS point_regroupement (
@@ -103,8 +111,9 @@ CREATE TABLE IF NOT EXISTS point_regroupement (
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     capacite_kg REAL NOT NULL,
-    zone_id INTEGER REFERENCES zone(id),
-    explication TEXT
+    zone_id INTEGER,                         -- peut être une zone ajoutée par le scénario (D4)
+    explication TEXT,
+    details TEXT NOT NULL DEFAULT '{}'
 );
 
 CREATE TABLE IF NOT EXISTS tournee (
@@ -115,7 +124,8 @@ CREATE TABLE IF NOT EXISTS tournee (
     affectee_a INTEGER REFERENCES utilisateur(id),
     distance_km REAL,
     duree_min REAL,
-    cout_xof REAL
+    cout_xof REAL,
+    details TEXT NOT NULL DEFAULT '{}'
 );
 
 CREATE TABLE IF NOT EXISTS arret_tournee (
@@ -124,7 +134,8 @@ CREATE TABLE IF NOT EXISTS arret_tournee (
     ordre INTEGER NOT NULL,
     cible_type TEXT NOT NULL CHECK (cible_type IN ('point_regroupement', 'depotoir')),
     cible_id INTEGER NOT NULL,
-    statut TEXT NOT NULL DEFAULT 'a_faire' CHECK (statut IN ('a_faire', 'effectue'))
+    statut TEXT NOT NULL DEFAULT 'a_faire' CHECK (statut IN ('a_faire', 'effectue')),
+    details TEXT NOT NULL DEFAULT '{}'
 );
 
 CREATE TABLE IF NOT EXISTS indicateur_simulation (
@@ -179,9 +190,47 @@ def connecter(chemin: str | Path | None = None) -> sqlite3.Connection:
     return conn
 
 
+# Colonnes ajoutées après la première version du schéma : `CREATE TABLE IF NOT
+# EXISTS` ne les crée pas dans une base existante, on les ajoute à la main.
+COLONNES_AJOUTEES = [
+    ("scenario", "actif", "INTEGER NOT NULL DEFAULT 0"),
+    ("plan", "signature", "TEXT"),
+    ("plan", "details", "TEXT NOT NULL DEFAULT '{}'"),
+    ("point_regroupement", "details", "TEXT NOT NULL DEFAULT '{}'"),
+    ("tournee", "details", "TEXT NOT NULL DEFAULT '{}'"),
+    ("arret_tournee", "details", "TEXT NOT NULL DEFAULT '{}'"),
+    ("zone", "arrondissement", "INTEGER"),
+    ("signalement", "capture_le", "TEXT"),
+    ("signalement", "id_client", "TEXT"),
+    ("signalement", "note_vocale", "TEXT"),
+    ("signalement", "masquage", "TEXT"),
+]
+
+# Index sur des colonnes ajoutées : créés après la migration.
+INDEX_APRES_MIGRATION = [
+    # Un même appareil ne crée qu'un signalement par identifiant client (renvois hors connexion).
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_signalement_id_client"
+    " ON signalement(contributeur_id, id_client) WHERE id_client IS NOT NULL",
+]
+
+
 def initialiser(conn: sqlite3.Connection) -> None:
-    """Crée les tables si elles n'existent pas (idempotent)."""
+    """Crée les tables si elles n'existent pas (idempotent), complète les anciennes bases."""
     conn.executescript(SCHEMA)
+    # La première version liait point_regroupement.zone_id à la table zone : une zone
+    # ajoutée par un scénario (D4) n'y est pas. Table jamais remplie avant C4 : on la recrée.
+    vers_zone = [l for l in conn.execute("PRAGMA foreign_key_list(point_regroupement)") if l[2] == "zone"]
+    if vers_zone and not conn.execute(
+        "SELECT 1 FROM point_regroupement LIMIT 1"
+    ).fetchone():
+        conn.execute("DROP TABLE point_regroupement")
+        conn.executescript(SCHEMA)
+    for table, colonne, definition in COLONNES_AJOUTEES:
+        existantes = {l[1] for l in conn.execute(f"PRAGMA table_info({table})")}
+        if colonne not in existantes:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {colonne} {definition}")
+    for index in INDEX_APRES_MIGRATION:
+        conn.execute(index)
     conn.commit()
 
 

@@ -38,12 +38,14 @@ def test_fusion_ne_modifie_pas_les_entrees():
 
 def test_fusion_des_camions_par_id():
     config = charger_config("ouagadougou")
+    n = len(config["camions"])
     nouvelle = appliquer_surcharges(config, {"camions": [{"id": "camion_2", "disponible": False}]})
     par_id = {c["id"]: c for c in nouvelle["camions"]}
     assert par_id["camion_2"]["disponible"] is False
-    assert par_id["camion_2"]["capacite_kg"] == 6000  # les autres champs sont conservés
-    assert len(nouvelle["camions"]) == 3
-    assert [c["id"] for c in camions_disponibles(nouvelle)] == ["camion_1", "camion_3"]
+    assert par_id["camion_2"]["capacite_kg"] == config["camions"][1]["capacite_kg"]  # autres champs conservés
+    assert len(nouvelle["camions"]) == n
+    assert "camion_2" not in [c["id"] for c in camions_disponibles(nouvelle)]
+    assert len(camions_disponibles(nouvelle)) == n - 1
     # la config d'origine n'a pas bougé (fonction pure)
     assert all(c["disponible"] for c in config["camions"])
 
@@ -81,3 +83,18 @@ def test_bbox_incoherente_refusee():
 def test_fichier_ville_introuvable():
     with pytest.raises(ConfigError):
         charger_config("ville_inconnue")
+
+
+def test_ville_choisie_par_variable_d_environnement(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from backend import db
+    from backend.main import app
+
+    monkeypatch.setattr(db, "CHEMIN_DB_DEFAUT", tmp_path / "test.sqlite3")
+    monkeypatch.setenv("YILGMDE_VILLE", "")                     # vide : default.yaml seul
+    with TestClient(app):
+        assert app.state.config.get("ville") is None
+    monkeypatch.delenv("YILGMDE_VILLE")
+    with TestClient(app):
+        assert app.state.config["ville"] == "Ouagadougou"

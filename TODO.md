@@ -7,41 +7,50 @@
 ## Phase 0 — Squelette (jour 1)
 
 - [x] Dépôt créé, structure en place, API `/health` qui tourne (Christian)
+<<<<<<< HEAD
 - [x] Faissal et Cramer ont cloné le dépôt et lancé l'API
 - [x] Contrat d'API (`docs/api-contract.md`) relu et validé par Christian et Faissal
 - [x] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence)
 - [x] Jeux de données d'exemple dans `data/sample/` utilisés par le front et le back
 - [x] Questions ouvertes de `CONTEXT.md` posées aux organisateurs (Cramer)
+=======
+- [ ] Faissal et Cramer ont cloné le dépôt et lancé l'API
+- [ ] Contrat d'API (`docs/api-contract.md`) relu et validé par Christian et Faissal
+- [ ] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence) — simulation (D18) et licence MIT (D16) tranchées
+- [ ] Jeux de données d'exemple dans `data/sample/` utilisés par le front et le back
+- [ ] Questions ouvertes de `CONTEXT.md` posées aux organisateurs (Cramer)
+>>>>>>> origin/main
 
 ## Faissal — back-end et moteur
 
 **Socle**
 - [x] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
 - [x] Modèle de données SQLite + schémas Pydantic (P1)
-- [ ] F1/F4 — Connexion (JWT) et création de comptes par l'admin (P1)
-- [ ] F2 — Droits par rôle vérifiés côté serveur (P1)
+- [x] F1/F4 — Connexion (JWT) et création de comptes par l'admin (P1) — + limitation des tentatives (D32)
+- [x] F2 — Droits par rôle vérifiés côté serveur (P1)
 
 **Signalements**
-- [ ] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
+- [x] A1 — `POST /signalements` + `GET /depotoirs` (données factices d'abord) (P1)
 - [x] A2 — Vérification automatique : doublon, hors zone, position incohérente, limite par appareil, score + motif (P1)
-- [ ] A3 — Modération : valider, rejeter avec motif, fusionner (P1)
-- [ ] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1)
-- [ ] A4 — Import par lot CSV/GeoJSON pour l'admin (P2)
+- [x] A3 — Modération : valider, rejeter avec motif, fusionner (P1) — + score de confiance des appareils (D33)
+- [x] B5/B6 — Cycle de vie du dépotoir, légal/illégal, réapparition (P1) — réapparition (A3), transitions Laabal (D28), sites officiels et `classe` par l'admin (D35)
+- [x] A4 — Import par lot CSV/GeoJSON pour l'admin (P2) — GeoJSON seulement (D35) ; CSV à ajouter si Cramer en a besoin
 
 **Plan**
-- [ ] C1 — Estimation de la demande par zone (P1)
-- [ ] C2 — Points de regroupement (P1)
-- [ ] C3 — Tournées de collecte (OR-Tools, repli plus proche voisin) (P1)
-- [ ] C7 — Tournées d'intervention Laabal (P1)
-- [ ] C4 — Recalcul automatique et rapide, plan = fonction pure (P1)
-- [ ] D1–D4 — Scénarios : paramètres, camion en panne, saison des pluies, nouveau quartier (P1)
-- [ ] C5 — Explication des choix (P2)
+- [x] C1 — Estimation de la demande par zone (P1) — fonction pure `simulation/demande.py`, intégrée au plan (C4)
+- [x] C2 — Points de regroupement (P1) — fonction pure `simulation/regroupement.py` (D24) ; route `/points-regroupement` avec le plan (C4)
+- [x] C3 — Tournées de collecte (OR-Tools, repli plus proche voisin) (P1) — `simulation/tournees.py` (D25) ; dépôt de Ouaga à confirmer
+- [x] C7 — Tournées d'intervention Laabal (P1) — `planifier_interventions` (D26)
+- [x] C6/H1–H3 (back) — Routes `/chauffeur/*`, `/laabal/*`, `POST /admin/tournees/{id}/affecter` (D28)
+- [x] C4 — Recalcul automatique et rapide, plan = fonction pure (P1) — `simulation/plan.py`, routes `/scenarios/*` et `/points-regroupement` (D27)
+- [x] D1–D4 — Scénarios : paramètres, camion en panne, saison des pluies, nouveau quartier (P1) — côté back, panne aussi déclarable par le chauffeur (D28)
+- [ ] C5 — Explication des choix (P2) — `explication` par point (C2), `raison` des arrêts Laabal et des non couverts ; reste la vue front
 
 **Simulation et export**
-- [ ] E1–E3 — Moteur journalier, 4 agents, indicateurs (P1)
-- [ ] E4 — Reproductibilité par graine aléatoire (P2)
+- [x] E1–E3 — Moteur journalier, 4 agents, indicateurs (P1) — `simulation/agents.py`, `POST /scenarios/{id}/simuler` (D29)
+- [x] E4 — Reproductibilité par graine aléatoire (P2)
 - [ ] G1 — Export GeoJSON des dépotoirs vérifiés (P1)
-- [ ] H4/H5 — Constats d'infraction, détection de réapparition (P2)
+- [ ] H4/H5 — Constats d'infraction, détection de réapparition (P2) — H4 fait (D35) ; H5 : la réapparition est détectée (A3) mais pas encore signalée à Laabal
 
 ## Christian — front-end
 
@@ -62,13 +71,13 @@
 - [ ] H1–H3 — Vue Laabal : dépotoirs à traiter, intervention, surveillance (P1)
 - [ ] E3 — Tableau de bord des indicateurs (P1)
 - [ ] A5 — Suivi d'un signalement avec le code (P2)
-- [ ] D6 — Comparaison de scénarios côte à côte (P2)
+- [x] D6 — Comparaison de scénarios côte à côte (P2) — `GET /scenarios/comparer` (D31) ; reste la vue front
 - [ ] A6 — Mode hors ligne : file d'attente d'envoi (P2)
 - [ ] B3/B4 — Fiche dépotoir et filtres (P2)
 
 ## Cramer — présentation, documentation, données, tests
 
-- [ ] README complété (présentation, installation, lancement, licence) (P1)
+- [x] README complété (présentation, installation, lancement, licence) (P1) — licence MIT (D16)
 - [ ] `docs/enonce.md` vérifié contre le sujet officiel (P1)
 - [ ] Collecte des signalements de notre secteur (une fois le secteur confirmé) (P1)
 - [ ] Hypothèses de `config/ouagadougou.yaml` documentées avec leurs sources (P1)
@@ -84,3 +93,14 @@
 - [ ] Répétition complète de l'épreuve en direct, de bout en bout, hors ligne comprise
 - [ ] Répétition du pitch, chronométrée
 - [ ] Dépôt propre : README, licence, pas de secret, données ouvertes
+
+## Livrables ajoutés le 2026-11-17
+
+- [x] L1 (back) — Signalement hors connexion : `id_client`, `capture_le`, plafond de réception, note vocale ; masquage serveur des visages et plaques (D36)
+- [ ] L1 (front) — File d'attente : envoyer `id_client` et `capture_le`, garder l'élément sur `429`/`503` ; masquage sur le téléphone avant envoi (Christian)
+- [x] L2 — Fichier de paramètres documenté (`docs/parametres.md`, test de complétude `tests/test_parametres_doc.py`)
+- [x] L3 (back) — Plan, simulation et comparaison d'un arrondissement (`perimetre`), `GET /arrondissements`, synthèse Markdown du plan (D37)
+- [ ] L3 (front) — Tableau de bord des scénarios : choix de l'arrondissement, plan sur la carte, indicateurs, simulation, comparaison, synthèse (Christian)
+- [x] L4 — Données réalistes de Ouaga (12 arrondissements, paramètres sourcés) et jeu de signalements GeoJSON sous ODbL — `data/ouaga/`, `GET /donnees/signalements.geojson` (D38–D40)
+- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (script de chiffres côté back)
+- [ ] L6 — Vidéo de 3 min : du signalement à la tournée, puis un changement de paramètres et le plan recalculé

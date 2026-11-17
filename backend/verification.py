@@ -192,9 +192,12 @@ def contexte_depuis_db(
         if c is not None:
             bloque, confiance = bool(c["bloque"]), c["score_confiance"]
             depuis = (maintenant - timedelta(hours=1)).isoformat()
+            # Heure de prise de vue si l'application l'a envoyée (hors connexion), sinon de réception :
+            # six photos prises dans la matinée puis envoyées d'un coup ne sont pas un abus.
             nb_heure = conn.execute(
-                "SELECT COUNT(*) FROM signalement WHERE contributeur_id = ? AND cree_le >= ?",
-                (c["id"], depuis),
+                "SELECT COUNT(*) FROM signalement WHERE contributeur_id = ?"
+                " AND COALESCE(capture_le, cree_le) >= ? AND COALESCE(capture_le, cree_le) <= ?",
+                (c["id"], depuis, maintenant.isoformat()),
             ).fetchone()[0]
 
     return Contexte(

@@ -49,7 +49,7 @@ Les comptes sont créés par l'administrateur (pas d'inscription libre).
 - **Base de données** : SQLite pour le MVP (proposé, voir `DECISIONS.md`).
 - **Front** : PWA responsive, Leaflet + tuiles OpenStreetMap (framework à confirmer).
 - **Une seule application front** avec des vues selon le rôle.
-- **Licence** : Apache-2.0 pour le code (proposé) ; données dérivées d'OSM sous ODbL.
+- **Licence** : MIT pour le code (D16) ; données dérivées d'OSM sous ODbL.
 
 ## 6. Structure du dépôt
 

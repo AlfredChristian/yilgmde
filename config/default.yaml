@@ -1,3 +1,4 @@
+# Chaque paramètre est documenté dans docs/parametres.md (rôle, unité, source ou hypothèse [H]).
 # Paramètres GÉNÉRIQUES (réutilisables par n'importe quelle commune).
 # [H] = HYPOTHÈSE de départ, sans source établie : à ajuster avec la mairie ou des données réelles.
 
@@ -20,14 +21,22 @@ verification:
   rayon_doublon_m: 30                    # signalements plus proches = doublon probable
   max_signalements_par_appareil_heure: 5
   photo_requise: false
+  photo_taille_max_mo: 5                 # [H] au-delà, la photo est refusée (HTTP 413)
   penalite_doublon: 0.3                  # [H] retranchée du score si un signalement proche existe déjà
   penalite_depotoir_proche: 0.1          # [H] retranchée du score si un dépotoir connu est proche
   seuil_confiance_appareil: 0.3          # [H] en dessous, l'appareil est jugé peu fiable
   penalite_appareil_peu_fiable: 0.2      # [H]
+  gain_confiance_validation: 0.1         # [H] signalement validé : score ← score + gain × (1 − score)
+  perte_confiance_rejet: 0.25            # [H] signalement rejeté : score ← score − perte × score
 
 points_regroupement:
   capacite_kg: 3000                      # [H]
   distance_max_a_pied_m: 300             # [H]
+  couverture_cible: 0.95                 # [H] part de la zone à moins de distance_max_a_pied_m d'un point
+  max_points_par_zone: 60                # [H] borne le calcul ; au-delà, la zone est signalée mal couverte
+  poids_depotoir: 5                      # [H] attraction d'un dépotoir actif sur le placement (1 = un échantillon de ménages)
+  pas_echantillonnage_m: 100             # résolution de la grille des ménages (agrandie si > max_echantillons_par_zone)
+  max_echantillons_par_zone: 2000        # borne le temps de calcul
 
 camions:
   - {id: camion_1, capacite_kg: 6000, cout_km_xof: 400, cout_jour_xof: 15000, disponible: true}   # [H]
@@ -37,6 +46,13 @@ camions:
 collecte:
   frequence_passages_par_semaine: 2      # [H]
   vitesse_moyenne_kmh: 20                # [H]
+  coef_detour: 1.3                       # [H] distance routière ≈ vol d'oiseau × coef
+  temps_arret_min: 10                    # [H] chargement d'un point de regroupement
+  duree_max_tournee_min: 480             # [H] journée de travail d'un camion
+  rotations_max_par_jour: 2              # [H] allers-retours au dépôt (vidage) par camion et par jour
+  temps_calcul_max_s: 30                 # sécurité seulement : le calcul doit finir avant (D38)
+  max_arrets_recherche_locale: 150       # au-delà, solution de départ OR-Tools seule (rapide, ~6 % plus longue, D38)
+  # depot: {latitude: ..., longitude: ...}   # propre à chaque commune : voir <ville>.yaml
 
 precollecteurs:
   nombre: 20                             # [H]
@@ -50,6 +66,62 @@ laabal:
   taux_controle: 0.3                     # [H] probabilité de constater un dépôt en zone surveillée
   montant_amende_xof: 10000              # [H]
   effet_dissuasion: 0.3                  # [H] réduction de la probabilité de dépôt sauvage en zone surveillée
+  temps_intervention_min: 60             # [H] durée d'une éradication sur place
+  # base: {latitude: ..., longitude: ...}  # départ des brigades ; par défaut collecte.depot
+  priorite:                              # [H] ordre de traitement des dépotoirs illégaux
+    poids_volume: {petit: 1, moyen: 2, gros: 3}
+    poids_reapparition: 2                # un dépotoir qui revient est traité en priorité
+    poids_signalement: 0.5
+
+hors_ligne:                              # livrable 1 : envois différés depuis la file d'attente du téléphone
+  tolerance_horloge_min: 5               # capture_le jusqu'à 5 min dans le futur (horloge du téléphone)
+  anciennete_max_jours: 30               # [H] au-delà, accepté avec l'alerte capture_ancienne
+  max_envois_par_heure: 30               # [H] plafond par appareil à la réception (429 au-delà)
+  note_vocale_taille_max_mo: 2           # ≈ 60 s ou plus en WebM/Opus ou AAC ; la durée n'est pas décodée
+
+masquage:                                # livrable 1 : visages et plaques floutés sur le serveur (backend/masquage.py)
+  cote_max_px: 1600                      # photo réduite au-delà (stockage, vitesse)
+  cote_detection_px: 800                 # détection sur une copie réduite (rapide)
+  facteur_echelle: 1.1                   # pas de la recherche multi-échelle d'OpenCV
+  voisins_min_visage: 5                  # [H] plus haut = moins de fausses détections, plus de visages manqués
+  voisins_min_plaque: 4                  # [H]
+  taille_min_px: 20                      # plus petit visage ou plaque cherché (en pixels de la photo)
+  marge: 0.25                            # zone floutée élargie de 25 % de chaque côté
+  qualite_jpeg: 85
+
+import:                                  # A4, POST /admin/signalements/import
+  max_par_lot: 1000                      # borne la taille d'un lot (temps de calcul)
+
+donnees_ouvertes:                        # livrable 4 : GET /donnees/signalements.geojson (public)
+  licence: ODbL-1.0
+  attribution: "yilgmde et contributeurs"
+  decimales_position: 4                  # ≈ 11 m : on ne publie pas la position exacte d'une maison
+
+export_osm:                              # G1, voir backend/export_osm.py
+  min_signalements: 1                    # [H] signalements vérifiés minimum pour exporter un dépotoir
+  source: "survey;YilGmdé"
+  licence: ODbL-1.0                      # données (D40) ; le code est sous MIT (D16)
+
+# Livrable 3 : limiter plan, tournées et simulation à un arrondissement (ou à des zones).
+# Vide = toute la commune. Se règle surtout par scénario : {"perimetre": {"arrondissements": [4]}}.
+perimetre:
+  arrondissements: []
+  zones: []
+
+simulation:                              # E1–E4, voir simulation/agents.py
+  prob_apport_volontaire: 0.6            # [H] un ménage non abonné à distance de marche apporte ses déchets au point
+  seuil_nouveau_depotoir_kg: 1500        # [H] dépôts sauvages du jour dans une zone pour qu'un dépotoir apparaisse à coup sûr
+  prob_reapparition: 0.05                # [H] par jour, pour un site sous surveillance (× (1 − effet_dissuasion))
+  prob_tentative_depot_surveille: 0.1    # [H] par jour, tentative de dépôt sur un site surveillé (contrôlable)
+  jours_par_mois: 30                     # répartition du budget mensuel
+  max_echantillons_couverture: 400       # borne le calcul de la couverture à pied
 
 mairie:
   budget_mensuel_xof: 5000000            # [H]
+
+securite:
+  duree_token_min: 480                   # [H] durée de validité d'une connexion (8 h)
+  max_echecs_par_email: 5                # [H] échecs de connexion avant blocage temporaire de l'e-mail
+  max_echecs_par_ip: 20                  # [H] idem par adresse IP (plusieurs comptes visés)
+  fenetre_echecs_min: 15                 # [H] fenêtre glissante de comptage des échecs
+  blocage_min: 15                        # [H] durée du blocage
