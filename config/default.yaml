@@ -91,10 +91,15 @@ masquage:                                # livrable 1 : visages et plaques flout
 import:                                  # A4, POST /admin/signalements/import
   max_par_lot: 1000                      # borne la taille d'un lot (temps de calcul)
 
+donnees_ouvertes:                        # livrable 4 : GET /donnees/signalements.geojson (public)
+  licence: ODbL-1.0
+  attribution: "yilgmde et contributeurs"
+  decimales_position: 4                  # ≈ 11 m : on ne publie pas la position exacte d'une maison
+
 export_osm:                              # G1, voir backend/export_osm.py
   min_signalements: 1                    # [H] signalements vérifiés minimum pour exporter un dépotoir
   source: "survey;YilGmdé"
-  licence: null                          # à décider (D16 proposé : ODbL pour les données) ; requis avant tout versement OSM
+  licence: ODbL-1.0                      # données (D40) ; le code est sous MIT (D16)
 
 # Livrable 3 : limiter plan, tournées et simulation à un arrondissement (ou à des zones).
 # Vide = toute la commune. Se règle surtout par scénario : {"perimetre": {"arrondissements": [4]}}.
