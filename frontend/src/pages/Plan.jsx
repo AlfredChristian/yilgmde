@@ -419,7 +419,7 @@ export default function Plan() {
             </CircleMarker>
           ))}
           {plan.tournees.map((t, i) => (
-            <Polyline key={`t${t.id}`} positions={t.arrets.map((a) => [a.latitude, a.longitude])}
+            <Polyline key={`t${t.id}`} positions={t.trace ? t.trace.flat() : t.arrets.map((a) => [a.latitude, a.longitude])}
               pathOptions={{ color: COULEURS[i % COULEURS.length], weight: 2 }} />
           ))}
           <Recadrer points={plan.points_regroupement} />

@@ -22,33 +22,56 @@ function distanceKm([la1, lo1], [la2, lo2]) {
 const heure = (min) => `${String(Math.floor(min / 60) % 24).padStart(2, '0')}:${String(Math.round(min % 60)).padStart(2, '0')}`
 const heureReelle = (iso) => (iso ? new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : null)
 
+const longueurKm = (geom) => geom.slice(1).reduce((s, p, i) => s + distanceKm(geom[i], p), 0)
+
 // Horaire prévu d'un camion pour un jour : ses rotations bout à bout depuis le dépôt.
-// Chaque segment : [début, fin] en minutes, de A vers B.
+// Chaque segment est un trajet (dépôt → arrêt 1, …, dernier arrêt → dépôt) : [début, fin] en minutes
+// et sa géométrie, celle des voies quand le plan a été calculé sur le réseau routier (D52).
 function horaire(rotations, depot) {
   const segments = []
   let t = DEBUT_JOURNEE_MIN
   for (const rot of rotations) {
     const sites = [depot, ...rot.arrets.map((a) => [a.latitude, a.longitude]), depot]
-    const longueurs = sites.slice(1).map((p, i) => distanceKm(sites[i], p))
+    const geoms = rot.trace?.length === sites.length - 1 ? rot.trace : sites.slice(1).map((p, i) => [sites[i], p])
+    const longueurs = geoms.map(longueurKm)
     const total = longueurs.reduce((s, l) => s + l, 0) || 1
     longueurs.forEach((l, i) => {
       const duree = (rot.duree_min * l) / total
-      segments.push({ debut: t, fin: t + duree, de: sites[i], vers: sites[i + 1], tournee: rot, arret: rot.arrets[i] ?? null })
+      segments.push({ debut: t, fin: t + duree, geom: geoms[i], longueur: l, arret: rot.arrets[i] ?? null })
       t += duree
     })
   }
   return { segments, fin: t }
 }
 
+// Point situé à la fraction f (0–1) du trajet, en suivant sa géométrie.
+function pointSurTrajet(geom, longueur, f) {
+  let reste = f * longueur
+  for (let i = 1; i < geom.length; i++) {
+    const l = distanceKm(geom[i - 1], geom[i])
+    if (reste <= l && l > 0) {
+      const g = reste / l
+      return [geom[i - 1][0] + (geom[i][0] - geom[i - 1][0]) * g, geom[i - 1][1] + (geom[i][1] - geom[i - 1][1]) * g]
+    }
+    reste -= l
+  }
+  return geom.at(-1)
+}
+
 function positionPrevue(plan, minute) {
-  if (minute <= DEBUT_JOURNEE_MIN || !plan.segments.length) return { pos: plan.segments[0]?.de, etat: 'Au dépôt' }
-  if (minute >= plan.fin) return { pos: plan.segments.at(-1).vers, etat: 'Rentré au dépôt' }
+  if (minute <= DEBUT_JOURNEE_MIN || !plan.segments.length) return { pos: plan.segments[0]?.geom[0], etat: 'Au dépôt' }
+  if (minute >= plan.fin) return { pos: plan.segments.at(-1).geom.at(-1), etat: 'Rentré au dépôt' }
   const s = plan.segments.find((x) => minute < x.fin)
   const f = s.fin > s.debut ? (minute - s.debut) / (s.fin - s.debut) : 1
   return {
-    pos: [s.de[0] + (s.vers[0] - s.de[0]) * f, s.de[1] + (s.vers[1] - s.de[1]) * f],
+    pos: pointSurTrajet(s.geom, s.longueur, f),
     etat: s.arret ? `Vers le point n°${s.arret.cible_id}` : 'Retour au dépôt',
   }
+}
+
+// Arrêts que l'horaire prévu place avant `minute` (le camion est déjà passé).
+function arretsPrevus(plan, minute) {
+  return plan.segments.filter((s) => s.arret && s.fin <= minute).length
 }
 
 function Recadrer({ positions }) {
@@ -145,6 +168,12 @@ function VueSuivi({ onRetourCarte }) {
         <p><strong>{r.tournees_affectees}</strong> tournées affectées · <strong>{r.tournees_terminees}</strong> terminées</p>
       </div>
 
+      <p className="suivi-aide">
+        Un <strong>passage</strong> de collecte s'étale sur {suivi.jours.length} jour{suivi.jours.length > 1 ? 's' : ''} : la commune
+        travaille 6 jours par semaine et chaque point est vidé 2 fois par semaine (réglages du plan). Le même plan se répète
+        à chaque passage ; les jours ci-dessous sont ceux d'un passage.
+      </p>
+
       <div className="suivi-commandes">
         <div className="suivi-jours" role="group" aria-label="Jour du passage">
           {suivi.jours.map((j) => (
@@ -165,7 +194,7 @@ function VueSuivi({ onRetourCarte }) {
             <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <Recadrer positions={positions} />
             {camions.map((c) => c.rotations.map((t) => (
-              <Polyline key={`l${t.id}`} positions={[depot, ...t.arrets.map((a) => [a.latitude, a.longitude]), depot]}
+              <Polyline key={`l${t.id}`} positions={t.trace ? t.trace.flat() : [depot, ...t.arrets.map((a) => [a.latitude, a.longitude]), depot]}
                 pathOptions={{ color: t.affectee_a ? '#1b6b4a' : '#8fa89a', weight: t.affectee_a ? 3 : 1.5, opacity: t.affectee_a ? 0.9 : 0.55 }} />
             )))}
             {tousLesArrets.map((a) => (
@@ -196,17 +225,26 @@ function VueSuivi({ onRetourCarte }) {
         <ol className="suivi-liste" aria-label={`Camions du jour ${jour}`}>
           {camions.map((c) => {
             const pct = c.total ? Math.round((100 * c.faits) / c.total) : 0
+            const prevus = arretsPrevus(c.plan, minute)
+            const pctPrevu = c.total ? Math.round((100 * prevus) / c.total) : 0
+            const retard = c.agent && prevus > c.faits
             return (
               <li key={c.id}>
                 <div className="suivi-ligne">
                   <strong>{c.id}</strong>
-                  <span>{c.faits}/{c.total} arrêts</span>
+                  {retard && <span className="suivi-retard">en retard sur le prévu</span>}
                 </div>
-                <div className="suivi-barre" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${c.id} : ${pct} %`}>
+                <div className="suivi-compte">
+                  <span>Réel : <strong>{c.faits}/{c.total}</strong></span>
+                  <span>Prévu à {heure(minute)} : {prevus}/{c.total}</span>
+                </div>
+                <div className="suivi-barre" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}
+                  aria-label={`${c.id} : ${pct} % réel, ${pctPrevu} % prévu`}>
+                  <i style={{ width: `${pctPrevu}%` }} />
                   <span style={{ width: `${pct}%` }} />
                 </div>
                 <small>
-                  {c.agent ?? 'Non affecté'} · {c.rotations.length} rotation{c.rotations.length > 1 ? 's' : ''} · fin prévue {heure(c.plan.fin)}
+                  {c.agent ?? 'Non affecté : personne ne peut cocher ses arrêts'} · {c.rotations.length} rotation{c.rotations.length > 1 ? 's' : ''} · fin prévue {heure(c.plan.fin)}
                   {c.derniere && ` · dernier arrêt coché à ${heureReelle(c.derniere)}`}
                 </small>
               </li>
@@ -220,10 +258,12 @@ function VueSuivi({ onRetourCarte }) {
         <span><i className="flotte-dot" style={{ background: '#fff', border: '1.5px solid #6b7c72' }} /> Arrêt à faire</span>
         <span><i className="flotte-dot" style={{ background: '#e0a100' }} /> Camion affecté, position prévue</span>
         <span><i className="flotte-dot" style={{ background: '#52514e' }} /> Camion non affecté, position prévue</span>
+        <span><i className="suivi-cle-barre" /> Barre : vert = arrêts cochés (réel), gris = arrêts prévus à l'heure choisie</span>
       </div>
       <p className="flotte-note">
-        Les positions des camions sont celles de l'horaire prévu par le plan (départ du dépôt à 7 h), pas un GPS.
-        L'avancement réel vient des arrêts cochés par les chauffeurs ; un traceur GPS pourra remplacer l'horaire prévu.
+        « Rejouer la journée » déplace les camions selon l'horaire prévu (départ du dépôt à 7 h) : ce n'est pas un GPS,
+        et cela ne coche aucun arrêt. Le compteur « Réel » ne bouge que lorsqu'un chauffeur coche un arrêt sur son téléphone ;
+        un camion non affecté reste donc à 0. Affectez les tournées dans le plan pour les suivre.
       </p>
     </section>
   )
