@@ -100,7 +100,7 @@ def ecrire_tableaux(resultats, arrondissement, jours, graine) -> None:
                            f"| {nb(i['cout_mensuel_estime_xof'] / 1e6, 1)} | {nb(i['budget_mensuel_xof'] / 1e6, 1)} "
                            f"| {nb(r['duree_ms'] / 1000, 1)} s |")
         lignes_sim.append(f"| {r['nom']} | {nb(s['part_captee_moyenne_pct'], 1)} % | {nb(s['dechets_sauvages_kg'] / 1000)} t "
-                          f"| {s['depotoirs_actifs_debut']} → {s['depotoirs_actifs_fin']} | {s['depotoirs_eradiques']} "
+                          f"| {s['nouveaux_depotoirs']} | {s['depotoirs_actifs_debut']} → {s['depotoirs_actifs_fin']} | {s['depotoirs_eradiques']} "
                           f"| {s['passages_collecte']} / {s['passages_suspendus_budget']} | {nb(s['cout_total_xof'] / 1e6, 1)} "
                           f"| {nb(s['amendes_total_xof'] / 1000)} k |")
     pop = resultats[0]["plan"]["indicateurs"]["perimetre"]["population"]
@@ -119,14 +119,13 @@ def ecrire_tableaux(resultats, arrondissement, jours, graine) -> None:
         "| Coût mensuel (M XOF) | Budget de l'arr. (M XOF) | Calcul |",
         "|---|---|---|---|---|---|---|---|---|", *lignes_plan, "",
         f"## Simulation sur {jours} jours", "",
-        "| Scénario | Part captée moyenne | Déchets sauvages | Dépotoirs actifs (début → fin) | Éradications (cumul) "
-        "| Passages faits / annulés | Coût (M XOF) | Amendes (XOF) |",
-        "|---|---|---|---|---|---|---|---|", *lignes_sim, "",
-        "Les dépotoirs suivent le même chemin dans tous les scénarios : dès qu'une zone produit "
-        f"des déchets sauvages au-delà de `seuil_nouveau_depotoir_kg`, un nouveau dépotoir y apparaît chaque jour "
-        "(c'est le cas des 4 secteurs dans tous les scénarios), et les brigades Laabal, dont la capacité "
-        "dépasse ces apparitions, ne dépendent pas des camions. L'effet des "
-        "scénarios se lit donc sur les tonnes de déchets sauvages, pas sur le nombre de dépotoirs.", "",
+        "| Scénario | Part captée moyenne | Déchets sauvages | Nouveaux dépotoirs | Dépotoirs actifs (début → fin) "
+        "| Éradications (cumul) | Passages faits / annulés | Coût (M XOF) | Amendes (XOF) |",
+        "|---|---|---|---|---|---|---|---|---|", *lignes_sim, "",
+        "Lecture : plus il reste de déchets sauvages, plus il apparaît de **nouveaux dépotoirs** "
+        "(probabilité lissée et plafonnée, D48, calibrée pour Ouaga en D50). Le nombre de dépotoirs **actifs** "
+        "en fin de période varie peu : les brigades Laabal de la commune (12 éradications par jour) "
+        "suffisent à traiter un arrondissement. Sur toute la commune, elles deviendraient la contrainte.", "",
         "Courbes : `courbes_part_captee.png`, `courbes_dechets_sauvages.png`, `courbes_cout.png`. "
         "Plan de base détaillé : `plan_de_gestion.md`, carte : `carte_plan.png`.", "",
         "Les hypothèses `[H]` sont listées dans `docs/parametres.md` ; les sources dans `data/ouaga/LISEZMOI.md`.", "",
@@ -137,14 +136,14 @@ def ecrire_tableaux(resultats, arrondissement, jours, graine) -> None:
         w = csv.writer(f, lineterminator="\n")
         w.writerow(["scenario", "capacite_collecte_pct", "part_captee_estimee_pct", "points", "camions_utilises",
                     "distance_km", "cout_mensuel_xof", "budget_mensuel_xof", "part_captee_moyenne_pct",
-                    "dechets_sauvages_kg", "depotoirs_actifs_debut", "depotoirs_actifs_fin", "depotoirs_eradiques",
+                    "dechets_sauvages_kg", "nouveaux_depotoirs", "depotoirs_actifs_debut", "depotoirs_actifs_fin", "depotoirs_eradiques",
                     "passages_collecte", "passages_suspendus_budget", "cout_simulation_xof", "amendes_xof"])
         for r in resultats:
             i, s = r["plan"]["indicateurs"], r["simulation"]["resume"]
             w.writerow([r["nom"], i["capacite_collecte_pct"], i["part_captee_estimee_pct"], i["nb_points_regroupement"],
                         len(i["camions_utilises"]), i["distance_totale_km"], i["cout_mensuel_estime_xof"],
                         i["budget_mensuel_xof"], s["part_captee_moyenne_pct"], s["dechets_sauvages_kg"],
-                        s["depotoirs_actifs_debut"], s["depotoirs_actifs_fin"], s["depotoirs_eradiques"],
+                        s["nouveaux_depotoirs"], s["depotoirs_actifs_debut"], s["depotoirs_actifs_fin"], s["depotoirs_eradiques"],
                         s["passages_collecte"], s["passages_suspendus_budget"], s["cout_total_xof"],
                         s["amendes_total_xof"]])
     with open(DOSSIER_SORTIE / "simulation_par_jour.csv", "w", newline="", encoding="utf-8") as f:
