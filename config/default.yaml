@@ -110,7 +110,8 @@ perimetre:
 
 simulation:                              # E1–E4, voir simulation/agents.py
   prob_apport_volontaire: 0.6            # [H] un ménage non abonné à distance de marche apporte ses déchets au point
-  seuil_nouveau_depotoir_kg: 1500        # [H] dépôts sauvages du jour dans une zone pour qu'un dépotoir apparaisse à coup sûr
+  seuil_nouveau_depotoir_kg: 1500        # [H] échelle de déchets sauvages qui augmente la probabilité d'un nouveau dépotoir
+  prob_nouveau_depotoir_max: 0.45        # [H] plafond journalier : évite une apparition certaine dans chaque secteur
   prob_reapparition: 0.05                # [H] par jour, pour un site sous surveillance (× (1 − effet_dissuasion))
   prob_tentative_depot_surveille: 0.1    # [H] par jour, tentative de dépôt sur un site surveillé (contrôlable)
   jours_par_mois: 30                     # répartition du budget mensuel

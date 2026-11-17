@@ -15,6 +15,12 @@ export default function Chauffeur() {
     getTournee().then(setTournee).catch((e) => setErreur(e.message)).finally(() => setCharge(true))
   }, [])
 
+  function reessayer() {
+    setCharge(false)
+    setErreur(null)
+    getTournee().then(setTournee).catch((e) => setErreur(e.message)).finally(() => setCharge(true))
+  }
+
   // Un arret coche ne se decoche pas (le serveur garde la trace du passage).
   async function cocher(a) {
     try {
@@ -26,8 +32,25 @@ export default function Chauffeur() {
   }
 
   if (!tournee) {
-    const texte = !charge ? 'Chargement…' : erreur ?? "Aucune tournée ne vous est affectée aujourd'hui. Demandez à l'administrateur."
-    return <main className="role-page"><p>{texte}</p></main>
+    if (!charge) return <main className="role-page"><div className="role-chargement"><span className="role-spinner" /> Chargement de votre espace</div></main>
+    return (
+      <main className="role-page">
+        <section className="role-empty carte">
+          <div className="role-empty-icon"><Icone nom="camion" taille={34} /></div>
+          <span className="statut statut-attente">En attente d'affectation</span>
+          <h1>{erreur ? 'Votre tournée est indisponible' : 'Aucune tournée pour le moment'}</h1>
+          <p>{erreur ?? "Votre espace est prêt. L'administrateur doit encore vous affecter une tournée de collecte."}</p>
+          <div className="role-empty-actions">
+            <button className="btn-contour plein" onClick={reessayer}><Icone nom="suivi" taille={18} /> Actualiser</button>
+            <a className="btn-contour" href="mailto:mairie@yilgmde.local">Contacter la mairie</a>
+          </div>
+        </section>
+        <section className="role-info-grid">
+          <article className="role-info-card"><strong>1</strong><div><b>Votre responsable affecte</b><span>La tournée apparaît automatiquement ici dès qu'elle est assignée.</span></div></article>
+          <article className="role-info-card"><strong>2</strong><div><b>Vous recevez les arrêts</b><span>Les points de regroupement et l'itinéraire du jour sont ensuite visibles.</span></div></article>
+        </section>
+      </main>
+    )
   }
   const faits = tournee.arrets.filter((a) => a.statut === 'effectue').length
 

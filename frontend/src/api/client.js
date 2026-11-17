@@ -345,6 +345,11 @@ export async function rejeterSignalement(id, motif) {
 
 // ---- Scenarios et plan (admin) ----
 let MOCK_PARAMS = { arrondissement: 0, camions_en_panne: 0, saison_pluies: false, budget_xof: 500000, nb_camions: 3 }
+let MOCK_SCENARIOS = [
+  { id: 1, nom: 'base', parametres: {}, actif: true },
+  { id: 2, nom: 'pluies', parametres: { scenario: { saison: 'pluies' } }, actif: false },
+]
+let PROCHAIN_MOCK_SCENARIO_ID = 3
 
 // Plan simule a partir des parametres (mock uniquement).
 function planMock(p) {
@@ -465,10 +470,111 @@ export async function getPlan() {
   return retenirFlotte(await appelAuth(`/scenarios/${id}/plan`))
 }
 
+// Liste, activation, simulation et comparaison des scénarios (tableau de bord D6).
+// Le scénario actif reste celui que le formulaire de plan modifie.
+export async function getScenarios() {
+  if (USE_MOCK) return MOCK_SCENARIOS.map((scenario) => ({ ...scenario }))
+  return appelAuth('/scenarios')
+}
+
+export async function activerScenario(id) {
+  if (USE_MOCK) {
+    MOCK_SCENARIOS = MOCK_SCENARIOS.map((scenario) => ({ ...scenario, actif: scenario.id === id }))
+    return MOCK_SCENARIOS.find((scenario) => scenario.id === id)
+  }
+  const scenario = await appelAuth(`/scenarios/${id}/activer`, { method: 'POST' })
+  SCENARIO_ID = scenario.id
+  return scenario
+}
+
+export async function creerScenario(nom, baseSur) {
+  if (USE_MOCK) {
+    const base = MOCK_SCENARIOS.find((scenario) => scenario.id === baseSur)
+    const scenario = { id: PROCHAIN_MOCK_SCENARIO_ID++, nom, parametres: { ...(base?.parametres ?? {}) }, actif: false }
+    MOCK_SCENARIOS = [...MOCK_SCENARIOS, scenario]
+    return scenario
+  }
+  return appelAuth('/scenarios', {
+    method: 'POST',
+    body: JSON.stringify({ nom, base_sur: baseSur, parametres: {}, activer: false }),
+  })
+}
+
+function simulationMock(jours, graine) {
+  const plan = planMock(MOCK_PARAMS)
+  const capacite = plan.indicateurs.capacite_collecte_pct
+  const partCaptee = Math.min(100, Math.max(0, 62 + (capacite - 70) * 0.28 - (MOCK_PARAMS.saison_pluies ? 8 : 0)))
+  const indicateurs = Array.from({ length: jours }, (_, i) => ({
+    jour: i + 1,
+    part_captee_pct: Math.round((partCaptee + Math.sin((i + 1) * 0.7 + graine) * 3) * 10) / 10,
+    depotoirs_actifs: Math.max(0, 4 + Math.round(i / 8) + MOCK_PARAMS.camions_en_panne),
+    dechets_sauvages_kg: Math.round((100 - partCaptee) * 85 * (i + 1)),
+    collecte_suspendue: plan.indicateurs.budget_depasse,
+  }))
+  const dernier = indicateurs[indicateurs.length - 1]
+  return {
+    scenario_id: 1,
+    plan_id: 1,
+    graine,
+    indicateurs,
+    resume: {
+      jours,
+      part_captee_moyenne_pct: Math.round(indicateurs.reduce((s, i) => s + i.part_captee_pct, 0) / jours * 10) / 10,
+      depotoirs_actifs_debut: indicateurs[0].depotoirs_actifs,
+      depotoirs_actifs_fin: dernier.depotoirs_actifs,
+      dechets_sauvages_kg: dernier.dechets_sauvages_kg,
+      passages_collecte: Math.floor(jours / 3),
+      passages_suspendus_budget: plan.indicateurs.budget_depasse ? Math.floor(jours / 3) : 0,
+      cout_total_xof: Math.round(plan.indicateurs.cout_mensuel_estime_xof * jours / 30),
+      budget_restant_xof: Math.max(0, plan.indicateurs.budget_mensuel_xof - plan.indicateurs.cout_mensuel_estime_xof),
+    },
+  }
+}
+
+export async function simulerScenario(jours, graine) {
+  if (USE_MOCK) return simulationMock(jours, graine)
+  const id = await scenarioActif()
+  return appelAuth(`/scenarios/${id}/simuler`, { method: 'POST', body: JSON.stringify({ jours, graine }) })
+}
+
+export async function comparerScenarios(ids, jours, graine) {
+  if (USE_MOCK) {
+    const simulation = simulationMock(jours, graine)
+    const valeurs = [simulation.resume.part_captee_moyenne_pct, simulation.resume.part_captee_moyenne_pct - 8]
+    return {
+      jours,
+      graine,
+      scenarios: ids.map((id, i) => ({ id, nom: MOCK_SCENARIOS.find((scenario) => scenario.id === id)?.nom ?? `scénario ${i + 1}` })),
+      indicateurs: [
+        { source: 'plan', indicateur: 'capacite_collecte_pct', valeurs: [100, 82], ecart_a_la_reference: [0, -18], sens: 'plus', meilleur: [ids[0]] },
+        { source: 'simulation', indicateur: 'part_captee_moyenne_pct', valeurs, ecart_a_la_reference: [0, -8], sens: 'plus', meilleur: [ids[0]] },
+        { source: 'simulation', indicateur: 'depotoirs_actifs_fin', valeurs: [simulation.resume.depotoirs_actifs_fin, simulation.resume.depotoirs_actifs_fin + 3], ecart_a_la_reference: [0, 3], sens: 'moins', meilleur: [ids[0]] },
+        { source: 'simulation', indicateur: 'dechets_sauvages_kg', valeurs: [simulation.resume.dechets_sauvages_kg, simulation.resume.dechets_sauvages_kg + 22000], ecart_a_la_reference: [0, 22000], sens: 'moins', meilleur: [ids[0]] },
+      ],
+    }
+  }
+  return appelAuth(`/scenarios/comparer?ids=${ids.join(',')}&jours=${jours}&graine=${graine}`)
+}
+
 // Liste des arrondissements pour le choix du perimetre (livrable 3).
 export async function getArrondissements() {
   if (USE_MOCK) return []
   return getJson(`${API_URL}/arrondissements`)
+}
+
+export async function getUtilisateurs() {
+  if (USE_MOCK) return [
+    { id: 11, nom: 'Issa chauffeur', role: 'chauffeur', actif: true },
+    { id: 12, nom: 'Awa Laabal', role: 'laabal', actif: true },
+  ]
+  return appelAuth('/admin/utilisateurs')
+}
+
+export async function affecterTournee(tourneeId, utilisateurId) {
+  if (USE_MOCK) return { id: tourneeId, affectee_a: utilisateurId }
+  return appelAuth(`/admin/tournees/${tourneeId}/affecter`, {
+    method: 'POST', body: JSON.stringify({ utilisateur_id: utilisateurId }),
+  })
 }
 
 // ---- Chauffeur ----

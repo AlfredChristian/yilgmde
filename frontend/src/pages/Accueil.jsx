@@ -23,19 +23,24 @@ export default function Accueil() {
     <div>
       <section className="hero">
         <div className="hero-contenu">
+          <div className="hero-kicker"><span className="hero-point" /> Plateforme municipale de propreté</div>
           <p className="hero-avant">Bienvenue sur</p>
-          <h1 className="hero-nom">{NOM}</h1>
+          <h1 className="hero-nom">{NOM}<span>.</span></h1>
           <p className="hero-slogan">{SLOGAN}</p>
+          <p className="hero-description">Signalez un dépotoir, suivez les interventions et aidez la mairie à organiser les tournées plus efficacement.</p>
 
-          <Link to="/carte" className="hero-barre">
-            <span className="hero-barre-texte">Où sont les dépotoirs de Ouagadougou ?</span>
-            <span className="hero-barre-bouton">
-              <Icone nom="carte" taille={28} />
-            </span>
-          </Link>
+          <div className="hero-actions">
+            <Link to="/signaler" className="hero-action hero-action-primaire"><Icone nom="alerte" taille={20} /> Signaler un dépotoir</Link>
+            <Link to="/carte" className="hero-action hero-action-secondaire"><Icone nom="carte" taille={20} /> Explorer la carte</Link>
+          </div>
+          <div className="hero-stats" aria-label="Fonctions principales">
+            <span><strong>01</strong> Signalement simple</span>
+            <span><strong>02</strong> Vérification terrain</span>
+            <span><strong>03</strong> Tournées optimisées</span>
+          </div>
         </div>
         <div className="hero-bandeau">
-          Version de démonstration · les données affichées sont fictives
+          <span className="hero-bandeau-point" /> Version de démonstration, données fictives pour la présentation
         </div>
       </section>
 
@@ -80,7 +85,7 @@ export default function Accueil() {
       <footer className="pied">
         <div className="pied-trait" />
         <p className="pied-nom">{NOM}</p>
-        <p>Code libre (Apache-2.0) · Données cartographiques © contributeurs OpenStreetMap</p>
+        <p>Code libre MIT - Données cartographiques © contributeurs OpenStreetMap</p>
       </footer>
     </div>
   )

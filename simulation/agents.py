@@ -20,8 +20,8 @@ Chaque jour, zone par zone :
    sauvage. Les jours de passage (tous les `7 / frequence_passages_par_semaine`
    jours), les points desservis par une tournée du plan sont vidés.
 4. **Dépotoirs** : les dépôts sauvages grossissent les dépotoirs actifs de la zone ;
-   un nouveau dépotoir apparaît avec la probabilité
-   `min(1, sauvage_kg / simulation.seuil_nouveau_depotoir_kg)`.
+   un nouveau dépotoir apparaît avec une probabilité lissée et plafonnée. Un dépôt
+   apparu aujourd'hui est traité par Laabal à partir du lendemain.
 5. **Brigade Laabal** éradique chaque jour les dépotoirs les plus prioritaires
    (C7), qui passent ensuite sous surveillance ; un site surveillé réapparaît avec
    la probabilité `simulation.prob_reapparition × (1 − effet_dissuasion)` ; les
@@ -56,6 +56,7 @@ def _parametres(config: dict) -> dict:
         "capacite_precollecte": float(pre["nombre"]) * float(pre["capacite_kg_jour"]),
         "prob_apport": min(1.0, float(s.get("prob_apport_volontaire", 0.6)) / float(saison.get("coef_depots_sauvages", 1.0))),
         "seuil_nouveau": float(s.get("seuil_nouveau_depotoir_kg", 1500)),
+        "prob_nouveau_max": min(1.0, max(0.0, float(s.get("prob_nouveau_depotoir_max", 0.45)))),
         "prob_reapparition": float(s.get("prob_reapparition", 0.05)),
         "prob_tentative": float(s.get("prob_tentative_depot_surveille", 0.1)),
         "jours_par_mois": float(s.get("jours_par_mois", 30)),
@@ -161,7 +162,8 @@ def simuler(donnees: dict, config: dict, jours: int = 30, graine: int | None = N
             # 4. Dépôts sauvages : dépotoirs existants ou nouveaux.
             sauvage_jour += sauvage_zone
             actifs_zone = [d for d in depotoirs if d["statut"] == "actif" and d.get("zone_id") == z["id"]]
-            if sauvage_zone > 0 and rng.random() < min(1.0, sauvage_zone / p["seuil_nouveau"]):
+            probabilite_nouveau = p["prob_nouveau_max"] * (1.0 - math.exp(-sauvage_zone / p["seuil_nouveau"]))
+            if sauvage_zone > 0 and rng.random() < probabilite_nouveau:
                 la, lo = rng.choice(info["grille"])
                 nouveau = {"id": prochain_id, "latitude": la, "longitude": lo, "zone_id": z["id"], "statut": "actif",
                            "legalite": "illegal", "volume_estime": "petit", "nb_signalements": 0,
@@ -187,7 +189,8 @@ def simuler(donnees: dict, config: dict, jours: int = 30, graine: int | None = N
                     d["nb_reapparitions"] = d.get("nb_reapparitions", 0) + 1
                     reapparitions += 1
         a_traiter = sorted(
-            (d for d in depotoirs if d["legalite"] == "illegal" and d["statut"] in ("actif", "intervention_planifiee")),
+            (d for d in depotoirs if d["legalite"] == "illegal" and d["statut"] in ("actif", "intervention_planifiee")
+             and d.get("apparu_jour") != jour),
             key=lambda d: (-priorite_depotoir(d, config)[0], d["id"]),
         )
         eradiques = a_traiter[: p["eradications"]]

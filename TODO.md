@@ -41,30 +41,33 @@
 **Simulation et export**
 - [x] E1–E3 — Moteur journalier, 4 agents, indicateurs (P1) — `simulation/agents.py`, `POST /scenarios/{id}/simuler` (D29)
 - [x] E4 — Reproductibilité par graine aléatoire (P2)
-- [ ] G1 — Export GeoJSON des dépotoirs vérifiés (P1)
+- [x] G1 — Export GeoJSON des dépotoirs vérifiés (P1) — export admin OSM (D30) et jeu ouvert anonymisé (D40)
 - [ ] H4/H5 — Constats d'infraction, détection de réapparition (P2) — H4 fait (D35) ; H5 : la réapparition est détectée (A3) mais pas encore signalée à Laabal
 
 ## Christian — front-end
 
 - [x] Choisir et initialiser le framework (React + Vite), Leaflet + OSM (P1)
-- [ ] A6 — Mode hors ligne : file d'attente d'envoi (IndexedDB), envoi au retour du réseau, PWA installable (P1)
+- [x] A6 — Mode hors ligne : file IndexedDB avec `id_client` / `capture_le`, nouvel essai au retour du réseau, PWA installable (P1) — masquage local restant à décider (D47)
 - [ ] Masquage automatique des visages et plaques sur les photos, avant envoi (P1)
-- [ ] D6 — Tableau de bord des scénarios et plan d'un arrondissement, comparaison côte à côte (P1)
+- [x] D6 — Tableau de bord des scénarios et plan d'un arrondissement, comparaison côte à côte (P1) — simulation et comparaison à graine commune dans `/admin/plan`
 - [ ] Parcours de la vidéo de démo (3 min) : signaler, modérer, plan, changement de paramètre, recalcul (P1)
 - [x] Page de suivi d'un signalement, note vocale, pictogrammes (P1)
-- [ ] Proxy ou CORS vers l'API (P1)
-- [ ] A1 — Formulaire de signalement mobile (position GPS ajustable, photo, type, volume) (P1)
-- [ ] B1/B2 — Carte publique : dépotoirs vérifiés, couches zones/points/tournées (P1)
-- [ ] F1/F2 — Connexion et vues selon le rôle (P1)
-- [ ] A3 — File de modération administrateur avec alertes (P1)
-- [ ] D1–D4 — Panneau de paramètres (camions, panne, saison, nouveau quartier) avec recalcul visible (P1)
-- [ ] C3/C7 — Affichage du plan et des tournées sur la carte (P1)
-- [ ] C6 — Vue chauffeur : tournée et arrêts à cocher (P1)
-- [ ] H1–H3 — Vue Laabal : dépotoirs à traiter, intervention, surveillance (P1)
-- [ ] E3 — Tableau de bord des indicateurs (P1)
-- [ ] A5 — Suivi d'un signalement avec le code (P2)
-- [x] D6 — Comparaison de scénarios côte à côte (P2) — `GET /scenarios/comparer` (D31) ; reste la vue front
-- [ ] A6 — Mode hors ligne : file d'attente d'envoi (P2)
+- [x] Proxy ou CORS vers l'API (P1) — proxy Vite `/api` et CORS de développement
+- [x] A1 — Formulaire de signalement mobile (position GPS ajustable, photo, type, volume) (P1)
+- [x] B1/B2 — Carte publique : dépotoirs vérifiés, couches zones/points/tournées (P1)
+- [x] F1/F2 — Connexion et vues selon le rôle (P1)
+- [x] A3 — File de modération administrateur avec alertes (P1)
+- [x] D1–D4 — Panneau de paramètres (camions, panne, saison, nouveau quartier) avec recalcul visible (P1)
+- [x] C3/C7 — Affichage du plan et des tournées sur la carte (P1)
+- [x] C6 — Vue chauffeur : tournée et arrêts à cocher (P1)
+- [x] H1–H3 — Vue Laabal : dépotoirs à traiter, intervention, surveillance (P1)
+- [x] Affectation des tournées : chauffeurs et brigades Laabal depuis `/admin/plan` (P1)
+- [x] T5 — Simulation : création probabiliste des nouveaux dépotoirs, sensible aux déchets sauvages (D48) ; régénération des chiffres du rapport à vérifier
+- [x] T6 — Hypothèse de flotte entière affichée pour un plan d'arrondissement (limite documentée)
+- [x] E3 — Tableau de bord des indicateurs (P1) — plan, simulation journalière et comparaison
+- [x] A5 — Suivi d'un signalement avec le code (P2)
+- [x] D6 — Comparaison de scénarios côte à côte (P2) — `GET /scenarios/comparer` (D31) et vue front
+- [x] A6 — Mode hors ligne : file d'attente d'envoi (P2)
 - [ ] B3/B4 — Fiche dépotoir et filtres (P2)
 
 ## Cramer — présentation, documentation, données, tests
@@ -76,8 +79,8 @@
 - [ ] Jeu de test maison : signalements valides + pièges (doublons, hors zone…) pour tester A2 (P1)
 - [ ] Scénario de test de l'épreuve en direct (panne, pluies, nouveau quartier) (P1)
 - [ ] Se renseigner sur la procédure de versement dans OSM (P2)
-- [ ] Script de démo et pitch de 3 à 5 minutes : problème, solution, démo, impact (P1)
-- [ ] Plan B de démo : captures d'écran et vidéo (P1)
+- [x] Script de démo et pitch de 3 à 5 minutes : problème, solution, démo, impact (P1) — `docs/demo-3-minutes.md`
+- [x] Plan B de démo : procédure hors-ligne, captures et vidéo à préparer (P1) — `docs/plan-b-demo.md`
 
 ## Jour 3 — Gel et répétition
 
@@ -89,11 +92,11 @@
 ## Livrables ajoutés le 2026-11-17
 
 - [x] L1 (back) — Signalement hors connexion : `id_client`, `capture_le`, plafond de réception, note vocale ; masquage serveur des visages et plaques (D36)
-- [ ] L1 (front) — File d'attente : envoyer `id_client` et `capture_le`, garder l'élément sur `429`/`503` ; masquage sur le téléphone avant envoi (Christian)
+- [x] L1 (front) — File d'attente : envoi de `id_client` et `capture_le`, conservation sur `429`/`503` ; masquage sur le téléphone reste à décider (D47)
 - [x] L2 — Fichier de paramètres documenté (`docs/parametres.md`, test de complétude `tests/test_parametres_doc.py`)
 - [x] L3 (back) — Plan, simulation et comparaison d'un arrondissement (`perimetre`), `GET /arrondissements`, synthèse Markdown du plan (D37)
-- [ ] L3 (front) — Tableau de bord des scénarios : choix de l'arrondissement, plan sur la carte, indicateurs, simulation, comparaison, synthèse (Christian)
+- [x] L3 (front) — Tableau de bord des scénarios : choix de l'arrondissement, plan sur la carte, indicateurs, simulation et comparaison (Christian) ; synthèse Markdown reste à exposer dans l'interface
 - [x] L4 — Données réalistes de Ouaga (12 arrondissements, paramètres sourcés) et jeu de signalements GeoJSON sous ODbL — `data/ouaga/`, `GET /donnees/signalements.geojson` (D38–D40)
-- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (Cramer)
+- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (Cramer) — structure et recommandations finalisées dans `docs/rapport/resultats.md` ; régénérer les chiffres après D48
   - [x] chiffres, tableaux, courbes et carte : `python scripts/resultats_scenarios.py` → `docs/rapport/` (D43)
 - [ ] L6 — Vidéo de 3 min : du signalement à la tournée, puis un changement de paramètres et le plan recalculé

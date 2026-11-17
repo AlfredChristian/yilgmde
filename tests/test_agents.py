@@ -91,6 +91,23 @@ def test_saison_des_pluies_plus_de_depots_sauvages(config):
     assert resume(pluies)["dechets_sauvages_kg"] > resume(config)["dechets_sauvages_kg"]
 
 
+def test_depots_actifs_reagissent_aux_dechets_sauvages(config):
+    """D48 : une hausse de dépôts sauvages augmente aussi les nouveaux sites visibles."""
+    sensible = appliquer_surcharges(config, {
+        "laabal": {"nombre_brigades": 0},
+        "simulation": {"seuil_nouveau_depotoir_kg": 25000, "prob_nouveau_depotoir_max": 0.9},
+    })
+    capte = appliquer_surcharges(sensible, {
+        "population": {"taux_abonnement_precollecteurs": 0.95},
+        "precollecteurs": {"nombre": 200},
+    })
+    peu = resume(sensible, jours=30, graine=1)
+    beaucoup = resume(capte, jours=30, graine=1)
+    assert peu["dechets_sauvages_kg"] > beaucoup["dechets_sauvages_kg"]
+    assert peu["nouveaux_depotoirs"] > beaucoup["nouveaux_depotoirs"]
+    assert peu["depotoirs_actifs_fin"] > beaucoup["depotoirs_actifs_fin"]
+
+
 def test_sans_camion_les_points_debordent(config):
     hs = appliquer_surcharges(config, {"camions": [{"id": c["id"], "disponible": False} for c in config["camions"]]})
     r = resume(hs, jours=30)

@@ -134,7 +134,8 @@ Les sources sont détaillées dans `data/ouaga/LISEZMOI.md`. Un test (`tests/tes
 | Paramètre | Rôle | Unité | Défaut | Statut |
 |---|---|---|---|---|
 | `simulation.prob_apport_volontaire` | Un ménage non abonné à distance de marche apporte ses déchets au point. **Levier principal de la part captée** (D41) | 0–1 | 0,6 | [H] |
-| `simulation.seuil_nouveau_depotoir_kg` | Dépôts sauvages du jour dans une zone pour qu'un dépotoir apparaisse à coup sûr | kg | 1500 | [H] |
+| `simulation.seuil_nouveau_depotoir_kg` | Échelle de déchets sauvages du jour : plus elle est basse, plus le risque d'un nouveau dépotoir augmente vite | kg | 1500 | [H] |
+| `simulation.prob_nouveau_depotoir_max` | Plafond journalier de probabilité d'apparition d'un nouveau dépotoir ; évite qu'un seuil dépassé crée un dépôt à coup sûr | 0–1 | 0,45 | [H] |
 | `simulation.prob_reapparition` | Réapparition d'un site surveillé, par jour (× (1 − dissuasion)) | 0–1 | 0,05 | [H] |
 | `simulation.prob_tentative_depot_surveille` | Tentative de dépôt sur un site surveillé, par jour | 0–1 | 0,1 | [H] |
 | `simulation.jours_par_mois` | Répartition du budget mensuel | jours | 30 | technique |

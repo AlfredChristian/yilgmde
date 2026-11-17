@@ -1,6 +1,6 @@
 # Plan de gestion des déchets — arrondissement 9
 
-Scénario **Base — arrondissement 9** · plan n° 1 calculé le 2026-11-17 14:06 UTC en 392 ms · saison sèche · 4 zone(s), 336 483 habitants.
+Scénario **Base — arrondissement 9** · plan n° 1 calculé le 2026-11-17 19:09 UTC en 4333 ms · saison sèche · 4 zone(s), 336 483 habitants.
 
 Paramètres modifiés par rapport à la configuration de base :
 
