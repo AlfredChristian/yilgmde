@@ -71,6 +71,9 @@ laabal:
     poids_reapparition: 2                # un dépotoir qui revient est traité en priorité
     poids_signalement: 0.5
 
+import:                                  # A4, POST /admin/signalements/import
+  max_par_lot: 1000                      # borne la taille d'un lot (temps de calcul)
+
 export_osm:                              # G1, voir backend/export_osm.py
   min_signalements: 1                    # [H] signalements vérifiés minimum pour exporter un dépotoir
   source: "survey;YilGmdé"

@@ -7,7 +7,7 @@ from backend import db
 from backend.config import charger_config
 from backend.limitation import creer_limiteurs
 from backend.plans import creer_scenario_base_si_absent
-from backend.routes import admin_export, admin_signalements, admin_utilisateurs, auth, depotoirs, scenarios, signalements, terrain, zones
+from backend.routes import admin_donnees, admin_export, admin_signalements, admin_utilisateurs, auth, depotoirs, scenarios, signalements, terrain, zones
 from backend.utilisateurs import creer_admin_si_absent
 
 
@@ -44,6 +44,7 @@ app.include_router(zones.router)
 app.include_router(auth.router)
 app.include_router(admin_utilisateurs.router)
 app.include_router(admin_signalements.router)
+app.include_router(admin_donnees.router)
 app.include_router(scenarios.router)
 app.include_router(terrain.router)
 app.include_router(admin_export.router)
