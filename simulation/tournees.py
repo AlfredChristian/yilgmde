@@ -64,7 +64,7 @@ def _depot(config: dict) -> tuple[float, float]:
 
 # --- Résolution ------------------------------------------------------------------------
 
-def _resoudre_ortools(dist, demandes, temps_service, vehicules, vitesse, temps_max_s):
+def _resoudre_ortools(dist, demandes, temps_service, vehicules, vitesse, temps_max_s, recherche_locale=True):
     """Renvoie une liste d'itinéraires (indices de sites, sans le dépôt 0) par véhicule, ou None."""
     if pywrapcp is None:
         return None
@@ -98,6 +98,10 @@ def _resoudre_ortools(dist, demandes, temps_service, vehicules, vitesse, temps_m
     params = pywrapcp.DefaultRoutingSearchParameters()
     params.first_solution_strategy = routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
     params.local_search_metaheuristic = routing_enums_pb2.LocalSearchMetaheuristic.GREEDY_DESCENT
+    if not recherche_locale:
+        # Grandes instances : la solution de départ seule (≈ 0,1 s pour 350 arrêts, ~6 % plus longue)
+        # plutôt qu'une recherche arrêtée par le chronomètre, qui dépendrait de la machine (D09, D38).
+        params.solution_limit = 1
     params.time_limit.FromMilliseconds(int(temps_max_s * 1000))
     solution = routing.SolveWithParameters(params)
     if solution is None:
@@ -156,9 +160,11 @@ def resoudre(sites, demandes_kg, temps_service_min, vehicules, config, temps_max
     vehs = [dict(v, capacite=int(v["capacite"]), duree_max=int(v["duree_max"])) for v in vehicules]
     if not vehs or len(sites) <= 1:
         return [[] for _ in vehs], "aucune", dist
-    itineraires = _resoudre_ortools(dist, demandes, service, vehs, vitesse, temps_max_s)
+    seuil = int(config["collecte"].get("max_arrets_recherche_locale", 150))
+    locale = len(sites) - 1 <= seuil
+    itineraires = _resoudre_ortools(dist, demandes, service, vehs, vitesse, temps_max_s, recherche_locale=locale)
     if itineraires is not None:
-        return itineraires, "ortools", dist
+        return itineraires, "ortools" if locale else "ortools_rapide", dist
     return _resoudre_plus_proche_voisin(dist, demandes, service, vehs, vitesse), "plus_proche_voisin", dist
 
 

@@ -49,7 +49,8 @@ collecte:
   temps_arret_min: 10                    # [H] chargement d'un point de regroupement
   duree_max_tournee_min: 480             # [H] journée de travail d'un camion
   rotations_max_par_jour: 2              # [H] allers-retours au dépôt (vidage) par camion et par jour
-  temps_calcul_max_s: 5                  # sécurité : au-delà, meilleure solution trouvée
+  temps_calcul_max_s: 30                 # sécurité seulement : le calcul doit finir avant (D38)
+  max_arrets_recherche_locale: 150       # au-delà, solution de départ OR-Tools seule (rapide, ~6 % plus longue, D38)
   # depot: {latitude: ..., longitude: ...}   # propre à chaque commune : voir <ville>.yaml
 
 precollecteurs:

@@ -197,3 +197,15 @@ def test_sans_brigade(config):
     zero = appliquer_surcharges(config, {"laabal": {"nombre_brigades": 0}})
     r = planifier_interventions(DEPOTOIRS, zero)
     assert r["tournees"] == [] and len(r["en_attente"]) == 5
+
+
+def test_grande_instance_solution_de_depart_deterministe(config):
+    """Au-delà de max_arrets_recherche_locale : solution de départ seule, rapide et reproductible (D38)."""
+    petit_seuil = appliquer_surcharges(config, {"collecte": {"max_arrets_recherche_locale": 3}})
+    a = planifier_tournees(POINTS, petit_seuil)
+    assert a["methode"] == "ortools_rapide"
+    assert ids_desservis(a) == [p["id"] for p in POINTS]
+    assert planifier_tournees(POINTS, petit_seuil) == a
+    complet = planifier_tournees(POINTS, config)
+    total = lambda r: sum(t["distance_km"] for t in r["tournees"])
+    assert total(complet) <= total(a) + 0.01                      # la recherche locale ne fait pas pire
