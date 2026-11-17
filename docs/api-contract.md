@@ -157,17 +157,17 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
 - `POST /scenarios/{id}/simuler` : `{"jours": 30, "graine": 42}` (corps optionnel ; `jours` de 1 à 365, défaut 30 ; `graine` par défaut celle de la config). Simule sur le plan à jour du scénario ; **même graine = mêmes résultats**. `422` si `jours` hors bornes, `404` si scénario inconnu. Les colonnes `pct_collecte`, `depotoirs_actifs`, `cout_xof`, `distance_km` sont enregistrées dans `indicateur_simulation` (la simulation précédente du même plan est remplacée).
 ```json
 { "scenario_id": 1, "plan_id": 7, "graine": 42,
-  "indicateurs": [{ "jour": 1, "pct_collecte": 78.2, "depotoirs_actifs": 2, "cout_xof": 0, "distance_km": 0.0,
+  "indicateurs": [{ "jour": 1, "part_captee_pct": 78.2, "pct_collecte": 78.2, "depotoirs_actifs": 2, "cout_xof": 0, "distance_km": 0.0,
                     "production_kg": 10000, "dechets_sauvages_kg": 2185, "stock_points_kg": 7816, "collecte_kg": 0,
                     "passage": false, "collecte_suspendue": false, "depotoirs_eradiques": 2,
                     "depotoirs_sous_surveillance": 0, "reapparitions": 0, "constats": 0, "amendes_xof": 0,
                     "budget_restant_xof": 166667 }],
-  "resume": { "jours": 30, "pct_collecte_moyen": 77.7, "depotoirs_actifs_debut": 2, "depotoirs_actifs_fin": 5,
+  "resume": { "jours": 30, "part_captee_moyenne_pct": 77.7, "pct_collecte_moyen": 77.7, "depotoirs_actifs_debut": 2, "depotoirs_actifs_fin": 5,
               "nouveaux_depotoirs": 41, "depotoirs_eradiques": 54, "reapparitions": 16, "dechets_sauvages_kg": 66921,
               "passages_collecte": 8, "passages_suspendus_budget": 0, "cout_total_xof": 804048,
               "distance_totale_km": 1110.2, "amendes_total_xof": 150000, "constats": 15, "budget_restant_xof": 4345952 } }
 ```
-  - `pct_collecte` : part de la production du jour arrivée aux points (pré-collecte + apport volontaire − débordement). `cout_xof`, `distance_km` : non nuls les seuls jours de passage. `budget_restant_xof` : `null` si pas de budget dans la config.
+  - `part_captee_pct` : part de la production du jour **arrivée aux points** (pré-collecte + apport volontaire + dissuasion Laabal − débordement des points) ; `part_captee_moyenne_pct` dans le résumé (D41). `pct_collecte` et `pct_collecte_moyen` : anciens noms, **dépréciés**, mêmes valeurs. `cout_xof`, `distance_km` : non nuls les seuls jours de passage. `budget_restant_xof` : `null` si pas de budget dans la config.
 - `GET /scenarios/comparer?ids=1,2&jours=30&graine=42` (D6) : 2 à 4 scénarios distincts (`422` sinon, `404` si l'un est inconnu), plan à jour et simulation de chacun avec la **même graine** (par défaut celle de la config).
 ```json
 { "jours": 30, "graine": 42,
@@ -198,7 +198,8 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
   ],
   "indicateurs": {
     "demande_totale_kg_jour": 10000, "zones_population_inconnue": [], "nb_points_regroupement": 66,
-    "stock_a_collecter_kg": 35000, "dechets_collectes_pct": 100.0, "depotoirs_actifs": 2,
+    "stock_a_collecter_kg": 35000, "capacite_collecte_pct": 100.0, "part_captee_estimee_pct": 67.6,
+    "precollecte_pct": 30.0, "apport_volontaire_pct": 37.6, "non_capte_pct": 32.4, "dechets_collectes_pct": 100.0, "depotoirs_actifs": 2,
     "depotoirs_planifies_laabal": 2, "depotoirs_en_attente_laabal": 0,
     "camions_utilises": ["camion_1", "camion_2", "camion_3"], "camions_indisponibles": [],
     "distance_totale_km": 145.1, "cout_total_xof": 100000, "cout_mensuel_estime_xof": 866667,
@@ -217,7 +218,10 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
 - Un passage de collecte s'étale sur `jours_ouvres_par_semaine / frequence_passages_par_semaine` jours (3 à Ouaga) ; chaque tournée porte son `jour` (1 à 3) (D39).
 - `methode_tournees` : `ortools` (recherche locale, jusqu'à `collecte.max_arrets_recherche_locale` arrêts), `ortools_rapide` (au-delà : solution de départ seule, ~6 % plus longue, D38) ou `plus_proche_voisin` (repli).
 - Une tournée de collecte = une **rotation** (dépôt → points → dépôt) d'un camion ; `cout_xof` inclut le coût journalier du camion sur sa 1re rotation. `cout_total_xof` = coût d'un passage de collecte ; `cout_mensuel_estime_xof` = ce coût × passages par mois.
-- `dechets_collectes_pct` = part du stock des points effectivement chargée dans les tournées.
+- **Deux indicateurs à ne pas confondre (D41)** :
+  - `capacite_collecte_pct` : part du stock des points que les tournées peuvent vider. Répond à « les camions suffisent-ils ? », en supposant que tous les déchets arrivent aux points.
+  - `part_captee_estimee_pct` : part des déchets produits qui **arrive aux points**, selon le comportement des ménages : `precollecte_pct` (abonnés ramassés par les pré-collecteurs) + `apport_volontaire_pct` (non-abonnés à distance de marche qui apportent leurs déchets, `simulation.prob_apport_volontaire`) ; `non_capte_pct` = le reste (dépôts sauvages, brûlage). Même formule que la simulation (`simulation/captage.py`), sans la dissuasion Laabal.
+  - `dechets_collectes_pct` : ancien nom de `capacite_collecte_pct`, **déprécié**, même valeur.
 - `cible_id` d'un arrêt de collecte = `id` du point de regroupement de ce plan ; d'un arrêt d'intervention = `id` du dépotoir.
 
 ## Chauffeur

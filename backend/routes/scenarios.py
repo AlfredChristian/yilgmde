@@ -87,12 +87,13 @@ def creer(request: Request, entree: ScenarioCreation, utilisateur=Depends(admin)
 
 # Indicateurs comparés (D6) : chemin dans la réponse, et sens « meilleur ».
 INDICATEURS_COMPARES = [
-    ("plan", "dechets_collectes_pct", "plus"),
+    ("plan", "capacite_collecte_pct", "plus"),
+    ("plan", "part_captee_estimee_pct", "plus"),
     ("plan", "nb_points_regroupement", None),
     ("plan", "distance_totale_km", "moins"),
     ("plan", "cout_total_xof", "moins"),
     ("plan", "cout_mensuel_estime_xof", "moins"),
-    ("simulation", "pct_collecte_moyen", "plus"),
+    ("simulation", "part_captee_moyenne_pct", "plus"),
     ("simulation", "depotoirs_actifs_fin", "moins"),
     ("simulation", "dechets_sauvages_kg", "moins"),
     ("simulation", "cout_total_xof", "moins"),
@@ -236,7 +237,7 @@ def simuler_scenario(request: Request, scenario_id: int, entree: SimulationEntre
             conn.executemany(
                 "INSERT INTO indicateur_simulation (plan_id, jour, pct_collecte, depotoirs_actifs, cout_xof, distance_km)"
                 " VALUES (?, ?, ?, ?, ?, ?)",
-                [(plan["id"], i["jour"], i["pct_collecte"], i["depotoirs_actifs"], i["cout_xof"], i["distance_km"])
+                [(plan["id"], i["jour"], i["part_captee_pct"], i["depotoirs_actifs"], i["cout_xof"], i["distance_km"])
                  for i in resultat["indicateurs"]],
             )
     return {"scenario_id": scenario_id, "plan_id": plan["id"], **resultat}

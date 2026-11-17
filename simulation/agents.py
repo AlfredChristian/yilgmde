@@ -36,10 +36,9 @@ from __future__ import annotations
 
 import math
 import random
-from typing import Sequence
 
+from simulation.captage import couverture, ratio_precollecte
 from simulation.demande import estimer_demande
-from simulation.geometrie import distance_m, echantillonner
 from simulation.plan import budget_du_perimetre, calculer_plan, preparer
 from simulation.regroupement import jours_entre_passages
 from simulation.tournees import priorite_depotoir
@@ -70,19 +69,6 @@ def _parametres(config: dict) -> dict:
         "jpp": jours_entre_passages(config),
         "pas_couverture": int(s.get("max_echantillons_couverture", 400)),
     }
-
-
-def _couverture(zone: dict, points: Sequence[dict], p: dict) -> tuple[float, list]:
-    """Part des ménages de la zone à distance de marche d'un point, et la grille utilisée."""
-    grille = echantillonner(zone["geometrie"], p["pas_m"], p["pas_couverture"])
-    proches = [pt for pt in points if pt.get("zone_id") == zone["id"]]
-    if not proches:
-        return 0.0, grille
-    dedans = sum(
-        1 for la, lo in grille
-        if min(distance_m(la, lo, pt["latitude"], pt["longitude"]) for pt in proches) <= p["distance_marche"]
-    )
-    return dedans / len(grille), grille
 
 
 def _jour_de_passage(jour: int, jpp: float) -> bool:
@@ -125,15 +111,14 @@ def simuler(donnees: dict, config: dict, jours: int = 30, graine: int | None = N
 
     par_zone = {}
     for z in zones:
-        cov, grille = _couverture(z, points, p)
+        cov, grille = couverture(z, points, p)
         pts = [pt for pt in points if pt.get("zone_id") == z["id"]]
         poids = [max(pt.get("charge_kg_jour") or 0.0, 0.0) for pt in pts]
         if pts and sum(poids) == 0:
             poids = [1.0] * len(pts)
         par_zone[z["id"]] = {"couverture": cov, "grille": grille, "points": pts, "poids": poids}
 
-    abonnes_total = sum(demandes[z["id"]] * p["taux_abonnement"] for z in zones if par_zone[z["id"]]["points"])
-    ratio_pre = min(1.0, p["capacite_precollecte"] / abonnes_total) if abonnes_total > 0 else 0.0
+    ratio_pre = ratio_precollecte(zones, demandes, {z for z, v in par_zone.items() if v["points"]}, p)
 
     indicateurs = []
     cout_cumule = amendes_cumulees = sauvage_cumule = 0.0
@@ -239,6 +224,8 @@ def simuler(donnees: dict, config: dict, jours: int = 30, graine: int | None = N
         indicateurs.append(
             {
                 "jour": jour,
+                # Part des déchets produits arrivée aux points (D41) ; `pct_collecte` : ancien nom, déprécié.
+                "part_captee_pct": round(100 * vers_points / production, 1) if production else 100.0,
                 "pct_collecte": round(100 * vers_points / production, 1) if production else 100.0,
                 "depotoirs_actifs": sum(1 for d in depotoirs if d["statut"] == "actif"),
                 "cout_xof": round(cout_jour),
@@ -261,7 +248,8 @@ def simuler(donnees: dict, config: dict, jours: int = 30, graine: int | None = N
     n = len(indicateurs)
     resume = {
         "jours": n,
-        "pct_collecte_moyen": round(sum(i["pct_collecte"] for i in indicateurs) / n, 1),
+        "part_captee_moyenne_pct": round(sum(i["part_captee_pct"] for i in indicateurs) / n, 1),
+        "pct_collecte_moyen": round(sum(i["part_captee_pct"] for i in indicateurs) / n, 1),   # déprécié
         "depotoirs_actifs_debut": actifs_debut,
         "depotoirs_actifs_fin": indicateurs[-1]["depotoirs_actifs"],
         "nouveaux_depotoirs": prochain_id - 1 - max((d["id"] for d in donnees.get("depotoirs", [])), default=0),

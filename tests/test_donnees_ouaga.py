@@ -61,6 +61,13 @@ def test_geometrie_coherente():
     for f in DEPOTOIRS["features"]:
         lon, lat = f["geometry"]["coordinates"]
         assert point_dans_geometrie(lat, lon, geometries[f["properties"]["zone_id"]])
+    # chaque secteur est dans le contour réel de la commune (OpenStreetMap), et ils le remplissent
+    from shapely.geometry import shape
+    from shapely.ops import unary_union
+    commune = shape(lire("commune_ouagadougou.geojson")["features"][0]["geometry"])
+    secteurs = [shape(g) for g in geometries.values()]
+    assert all(commune.buffer(1e-6).contains(s) for s in secteurs)
+    assert unary_union(secteurs).area == pytest.approx(commune.area, rel=0.01)
     officiels = [f for f in DEPOTOIRS["features"] if f["properties"]["legalite"] == "officiel"]
     assert len(officiels) == 35                                    # centres de collecte (UN-Habitat)
 
@@ -88,7 +95,7 @@ def test_plan_d_un_arrondissement_rapide_a_l_echelle_reelle():
     assert time.perf_counter() - debut < 20                         # ~0,5 s en pratique
     ind = plan["indicateurs"]
     assert ind["perimetre"]["population"] == 336_483
-    assert ind["nb_points_regroupement"] > 200 and ind["dechets_collectes_pct"] > 90
+    assert ind["nb_points_regroupement"] > 200 and ind["capacite_collecte_pct"] > 90
     assert ind["budget_mensuel_xof"] < config["mairie"]["budget_mensuel_xof"]
 
 
@@ -106,7 +113,7 @@ def client(tmp_path, monkeypatch):
 
 def test_chargement_idempotent(client):
     n = charger_exemples(app.state.db, DOSSIER_OUAGA)
-    assert n == {"zones": 52, "depotoirs": 215, "signalements": 930}
+    assert n == {"zones": 52, "depotoirs": 215, "signalements": len(SIGNALEMENTS["features"])}
     assert charger_exemples(app.state.db, DOSSIER_OUAGA) == {"zones": 0, "depotoirs": 0, "signalements": 0}
     arr = client.get("/arrondissements").json()
     assert [a["arrondissement"] for a in arr] == list(range(1, 13))

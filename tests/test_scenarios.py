@@ -179,7 +179,7 @@ def test_simuler(client):
     assert r.status_code == 200, r.text
     corps = r.json()
     assert corps["graine"] == 42 and len(corps["indicateurs"]) == 10
-    assert {"jour", "pct_collecte", "depotoirs_actifs", "cout_xof", "distance_km"} <= set(corps["indicateurs"][0])
+    assert {"jour", "part_captee_pct", "pct_collecte", "depotoirs_actifs", "cout_xof", "distance_km"} <= set(corps["indicateurs"][0])
     assert client.post("/scenarios/1/simuler", json={"jours": 10, "graine": 42}, headers=h).json() == corps
     lignes = app.state.db.execute("SELECT COUNT(*) FROM indicateur_simulation WHERE plan_id = ?", (corps["plan_id"],)).fetchone()[0]
     assert lignes == 10                                                  # remplacée, pas doublée
@@ -209,7 +209,7 @@ def test_comparer(client):
     corps = r.json()
     assert corps["graine"] == 3 and [s["id"] for s in corps["scenarios"]] == [1, s2["id"]]
     lignes = {(l["source"], l["indicateur"]): l for l in corps["indicateurs"]}
-    pct = lignes[("plan", "dechets_collectes_pct")]
+    pct = lignes[("plan", "capacite_collecte_pct")]
     assert pct["ecart_a_la_reference"][0] == 0 and pct["meilleur"] == [1]       # la base collecte plus
     sauvage = lignes[("simulation", "dechets_sauvages_kg")]
     assert sauvage["valeurs"][1] > sauvage["valeurs"][0] and sauvage["meilleur"] == [1]

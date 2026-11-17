@@ -22,6 +22,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
+from simulation.captage import estimer_captage
 from simulation.demande import estimer_demande
 from simulation.geometrie import point_dans_geometrie, zone_pour_point
 from simulation.regroupement import placer_points
@@ -169,7 +170,12 @@ def calculer_plan(donnees: dict, config: dict) -> dict:
         "zones_population_inconnue": [d["zone_id"] for d in demandes if not d["population_connue"]],
         "nb_points_regroupement": len(points),
         "stock_a_collecter_kg": round(a_collecter, 1),
-        "dechets_collectes_pct": round(100 * collecte_kg / a_collecter, 1) if a_collecter else 100.0,
+        # D41 : deux questions différentes, deux indicateurs.
+        # Les camions peuvent-ils vider les points ? (suppose que tout arrive aux points)
+        "capacite_collecte_pct": round(100 * collecte_kg / a_collecter, 1) if a_collecter else 100.0,
+        # Quelle part des déchets produits arrive aux points ? (comportement des ménages, voir captage.py)
+        **estimer_captage(zones, points, {d["zone_id"]: d["demande_kg_jour"] for d in demandes}, config),
+        "dechets_collectes_pct": round(100 * collecte_kg / a_collecter, 1) if a_collecter else 100.0,   # déprécié
         "depotoirs_actifs": len(actifs),
         "depotoirs_planifies_laabal": sum(len(t["arrets"]) for t in laabal["tournees"]),
         "depotoirs_en_attente_laabal": len(laabal["en_attente"]),
