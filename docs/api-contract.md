@@ -35,6 +35,7 @@ Toute modification d'API passe par une PR qui met à jour ce fichier. La documen
 | GET | `/depotoirs?statut=&zone_id=` | Dépotoirs **vérifiés** en GeoJSON (`FeatureCollection`, propriétés : `id`, `statut`, `legalite`, `volume_estime`, `nb_signalements`, `zone_id`, `derniere_maj`) |
 | GET | `/zones` | Zones (quartiers ou secteurs) en GeoJSON, avec la demande de déchets estimée (C1) |
 | GET | `/arrondissements` | Arrondissements, leurs zones, population et demande (choix du périmètre d'un plan) |
+| GET | `/donnees/signalements.geojson` | Jeu ouvert des signalements vérifiés, anonymisé, sous ODbL (livrable 4) |
 | GET | `/points-regroupement` | Points du plan courant (scénario actif), GeoJSON |
 | POST | `/signalements` | Créer un signalement (anonyme) |
 | GET | `/signalements/suivi/{code_suivi}` | Statut d'un signalement |
@@ -42,6 +43,8 @@ Toute modification d'API passe par une PR qui met à jour ce fichier. La documen
 **GET `/zones`** → `FeatureCollection` de `Polygon` (ou `MultiPolygon`), propriétés : `id`, `nom`, `population` (peut être `null`), `densite`, `arrondissement` (entier ou `null`), `demande_kg_jour`. La demande vaut `population × production_dechets_kg_hab_jour × coef_production(saison)` selon la config courante ; elle vaut `0` si la population est inconnue. Vide tant qu'aucune zone n'est chargée.
 
 **GET `/arrondissements`** → `[{"arrondissement": 4, "zones": [12, 13], "population": 180000, "population_inconnue": false, "demande_kg_jour": 108000.0}]`, trié par numéro ; seules les zones qui ont un `arrondissement` comptent.
+
+**GET `/donnees/signalements.geojson`** (public, téléchargeable, `application/geo+json`) → `FeatureCollection` des signalements **vérifiés** seulement. Propriétés : `id`, `type_dechet`, `volume_estime`, `date` (`AAAA-MM-JJ`, prise de vue sinon réception), `depotoir_id`, `zone_id`, `arrondissement`. Position arrondie à `donnees_ouvertes.decimales_position` décimales (4 ≈ 11 m). Ni appareil, ni photo, ni note vocale, ni texte libre, ni code de suivi. `metadata` : `titre`, `licence` (`ODbL-1.0`), `licence_url`, `attribution`, `genere_le`, `nombre`, `anonymisation` (D40).
 
 À la validation d'un signalement, le nouveau dépotoir est rattaché à la zone qui le contient (`zone_id`), ou `null` si aucune zone ne le contient.
 
@@ -147,7 +150,7 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
   - `{"zones_ajoutees": [<Feature ou géométrie GeoJSON, ou sa chaîne JSON>]}` : nouveau quartier (D4), propriétés `nom`, `population` (sans population : seuls ses dépotoirs reçoivent un point). Les zones **s'ajoutent** à celles déjà ajoutées. Les dépotoirs sans zone qu'elles contiennent leur sont rattachés.
   - tout autre paramètre de la config : `{"collecte": {"frequence_passages_par_semaine": 3}}`, `{"points_regroupement": {"distance_max_a_pied_m": 200}}`, `{"laabal": {"nombre_brigades": 2}}`, `{"mairie": {"budget_mensuel_xof": 4000000}}`…
 - `POST /scenarios/{id}/activer` → scénario, devenu le seul actif.
-- **Plan d'un arrondissement** (livrable 3) : `{"perimetre": {"arrondissements": [4]}}` (ou `{"zones": [12, 13]}`, ou les deux : union ; listes vides = toute la commune). Plan, tournées, Laabal, simulation et comparaison se limitent aux zones choisies et à leurs dépotoirs ; les nouveaux quartiers du scénario sont toujours gardés. `422` (rien n'est enregistré) si le périmètre ne contient aucune zone. `indicateurs.perimetre` = `{"arrondissements": [4], "zones": [12, 13], "population": 180000}` (`null` sans périmètre).
+- **Plan d'un arrondissement** (livrable 3) : `{"perimetre": {"arrondissements": [4]}}` (ou `{"zones": [12, 13]}`, ou les deux : union ; listes vides = toute la commune). Plan, tournées, Laabal, simulation et comparaison se limitent aux zones choisies et à leurs dépotoirs ; les nouveaux quartiers du scénario sont toujours gardés. `422` (rien n'est enregistré) si le périmètre ne contient aucune zone. `indicateurs.perimetre` = `{"arrondissements": [4], "zones": [12, 13], "population": 180000, "part_budget": 0.0745}` (`null` sans périmètre). `budget_mensuel_xof` est alors la part du budget communal revenant au périmètre, au prorata de sa population (D39) ; la simulation utilise la même part.
 - `POST /scenarios/{id}/calculer` → Plan, calcul forcé.
 - `GET /scenarios/{id}/plan/synthese` → **plan de gestion lisible** en Markdown (`text/markdown`) : en bref, points par zone avec une explication, tournées par camion et rotation, brigade Laabal, ce qui n'est pas couvert. Pour le tableau de bord, le rapport ou l'impression.
 - `GET /scenarios/{id}/plan` → dernier Plan, **recalculé d'abord si les entrées ont changé** (dépotoirs, zones, paramètres) ; sinon le même plan est renvoyé.
@@ -211,6 +214,8 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
   "zones_ajoutees": []
 }
 ```
+- Un passage de collecte s'étale sur `jours_ouvres_par_semaine / frequence_passages_par_semaine` jours (3 à Ouaga) ; chaque tournée porte son `jour` (1 à 3) (D39).
+- `methode_tournees` : `ortools` (recherche locale, jusqu'à `collecte.max_arrets_recherche_locale` arrêts), `ortools_rapide` (au-delà : solution de départ seule, ~6 % plus longue, D38) ou `plus_proche_voisin` (repli).
 - Une tournée de collecte = une **rotation** (dépôt → points → dépôt) d'un camion ; `cout_xof` inclut le coût journalier du camion sur sa 1re rotation. `cout_total_xof` = coût d'un passage de collecte ; `cout_mensuel_estime_xof` = ce coût × passages par mois.
 - `dechets_collectes_pct` = part du stock des points effectivement chargée dans les tournées.
 - `cible_id` d'un arrêt de collecte = `id` du point de regroupement de ce plan ; d'un arrêt d'intervention = `id` du dépotoir.
