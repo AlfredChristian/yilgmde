@@ -6,15 +6,20 @@ Projet du **Hackathon des Universités 2026 — Finale**, Challenge 01 « Assain
 
 ## Ce que fait l'outil
 
-- **Carte ouverte des dépotoirs** : signalements citoyens (sans compte), vérifiés par la mairie.
-- **Plan de gestion** : points de regroupement et tournées de collecte optimisés.
-- **Brigade Laabal** : tournées d'éradication des dépotoirs illégaux, surveillance, constats.
-- **Simulation multi-agents** : ménages, pré-collecteurs, brigade Laabal, mairie.
-- **Scénarios** : paramètres modifiables (camions, budget, fréquences, saison…) avec recalcul du plan.
+| Besoin | Ce que fait l'outil | Où |
+|---|---|---|
+| Savoir où sont les dépotoirs | Signalement citoyen **sans compte** (position, photo, type de déchets), vérification automatique (doublons, hors zone, limite par appareil, appareil peu fiable), puis modération par la mairie | `POST /signalements`, `/admin/signalements` |
+| Organiser la collecte | Demande par zone, **points de regroupement** à distance de marche, **tournées** de camions optimisées (OR-Tools), coûts et budget | `GET /points-regroupement`, `/scenarios/{id}/plan` |
+| Éradiquer les dépotoirs illégaux | Tournées de la **brigade Laabal** par priorité, intervention, surveillance, réapparition | `/laabal/*` |
+| Guider le terrain | Tournée du chauffeur, arrêts à cocher, déclaration de panne (le plan se recalcule) | `/chauffeur/*` |
+| Décider | **Scénarios** (camion en panne, saison des pluies, nouveau quartier, budget…), **simulation multi-agents** sur 30 jours, **comparaison** côte à côte | `/scenarios/*` |
+| Partager | **Export GeoJSON** des dépotoirs vérifiés, prêt pour OpenStreetMap, sans donnée personnelle | `GET /admin/export/depotoirs.geojson` |
+
+Chaque choix du moteur est **expliqué** (pourquoi ce point, pourquoi ce dépotoir d'abord, pourquoi une zone n'est pas couverte), et **reproductible** : mêmes données et mêmes paramètres donnent le même plan ; même graine donne la même simulation.
 
 ## Installation
 
-Prérequis : Python 3.11+ et Node.js 20+.
+Prérequis : **Python 3.11+** (back-end) et **Node.js 20+** (front-end).
 
 ### Back-end
 
@@ -24,7 +29,6 @@ python -m venv .venv
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-uvicorn backend.main:app --reload
 ```
 
 Linux / macOS :
@@ -32,35 +36,119 @@ Linux / macOS :
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn backend.main:app --reload
 ```
-
-L'API tourne sur http://localhost:8000 (documentation interactive : http://localhost:8000/docs).
 
 ### Front-end
 
 ```bash
 cd frontend
 npm install
-npm run dev
 ```
+
+## Lancement
+
+### 1. Créer le compte administrateur (première fois)
+
+Le compte admin est créé au démarrage s'il n'existe pas, à partir de deux variables d'environnement.
+
+Windows (PowerShell) :
+```powershell
+$env:YILGMDE_ADMIN_EMAIL = "admin@mairie.bf"
+$env:YILGMDE_ADMIN_PASSWORD = "un-mot-de-passe-solide"
+$env:YILGMDE_JWT_SECRET = "une-longue-chaine-aleatoire"
+```
+Linux / macOS :
+```bash
+export YILGMDE_ADMIN_EMAIL=admin@mairie.bf
+export YILGMDE_ADMIN_PASSWORD=un-mot-de-passe-solide
+export YILGMDE_JWT_SECRET=une-longue-chaine-aleatoire
+```
+
+### 2. Charger les données d'exemple (facultatif)
+
+```bash
+python scripts/charger_exemples.py
+```
+Ajoute les zones et dépotoirs **fictifs** de `data/sample/` (sans effet si la base est déjà remplie).
+
+### 3. Démarrer
+
+```bash
+uvicorn backend.main:app --reload          # API : http://localhost:8000, documentation : http://localhost:8000/docs
+cd frontend && npm run dev                 # interface : http://localhost:5173
+```
+
+### 4. Essayer (épreuve en direct)
+
+Depuis http://localhost:8000/docs, après `POST /auth/login` avec le compte admin (bouton « Authorize ») :
+
+1. `GET /points-regroupement` : les points du plan courant, chacun avec son explication.
+2. `PUT /scenarios/1/parametres` avec `{"camions": [{"id": "camion_2", "disponible": false}]}` : le plan est recalculé sans ce camion ; ce qui n'est plus desservi est listé avec la raison.
+3. `PUT /scenarios/1/parametres` avec `{"saison": "pluies"}` : plus de déchets, camions plus lents.
+4. `POST /scenarios/1/simuler` avec `{"jours": 30, "graine": 42}` : évolution jour par jour (% collecté, dépotoirs actifs, coût).
+5. `POST /scenarios` avec `{"nom": "budget serré", "parametres": {"mairie": {"budget_mensuel_xof": 300000}}}`, puis `GET /scenarios/comparer?ids=1,2` : comparaison côte à côte.
+
+### Tests
+
+```bash
+python -m pytest -q
+```
+Environ 250 tests. Pour aller vite, lancez seulement le fichier concerné : `python -m pytest -q tests/test_plan.py`.
 
 ## Configuration
 
-Les paramètres sont dans `config/` : `default.yaml` (générique) et `ouagadougou.yaml` (propre à Ouaga). Les valeurs marquées `[H]` sont des hypothèses à ajuster.
+Tous les paramètres sont dans `config/`, **aucun n'est écrit dans le code** :
+
+- `default.yaml` : paramètres génériques, valables pour n'importe quelle commune (production de déchets, capacités, camions, simulation…) ;
+- `ouagadougou.yaml` : ce qui est propre à Ouaga (nom, dépôt des camions…), fusionné par-dessus ;
+- un **scénario** surcharge ensuite quelques valeurs, sans modifier les fichiers.
+
+Les valeurs marquées **`[H]`** sont des **hypothèses de départ**, sans source établie : à ajuster avec la mairie ou des données réelles.
+
+| Variable d'environnement | Rôle | Par défaut |
+|---|---|---|
+| `YILGMDE_VILLE` | fichier `config/<ville>.yaml` à charger (vide : `default.yaml` seul) | `ouagadougou` |
+| `YILGMDE_CONFIG_DIR` | dossier de configuration | `config/` |
+| `YILGMDE_DB` | fichier de base SQLite | `data/processed/yilgmde.sqlite3` |
+| `YILGMDE_UPLOADS` | dossier des photos (jamais publiques, ignoré par git) | `uploads/` |
+| `YILGMDE_JWT_SECRET` | secret des jetons de connexion ; **obligatoire en production** (sinon les connexions expirent à chaque redémarrage) | secret aléatoire par processus |
+| `YILGMDE_ADMIN_EMAIL`, `YILGMDE_ADMIN_PASSWORD`, `YILGMDE_ADMIN_NOM` | compte admin créé au démarrage s'il n'existe pas | — |
 
 ## Réutiliser pour une autre commune
 
-Le moteur (`simulation/`) est indépendant des données de Ouaga. Pour une autre commune : remplacer `config/ouagadougou.yaml` et fournir ses propres données (zones, signalements).
+Le moteur (`simulation/`) ne dépend ni de la base ni de Ouaga : ce sont des fonctions pures qui prennent des données et une configuration.
 
-## Organisation du dépôt
+1. Copier `config/ouagadougou.yaml` en `config/<commune>.yaml` et l'adapter (nom, `collecte.depot`, camions, budget…).
+2. Lancer avec `YILGMDE_VILLE=<commune>`.
+3. Fournir ses zones (GeoJSON avec population) et ses dépotoirs, ou les laisser venir des signalements.
 
-Voir `CONTEXT.md` (vue d'ensemble), `docs/` (fonctionnalités, modèle de données, contrat d'API), `DECISIONS.md` (choix techniques).
+## Architecture
+
+```
+backend/        API FastAPI : routes, base SQLite, sécurité, stockage du plan et des scénarios
+simulation/     moteur pur : demande (C1), points (C2), tournées (C3, C7), plan (C4), simulation (E1–E4)
+config/         paramètres (default.yaml + <ville>.yaml)
+data/sample/    données fictives et signalements piégés pour les tests
+frontend/       interface React + Vite (carte Leaflet)
+tests/          tests pytest
+docs/           fonctionnalités, modèle de données, contrat d'API
+```
+
+Pour aller plus loin : `CONTEXT.md` (vue d'ensemble et règles de cohérence), `docs/api-contract.md` (toutes les routes), `docs/modele-donnees.md`, `DECISIONS.md` (choix techniques et hypothèses).
+
+## Données et vie privée
+
+- Les citoyens signalent **sans compte** ; un appareil est reconnu par un jeton anonyme.
+- Les **photos ne sont jamais publiques** : seule l'administration les voit, pour vérifier.
+- L'**export OpenStreetMap** ne contient que des étiquettes OSM (type de site, type de déchets, date), sans photo, ni contributeur, ni texte libre.
+- Verser ces données dans OpenStreetMap est un **import** : il faut l'annoncer et le faire valider par la communauté OSM du Burkina, avec une licence compatible ODbL.
 
 ## Licence
 
-Code : Apache-2.0 (à confirmer, voir `DECISIONS.md`). Données dérivées d'OpenStreetMap : ODbL.
+**À trancher par l'équipe avant la démo** : le fichier `LICENSE` est sous **MIT**, mais la décision D16 de `DECISIONS.md` (encore « proposée ») parle d'**Apache-2.0**. Les deux sont libres et permettent la réutilisation par d'autres communes ; il faut juste choisir et aligner `LICENSE`, ce README et D16.
+
+Données dérivées d'OpenStreetMap : **ODbL**. Licence des données de signalement (`export_osm.licence` dans la config) : à décider, compatible ODbL pour pouvoir les verser dans OSM.
 
 ## Équipe
 
-Christian, Faissal, Cramer.
+Christian (front-end), Faissal (back-end, moteur), Cramer (docs, données, présentation).
