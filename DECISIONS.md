@@ -23,3 +23,7 @@
 | D16 | 2026-11-16 | Licence du code : Apache-2.0 ; données dérivées d'OSM sous ODbL | Réutilisation facile par d'autres communes ; compatibilité OSM | Proposé |
 | D17 | 2026-11-16 | Front : React + Vite, avec Leaflet et react-leaflet | Maîtrisé par Christian ; démarrage rapide ; compatible PWA (D12) | Retenu |
 | D18 | — | Simulation : boucle Python maison ou Mesa | À choisir par Faissal | À décider |
+| D20 | 2026-11-16 | Police via npm (@fontsource, hors ligne) ; palette verte + jaune, rouge réservé aux dépotoirs actifs ; style inspiré du site de la ville de Sherbrooke, sans copie | Démo hors ligne ; identité claire | Retenu |
+| D21 | 2026-11-17 | Note vocale en plus du texte pour décrire un signalement (champ `note_vocale`, webm/mp4, 60 s max) ; pictogrammes pour type et volume | Une grande partie de la population ne lit pas | Retenu |
+| D22 | 2026-11-17 | Livrable : application de signalement hors connexion (PWA, file d'attente IndexedDB) ; masquage visages et plaques avant envoi | Exigé par l'organisateur | Proposé |
+| D23 | 2026-11-17 | Masquage des visages/plaques : sur l'appareil. Repli MVP : pas de photo, seulement voix et texte | Données personnelles ; modèle de détection lourd | À décider |

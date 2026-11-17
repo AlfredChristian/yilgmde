@@ -87,3 +87,31 @@ export async function postSignalement({ type_dechet, volume_estime, description,
   }
   return res.json()
 }
+
+// Statut d'un signalement a partir de son code de suivi.
+export async function getSuivi(code) {
+  const propre = code.trim().toUpperCase()
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 500))
+    if (propre === 'K7M-4QD') {
+      return { code_suivi: propre, statut: 'verifie', motif: null, depotoir_id: 3 }
+    }
+    if (propre === 'ERR-000') {
+      return { code_suivi: propre, statut: 'rejete', motif: 'photo sans rapport', depotoir_id: null }
+    }
+    if (propre.startsWith('NON')) {
+      const e = new Error('introuvable')
+      e.introuvable = true
+      throw e
+    }
+    return { code_suivi: propre, statut: 'en_attente_revue', motif: null, depotoir_id: null }
+  }
+  const res = await fetch(`${API_URL}/signalements/suivi/${encodeURIComponent(propre)}`)
+  if (res.status === 404) {
+    const e = new Error('introuvable')
+    e.introuvable = true
+    throw e
+  }
+  if (!res.ok) throw new Error(`Erreur ${res.status}`)
+  return res.json()
+}

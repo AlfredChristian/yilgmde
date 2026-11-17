@@ -46,6 +46,11 @@
 ## Christian — front-end
 
 - [x] Choisir et initialiser le framework (React + Vite), Leaflet + OSM (P1)
+- [ ] A6 — Mode hors ligne : file d'attente d'envoi (IndexedDB), envoi au retour du réseau, PWA installable (P1)
+- [ ] Masquage automatique des visages et plaques sur les photos, avant envoi (P1)
+- [ ] D6 — Tableau de bord des scénarios et plan d'un arrondissement, comparaison côte à côte (P1)
+- [ ] Parcours de la vidéo de démo (3 min) : signaler, modérer, plan, changement de paramètre, recalcul (P1)
+- [x] Page de suivi d'un signalement, note vocale, pictogrammes (P1)
 - [ ] Proxy ou CORS vers l'API (P1)
 - [ ] A1 — Formulaire de signalement mobile (position GPS ajustable, photo, type, volume) (P1)
 - [ ] B1/B2 — Carte publique : dépotoirs vérifiés, couches zones/points/tournées (P1)

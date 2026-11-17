@@ -116,6 +116,7 @@ if (confirmation) {
             <button type="button" className="btn btn-vert" onClick={nouveau}>
               Faire un autre signalement
             </button>
+            <Link to="/suivi" className="btn btn-vert">Suivre mon signalement</Link>
             <Link to="/" className="btn btn-jaune">Retour à l'accueil</Link>
           </div>
         </section>

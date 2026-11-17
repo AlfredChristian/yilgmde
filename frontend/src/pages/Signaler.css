@@ -176,3 +176,9 @@ fieldset {
 .confirmation-rejet {
   border-left-color: var(--rouge);
 }
+
+.btn-secondaire-sombre {
+  background: white;
+  color: var(--vert-fonce);
+  border-color: var(--vert);
+}

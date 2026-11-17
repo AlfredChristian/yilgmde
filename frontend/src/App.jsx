@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Entete from './components/Entete'
 import Accueil from './pages/Accueil'
 import Signaler from './pages/Signaler'
+import Suivi from './pages/Suivi'
 import Carte from './components/Carte'
 
 export default function App() {
@@ -11,6 +12,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Accueil />} />
         <Route path="/signaler" element={<Signaler />} />
+        <Route path="/suivi" element={<Suivi />} />
         <Route
           path="/carte"
           element={

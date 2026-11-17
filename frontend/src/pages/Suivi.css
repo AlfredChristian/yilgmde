@@ -1,0 +1,57 @@
+.suivi {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+.suivi h1 {
+  margin: 0 0 8px;
+  color: var(--vert-fonce);
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+}
+.suivi-intro {
+  color: var(--gris);
+  margin: 0 0 24px;
+}
+.suivi-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.suivi-form input {
+  flex: 1;
+  min-width: 200px;
+  font: inherit;
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+  padding: 14px;
+  border: 2px solid #ccc;
+  text-transform: uppercase;
+}
+.suivi-erreur {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: #fff3cd;
+  border-left: 6px solid var(--jaune);
+}
+.suivi-resultat {
+  margin-top: 24px;
+  padding: 24px;
+  background: white;
+  border-left: 6px solid var(--jaune);
+  box-shadow: var(--ombre);
+}
+.suivi-resultat h2 {
+  margin: 0 0 8px;
+}
+.suivi-code {
+  margin: 0 0 4px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gris);
+}
+.suivi-ok {
+  border-left-color: var(--vert);
+}
+.suivi-rejet {
+  border-left-color: var(--rouge);
+}
