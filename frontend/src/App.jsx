@@ -13,6 +13,7 @@ import Plan from './pages/Plan'
 import Chauffeur from './pages/Chauffeur'
 import Laabal from './pages/Laabal'
 import Utilisateurs from './pages/Utilisateurs'
+import ModerationDetail from './pages/ModerationDetail'
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
               </RouteProtegee>
             } 
           />
+          <Route path="/admin/signalements/:id" element={<RouteProtegee roles={['admin']}><ModerationDetail /></RouteProtegee>} />
           <Route path="/admin/utilisateurs" element={<RouteProtegee roles={['admin']}><Utilisateurs /></RouteProtegee>} />
           <Route path="/chauffeur" element={<RouteProtegee roles={['chauffeur']}><Chauffeur /></RouteProtegee>} />
           <Route path="/laabal" element={<RouteProtegee roles={['laabal']}><Laabal /></RouteProtegee>} />
