@@ -8,7 +8,7 @@ Projet du **Hackathon des Universités 2026 — Finale**, Challenge 01 « Assain
 
 | Besoin | Ce que fait l'outil | Où |
 |---|---|---|
-| Savoir où sont les dépotoirs | Signalement citoyen **sans compte** (position, photo, type de déchets), vérification automatique (doublons, hors zone, limite par appareil, appareil peu fiable), puis modération par la mairie | `POST /signalements`, `/admin/signalements` |
+| Savoir où sont les dépotoirs | Signalement citoyen **sans compte**, même **hors connexion** (position, photo aux visages et plaques floutés, note vocale, type de déchets), vérification automatique (doublons, hors zone, limite par appareil, appareil peu fiable), puis modération par la mairie | `POST /signalements`, `/admin/signalements` |
 | Organiser la collecte | Demande par zone, **points de regroupement** à distance de marche, **tournées** de camions optimisées (OR-Tools), coûts et budget | `GET /points-regroupement`, `/scenarios/{id}/plan` |
 | Éradiquer les dépotoirs illégaux | Tournées de la **brigade Laabal** par priorité, intervention, surveillance, réapparition | `/laabal/*` |
 | Guider le terrain | Tournée du chauffeur, arrêts à cocher, déclaration de panne (le plan se recalcule) | `/chauffeur/*` |
@@ -139,7 +139,8 @@ Pour aller plus loin : `CONTEXT.md` (vue d'ensemble et règles de cohérence), `
 ## Données et vie privée
 
 - Les citoyens signalent **sans compte** ; un appareil est reconnu par un jeton anonyme.
-- Les **photos ne sont jamais publiques** : seule l'administration les voit, pour vérifier.
+- Les **visages et les plaques d'immatriculation sont floutés automatiquement** sur le serveur, et les métadonnées des photos (position GPS de l'appareil, modèle) supprimées, avant tout enregistrement.
+- Les **photos et notes vocales ne sont jamais publiques** : seule l'administration les voit, pour vérifier.
 - L'**export OpenStreetMap** ne contient que des étiquettes OSM (type de site, type de déchets, date), sans photo, ni contributeur, ni texte libre.
 - Verser ces données dans OpenStreetMap est un **import** : il faut l'annoncer et le faire valider par la communauté OSM du Burkina, avec une licence compatible ODbL.
 

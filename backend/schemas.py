@@ -69,12 +69,14 @@ class SignalementEntree(Position):
 
 
 class SignalementCree(BaseModel):
-    """Réponse 201 de POST /signalements."""
+    """Réponse 201 de POST /signalements (200 si `id_client` déjà reçu : renvoi)."""
 
     id: int
     code_suivi: str
     statut: StatutSignalement
     motif: str | None = None
+    photo_masquee: dict | None = None     # {"visages": 1, "plaques": 0, "methode": "opencv-haar"}
+    deja_recu: bool = False               # True : renvoi d'un signalement déjà enregistré
 
 
 class SuiviSignalement(BaseModel):
@@ -91,6 +93,9 @@ class SignalementAdmin(Position):
     type_dechet: TypeDechet
     volume_estime: VolumeEstime
     photo_url: str | None = None
+    note_vocale_url: str | None = None
+    photo_masquee: dict | None = None      # visages et plaques floutés automatiquement
+    capture_le: str | None = None          # prise de vue (envoi différé)
     statut: StatutSignalement
     score_auto: float | None = None
     alertes: list[str] = []

@@ -14,3 +14,4 @@ scikit-learn
 ortools
 pytest
 httpx
+opencv-python-headless>=4.8,<5   # masquage visages/plaques ; la v5 ne fournit plus les cascades de Haar

@@ -8,7 +8,10 @@ from backend.schemas import Role
 from backend.utilisateurs import creer_utilisateur
 
 MDP = "motdepasse-solide"
-PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+import cv2 as _cv2
+import numpy as _np
+
+PNG = _cv2.imencode(".png", _np.full((32, 32, 3), 180, _np.uint8))[1].tobytes()   # vraie image (masquage, D36)
 
 
 @pytest.fixture

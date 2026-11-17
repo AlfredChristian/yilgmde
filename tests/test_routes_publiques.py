@@ -7,7 +7,11 @@ from backend import db
 from backend.main import app
 
 JETON = "appareil-test-0001"
-PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+import cv2 as _cv2
+import numpy as _np
+
+# Vraie petite image : le serveur décode chaque photo pour la masquer (D36).
+PNG = _cv2.imencode(".png", _np.full((32, 32, 3), 180, _np.uint8))[1].tobytes()
 
 
 @pytest.fixture
@@ -110,9 +114,11 @@ def test_photo_valide_est_enregistree(client, tmp_path):
     r = envoyer(client, fichiers={"photo": ("p.png", PNG, "image/png")})
     assert r.status_code == 201
     sid = r.json()["id"]
-    assert (tmp_path / "uploads" / f"{sid}.png").read_bytes() == PNG
+    # Gardée masquée et ré-encodée en JPEG (sans métadonnées), jamais telle quelle.
+    assert (tmp_path / "uploads" / f"{sid}.jpg").read_bytes().startswith(b"\xff\xd8\xff")
     nom = app.state.db.execute("SELECT photo FROM signalement WHERE id = ?", (sid,)).fetchone()["photo"]
-    assert nom == f"{sid}.png"
+    assert nom == f"{sid}.jpg"
+    assert r.json()["photo_masquee"] == {"visages": 0, "plaques": 0, "methode": "opencv-haar"}
 
 
 def test_photo_qui_n_est_pas_une_image_est_refusee(client):
