@@ -13,6 +13,7 @@
 - `/suivi` : suivi par code.
 - Hors ligne (à tester) : `src/api/fileAttente.js`, `signalerAvecFile`, `viderFile`, `BandeauReseau`.
 - PR contrat `docs/api-audio` (note_vocale, X-Device-Token) ouverte.
+- Pages Laabal (2 colonnes en grand écran), Chauffeur, Plan, routes et client API commités en local sur front/design-moderne. Push en attente : réseau coupé le 17/11 vers 11h45.
 
 **Bugs ouverts** : aucun connu. Hors ligne non encore testé.
 
