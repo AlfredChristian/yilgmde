@@ -7,7 +7,9 @@
 - A4 : `POST /admin/signalements/import` charge un lot de signalements (GeoJSON) qui
   passe par **la même vérification automatique** que les citoyens (A2) — rejet
   d'office ou mise en revue avec alertes, jamais de validation seule —, sans la
-  limite par appareil ; les doublons à l'intérieur du lot sont détectés aussi.
+  limite par appareil, sauf si une entrée donne son `jeton_appareil` (collecte de
+  terrain) : les règles de cet appareil s'appliquent alors ; les doublons à
+  l'intérieur du lot sont détectés aussi.
 
 Tout est tracé dans `journal_audit` (règle 5).
 """
@@ -22,8 +24,8 @@ from pydantic import BaseModel, Field, ValidationError
 
 from backend import db
 from backend.deps import acces_db
-from backend.routes.signalements import _generer_code
-from backend.schemas import Legalite, Role, StatutDepotoir, TypeDechet, VolumeEstime
+from backend.routes.signalements import _contributeur, _generer_code
+from backend.schemas import Legalite, Role, StatutDepotoir, StatutSignalement, TypeDechet, Verdict, VolumeEstime
 from backend.securite import exiger_role
 from backend.utilisateurs import journaliser
 from backend.verification import contexte_depuis_db, verifier
@@ -51,6 +53,8 @@ class ProprietesImport(BaseModel):
     type_dechet: TypeDechet
     volume_estime: VolumeEstime
     description: str | None = Field(default=None, max_length=500)
+    # Facultatif : appareil d'origine (collecte de terrain) ; ses règles s'appliquent alors.
+    jeton_appareil: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{8,64}$")
 
 
 def _maintenant() -> str:
@@ -141,9 +145,6 @@ def importer_signalements(request: Request, lot: dict = Body(...), utilisateur=D
                 except (TypeError, ValueError):
                     erreurs.append({"index": i, "raison": "coordonnées non numériques"})
                     continue
-                if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-                    erreurs.append({"index": i, "raison": "coordonnées hors bornes"})
-                    continue
                 try:
                     props = ProprietesImport(**((f or {}).get("properties") or {}))
                 except ValidationError as e:
@@ -152,17 +153,28 @@ def importer_signalements(request: Request, lot: dict = Body(...), utilisateur=D
                     continue
 
                 maintenant = datetime.now(timezone.utc)
-                contexte = contexte_depuis_db(conn, None, lat, lon, config, avec_photo=False, maintenant=maintenant)
-                # Lot de l'admin : pas de limite par appareil ni de score d'appareil.
-                contexte = dataclasses.replace(contexte, nb_signalements_derniere_heure=0, appareil_bloque=False,
-                                               score_confiance_appareil=1.0)
-                verdict = verifier(lat, lon, config, contexte)
+                jeton = props.jeton_appareil
+                contexte = contexte_depuis_db(conn, jeton, lat, lon, config, avec_photo=False, maintenant=maintenant)
+                if jeton is None:
+                    # Lot de l'admin sans appareil : pas de limite par appareil ni de score d'appareil.
+                    contexte = dataclasses.replace(contexte, nb_signalements_derniere_heure=0, appareil_bloque=False,
+                                                   score_confiance_appareil=1.0)
+                if -90 <= lat <= 90 and -180 <= lon <= 180:
+                    verdict = verifier(lat, lon, config, contexte)
+                else:   # enregistré quand même, rejeté d'office, comme une position (0, 0)
+                    verdict = Verdict(statut=StatutSignalement.rejete_auto,
+                                      motif="position incohérente (coordonnées hors bornes)", score_auto=0.0,
+                                      alertes=["position_incoherente"])
                 code = _generer_code(conn)
+                contributeur_id = _contributeur(conn, jeton) if jeton else None
+                if contributeur_id is not None:
+                    conn.execute("UPDATE contributeur SET nb_signalements = nb_signalements + 1 WHERE id = ?",
+                                 (contributeur_id,))
                 curseur = conn.execute(
                     "INSERT INTO signalement (contributeur_id, latitude, longitude, description, type_dechet,"
                     " volume_estime, code_suivi, statut, motif, score_auto, alertes, cree_le)"
-                    " VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    (lat, lon, props.description or None, props.type_dechet.value, props.volume_estime.value, code,
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (contributeur_id, lat, lon, props.description or None, props.type_dechet.value, props.volume_estime.value, code,
                      verdict.statut.value, verdict.motif, verdict.score_auto, db.en_json(verdict.alertes),
                      maintenant.isoformat()),
                 )

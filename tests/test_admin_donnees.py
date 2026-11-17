@@ -129,3 +129,40 @@ def test_import_refuse(client):
         app.state.config["import"]["max_par_lot"] = 1000
     vide = client.post("/admin/signalements/import", json={"type": "FeatureCollection", "features": []}, headers=h)
     assert vide.json()["importes"] == 0 and actions() == []
+
+
+def test_import_du_jeu_de_signalements_pieges(client):
+    """Le jeu piégé de data/sample/ : chaque entrée finit comme le dit sa colonne `attendu`."""
+    import json
+    from pathlib import Path
+
+    lot = json.loads(Path("data/sample/signalements_pieges.geojson").read_text(encoding="utf-8"))
+    r = client.post("/admin/signalements/import", json=lot, headers=entetes(client))
+    assert r.status_code == 200, r.text
+    corps = r.json()
+    par_index = {s["index"]: s for s in corps["signalements"]}
+    en_erreur = {e["index"] for e in corps["erreurs"]}
+    id_base = {f["properties"]["id"]: par_index[i]["id"] for i, f in enumerate(lot["features"]) if i in par_index}
+
+    for i, f in enumerate(lot["features"]):
+        attendu = f["properties"]["attendu"]
+        s = par_index.get(i)
+        message = f"entrée {f['properties']['id']} ({f['properties']['categorie']}) : attendu « {attendu} », obtenu {s}"
+        if attendu.startswith("rejete:"):                      # entrée invalide : refusée sans planter
+            assert i in en_erreur, message
+        elif attendu.startswith("rejete_auto:"):
+            motifs = {m.strip(" ()") for m in attendu.split(":", 1)[1].replace("ou", " ").split()}
+            assert s and s["statut"] == "rejete_auto" and motifs & set(s["alertes"]), message
+        elif attendu.startswith("alerte doublon_probable:"):
+            ref = int(attendu.split(":")[1].split()[0])
+            assert s and s["statut"] == "en_attente_revue", message
+            assert f"doublon_probable:{id_base[ref]}" in s["alertes"], message
+        elif attendu.startswith("alerte appareil_suspect"):    # 6e signalement en moins d'une heure
+            assert s and "limite_appareil" in s["alertes"], message
+        else:
+            assert attendu.startswith("en_attente_revue"), message
+            assert s and s["statut"] == "en_attente_revue", message
+            # Importée avec tout le lot, l'entrée 6 (à 40 m de la 1) est à 15 m de la 5 : alerte légitime.
+            # On vérifie seulement qu'elle n'est pas prise pour un doublon de la référence (entrée 1).
+            if f["properties"]["categorie"] == "non_doublon_limite":
+                assert f"doublon_probable:{id_base[1]}" not in s["alertes"], message
