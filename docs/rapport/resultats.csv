@@ -1,0 +1,7 @@
+scenario,capacite_collecte_pct,part_captee_estimee_pct,points,camions_utilises,distance_km,cout_mensuel_xof,budget_mensuel_xof,part_captee_moyenne_pct,dechets_sauvages_kg,depotoirs_actifs_debut,depotoirs_actifs_fin,depotoirs_eradiques,passages_collecte,passages_suspendus_budget,cout_simulation_xof,amendes_xof
+Base,100.0,60.2,240,13,2497.2,18769530,25074000,68.3,1921469.6,25,5,210,8,0,17325720,650000
+Pluies,100.0,55.2,240,15,2767.15,21239426,25074000,64.3,2382284.4,25,5,210,8,0,19605624,650000
+Panne,77.5,60.2,240,10,1750.29,13582833,25074000,59.4,2457006.0,25,5,210,8,0,12538000,650000
+Sensibilisation,100.0,70.3,240,13,2497.2,18769530,25074000,75.6,1477405.4,25,5,210,8,0,17325720,650000
+Abonnements,100.0,71.6,240,13,2497.2,18769530,25074000,76.4,1429124.1,25,5,210,8,0,17325720,650000
+Budget ÷ 2,100.0,60.2,240,13,2497.2,18769530,12537000,62.4,2276408.9,25,5,210,5,3,10828575,650000

@@ -7,19 +7,11 @@
 ## Phase 0 — Squelette (jour 1)
 
 - [x] Dépôt créé, structure en place, API `/health` qui tourne (Christian)
-<<<<<<< HEAD
 - [x] Faissal et Cramer ont cloné le dépôt et lancé l'API
 - [x] Contrat d'API (`docs/api-contract.md`) relu et validé par Christian et Faissal
 - [x] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence)
 - [x] Jeux de données d'exemple dans `data/sample/` utilisés par le front et le back
 - [x] Questions ouvertes de `CONTEXT.md` posées aux organisateurs (Cramer)
-=======
-- [ ] Faissal et Cramer ont cloné le dépôt et lancé l'API
-- [ ] Contrat d'API (`docs/api-contract.md`) relu et validé par Christian et Faissal
-- [ ] Décisions ouvertes tranchées dans `DECISIONS.md` (framework front, base de données, simulation, licence) — simulation (D18) et licence MIT (D16) tranchées
-- [ ] Jeux de données d'exemple dans `data/sample/` utilisés par le front et le back
-- [ ] Questions ouvertes de `CONTEXT.md` posées aux organisateurs (Cramer)
->>>>>>> origin/main
 
 ## Faissal — back-end et moteur
 
@@ -102,5 +94,6 @@
 - [x] L3 (back) — Plan, simulation et comparaison d'un arrondissement (`perimetre`), `GET /arrondissements`, synthèse Markdown du plan (D37)
 - [ ] L3 (front) — Tableau de bord des scénarios : choix de l'arrondissement, plan sur la carte, indicateurs, simulation, comparaison, synthèse (Christian)
 - [x] L4 — Données réalistes de Ouaga (12 arrondissements, paramètres sourcés) et jeu de signalements GeoJSON sous ODbL — `data/ouaga/`, `GET /donnees/signalements.geojson` (D38–D40)
-- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (script de chiffres côté back)
+- [ ] L5 — Rapport : démarche, paramètres, scénarios, résultats, plan de gestion (Cramer)
+  - [x] chiffres, tableaux, courbes et carte : `python scripts/resultats_scenarios.py` → `docs/rapport/` (D43)
 - [ ] L6 — Vidéo de 3 min : du signalement à la tournée, puis un changement de paramètres et le plan recalculé
