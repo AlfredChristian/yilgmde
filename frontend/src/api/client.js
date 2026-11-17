@@ -50,7 +50,7 @@ function jetonAppareil() {
 }
 
 // Envoie un signalement. [H] format a confirmer dans docs/api-contract.md
-export async function postSignalement({ type_dechet, volume_estime, description, latitude, longitude, audio }) {
+export async function postSignalement({ type_dechet, volume_estime, description, latitude, longitude, audio, id_client, capture_le }) {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 800))
     const bloc = () => Math.random().toString(36).slice(2, 5).toUpperCase()
@@ -67,7 +67,9 @@ export async function postSignalement({ type_dechet, volume_estime, description,
   form.append('volume_estime', volume_estime)
   form.append('description', description ?? '')
   form.append('latitude', String(latitude))
-  form.append('longitude', String(longitude))
+  
+  if (id_client) form.append('id_client', id_client)
+  if (capture_le) form.append('capture_le', capture_le)
   if (audio) {
     const ext = audio.blob.type.includes('mp4') ? 'mp4' : 'webm'
     form.append('note_vocale', audio.blob, `note.${ext}`)
@@ -86,7 +88,9 @@ export async function postSignalement({ type_dechet, volume_estime, description,
     } catch {
       // reponse sans JSON
     }
-    throw new Error(typeof detail === 'string' ? detail : `Erreur ${res.status}`)
+    const erreur = new Error(typeof detail === 'string' ? detail : `Erreur ${res.status}`)
+    erreur.statut = res.status // permet de distinguer 429/503 (a reessayer) de 413/422 (definitif)
+    throw erreur
   }
   return res.json()
 }
