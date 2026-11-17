@@ -75,7 +75,11 @@ CREATE TABLE IF NOT EXISTS signalement (
     depotoir_id INTEGER REFERENCES depotoir(id),
     valide_par INTEGER REFERENCES utilisateur(id),
     valide_le TEXT,
-    cree_le TEXT NOT NULL
+    cree_le TEXT NOT NULL,                -- réception par le serveur
+    capture_le TEXT,                      -- prise de vue sur le téléphone (envoi différé, hors connexion)
+    id_client TEXT,                       -- identifiant choisi par l'application : un renvoi n'est pas un doublon
+    note_vocale TEXT,                     -- fichier audio (jamais public)
+    masquage TEXT                         -- JSON : visages et plaques floutés sur la photo
 );
 CREATE INDEX IF NOT EXISTS idx_signalement_statut ON signalement(statut);
 CREATE INDEX IF NOT EXISTS idx_signalement_contributeur ON signalement(contributeur_id, cree_le);
@@ -194,6 +198,17 @@ COLONNES_AJOUTEES = [
     ("point_regroupement", "details", "TEXT NOT NULL DEFAULT '{}'"),
     ("tournee", "details", "TEXT NOT NULL DEFAULT '{}'"),
     ("arret_tournee", "details", "TEXT NOT NULL DEFAULT '{}'"),
+    ("signalement", "capture_le", "TEXT"),
+    ("signalement", "id_client", "TEXT"),
+    ("signalement", "note_vocale", "TEXT"),
+    ("signalement", "masquage", "TEXT"),
+]
+
+# Index sur des colonnes ajoutées : créés après la migration.
+INDEX_APRES_MIGRATION = [
+    # Un même appareil ne crée qu'un signalement par identifiant client (renvois hors connexion).
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_signalement_id_client"
+    " ON signalement(contributeur_id, id_client) WHERE id_client IS NOT NULL",
 ]
 
 
@@ -212,6 +227,8 @@ def initialiser(conn: sqlite3.Connection) -> None:
         existantes = {l[1] for l in conn.execute(f"PRAGMA table_info({table})")}
         if colonne not in existantes:
             conn.execute(f"ALTER TABLE {table} ADD COLUMN {colonne} {definition}")
+    for index in INDEX_APRES_MIGRATION:
+        conn.execute(index)
     conn.commit()
 
 

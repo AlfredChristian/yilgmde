@@ -69,12 +69,14 @@ class SignalementEntree(Position):
 
 
 class SignalementCree(BaseModel):
-    """Réponse 201 de POST /signalements."""
+    """Réponse 201 de POST /signalements (200 si `id_client` déjà reçu : renvoi)."""
 
     id: int
     code_suivi: str
     statut: StatutSignalement
     motif: str | None = None
+    photo_masquee: dict | None = None     # {"visages": 1, "plaques": 0, "methode": "opencv-haar"}
+    deja_recu: bool = False               # True : renvoi d'un signalement déjà enregistré
 
 
 class SuiviSignalement(BaseModel):

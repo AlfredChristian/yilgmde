@@ -7,7 +7,11 @@ from backend.schemas import Role
 from backend.utilisateurs import creer_utilisateur
 
 MDP = "motdepasse-solide"
-PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+import cv2 as _cv2
+import numpy as _np
+
+# Vraie petite image : le serveur décode chaque photo pour la masquer (D36).
+PNG = _cv2.imencode(".png", _np.full((32, 32, 3), 180, _np.uint8))[1].tobytes()
 
 
 @pytest.fixture
@@ -257,7 +261,8 @@ def test_l_admin_peut_voir_la_photo(client):
     ligne = client.get("/admin/signalements?statut=en_attente_revue", headers=h).json()[0]
     assert ligne["photo_url"] == f"/admin/signalements/{sid}/photo"
     r = client.get(ligne["photo_url"], headers=h)
-    assert r.status_code == 200 and r.content == PNG and r.headers["content-type"] == "image/png"
+    # L'admin voit la version masquée (JPEG ré-encodé), jamais l'original.
+    assert r.status_code == 200 and r.content.startswith(b"\xff\xd8\xff") and r.headers["content-type"] == "image/jpeg"
 
 
 def test_pas_de_photo_404(client):
