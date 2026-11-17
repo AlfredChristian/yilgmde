@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from backend import db, plans
 from backend.deps import acces_db
+from backend.masquage import MasquageIndisponible, masquer_photo
 from backend.routes.signalements import _extension_photo, dossier_uploads
 from backend.schemas import Role, StatutDepotoir
 from backend.securite import exiger_role
@@ -207,7 +208,8 @@ def intervention(
     """B5 : `en_cours` → dépotoir `intervention_planifiee` ; `eradique` → dépotoir `eradique`.
 
     Seuls les dépotoirs illégaux `actif` ou `intervention_planifiee` se traitent (409 sinon).
-    Photo optionnelle (JPEG, PNG, WebP), gardée hors du dépôt git (D11), jamais publique.
+    Photo optionnelle (JPEG, PNG, WebP), masquée (visages, plaques) puis gardée hors du
+    dépôt git (D11, D36), jamais publique.
     """
     contenu, extension = None, None
     if photo is not None and photo.filename:
@@ -218,9 +220,16 @@ def intervention(
         contenu = photo.file.read(taille_max + 1)
         if len(contenu) > taille_max:
             raise HTTPException(413, "photo trop volumineuse")
-        extension = _extension_photo(contenu)
-        if extension is None:
+        if _extension_photo(contenu) is None:
             raise HTTPException(422, "photo invalide (JPEG, PNG ou WebP attendu)")
+        # Photo d'intervention : visages et plaques masqués comme pour les citoyens (D36).
+        try:
+            masque = masquer_photo(contenu, request.app.state.config)
+        except MasquageIndisponible:
+            raise HTTPException(503, "masquage des photos indisponible : réessayez plus tard")
+        except ValueError:
+            raise HTTPException(422, "photo illisible")
+        contenu, extension = masque.contenu, masque.extension
 
     with acces_db(request) as conn:
         depotoir = _lire_depotoir(conn, depotoir_id)
@@ -285,7 +294,8 @@ def creer_constat(
     """Constat d'un dépôt illégal pris sur le fait, avec amende et preuves photo (0 à 5).
 
     `montant_xof` par défaut : `laabal.montant_amende_xof`. Un site officiel ne donne pas
-    lieu à constat (409). Les preuves suivent les mêmes règles que les photos (D11).
+    lieu à constat (409). Les preuves suivent les mêmes règles que les photos (D11) mais
+    ne sont **pas** masquées : elles servent à identifier l'auteur de l'infraction (D36).
     """
     config = request.app.state.config
     fichiers = [p for p in (preuves or []) if p is not None and p.filename]

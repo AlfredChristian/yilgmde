@@ -47,10 +47,12 @@ STATUTS_REAPPARITION = (
 )
 
 TYPES_PHOTO = {".jpg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+TYPES_AUDIO = {".webm": "audio/webm", ".m4a": "audio/mp4", ".ogg": "audio/ogg", ".mp3": "audio/mpeg",
+               ".wav": "audio/wav"}
 
 _COLONNES_SIGNALEMENT = (
     "id, latitude, longitude, type_dechet, volume_estime, photo, statut, score_auto,"
-    " alertes, motif, depotoir_id, cree_le"
+    " alertes, motif, depotoir_id, cree_le, note_vocale, masquage, capture_le"
 )
 
 
@@ -62,6 +64,9 @@ def _signalement_sortie(ligne) -> SignalementAdmin:
         type_dechet=ligne["type_dechet"],
         volume_estime=ligne["volume_estime"],
         photo_url=f"/admin/signalements/{ligne['id']}/photo" if ligne["photo"] else None,
+        note_vocale_url=f"/admin/signalements/{ligne['id']}/note-vocale" if ligne["note_vocale"] else None,
+        photo_masquee=db.depuis_json(ligne["masquage"], None),
+        capture_le=ligne["capture_le"],
         statut=ligne["statut"],
         score_auto=ligne["score_auto"],
         alertes=db.depuis_json(ligne["alertes"], []),
@@ -124,6 +129,23 @@ def photo_signalement(
     if not chemin.is_file():
         raise HTTPException(404, "photo introuvable")
     return FileResponse(chemin, media_type=TYPES_PHOTO.get(chemin.suffix.lower(), "application/octet-stream"))
+
+
+@router.get("/signalements/{signalement_id}/note-vocale")
+def note_vocale_signalement(
+    signalement_id: int,
+    request: Request,
+    _admin: dict = Depends(exiger_role(Role.admin)),
+):
+    """Note vocale du citoyen, réservée aux admins (jamais publique)."""
+    with acces_db(request) as conn:
+        ligne = conn.execute("SELECT note_vocale FROM signalement WHERE id = ?", (signalement_id,)).fetchone()
+    if ligne is None or not ligne["note_vocale"]:
+        raise HTTPException(404, "pas de note vocale pour ce signalement")
+    chemin = dossier_uploads() / "audio" / Path(ligne["note_vocale"]).name   # jamais de chemin venu de la base
+    if not chemin.is_file():
+        raise HTTPException(404, "note vocale introuvable")
+    return FileResponse(chemin, media_type=TYPES_AUDIO.get(chemin.suffix.lower(), "application/octet-stream"))
 
 
 @router.post("/signalements/{signalement_id}/valider", response_model=ResultatValidation)

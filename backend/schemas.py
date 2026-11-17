@@ -93,6 +93,9 @@ class SignalementAdmin(Position):
     type_dechet: TypeDechet
     volume_estime: VolumeEstime
     photo_url: str | None = None
+    note_vocale_url: str | None = None
+    photo_masquee: dict | None = None      # visages et plaques floutés automatiquement
+    capture_le: str | None = None          # prise de vue (envoi différé)
     statut: StatutSignalement
     score_auto: float | None = None
     alertes: list[str] = []
