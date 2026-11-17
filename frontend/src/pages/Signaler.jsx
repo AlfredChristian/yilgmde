@@ -5,7 +5,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import Icone from '../components/Icone'
 import EnregistreurVocal from '../components/EnregistreurVocal'
-import { postSignalement } from '../api/client'
+import { signalerAvecFile } from '../api/client'
 import './Signaler.css'
 
 const CENTRE = [12.3714, -1.5197] // [H] a deplacer dans la config
@@ -73,7 +73,7 @@ export default function Signaler() {
     setMessage(null)
     setEnvoiEnCours(true)
     try {
-      const reponse = await postSignalement({
+      const resultat = await signalerAvecFile({
         type_dechet: type,
         volume_estime: volume,
         description,
@@ -81,7 +81,11 @@ export default function Signaler() {
         longitude: Number(position[1].toFixed(6)),
         audio,
       })
-      setConfirmation(reponse)
+      setConfirmation(
+        resultat.envoye
+          ? resultat.reponse
+          : { statut: 'hors_ligne' },
+      )
     } catch (err) {
       setMessage(`Envoi impossible : ${err.message}. Vous pouvez réessayer.`)
     } finally {
@@ -99,6 +103,25 @@ export default function Signaler() {
   }
 
 if (confirmation) {
+        if (confirmation.statut === 'hors_ligne') {
+      return (
+        <main className="signaler">
+          <section className="confirmation">
+            <h1>Enregistré sur votre téléphone</h1>
+            <p>
+              Pas de réseau pour le moment. Votre signalement sera envoyé
+              automatiquement dès que la connexion reviendra.
+            </p>
+            <div className="confirmation-actions">
+              <button type="button" className="btn btn-vert" onClick={nouveau}>
+                Faire un autre signalement
+              </button>
+              <Link to="/" className="btn btn-jaune">Retour à l'accueil</Link>
+            </div>
+          </section>
+        </main>
+      )
+    }
     const rejete = confirmation.statut === 'rejete_auto'
     return (
       <main className="signaler">

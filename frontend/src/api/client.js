@@ -2,6 +2,9 @@
 // viennent du mock ou de l'API : tout passe par ce fichier.
 
 // Attention : les variables Vite sont des chaines, pas des booleens.
+
+import { ajouter, lister, retirer } from './fileAttente'
+
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 const API_URL = import.meta.env.VITE_API_URL ?? '/api'
 
@@ -111,6 +114,117 @@ export async function getSuivi(code) {
     const e = new Error('introuvable')
     e.introuvable = true
     throw e
+  }
+  if (!res.ok) throw new Error(`Erreur ${res.status}`)
+  return res.json()
+}
+
+// Erreur reseau (pas de reponse du serveur) = a mettre en file d'attente.
+function estHorsLigne(err) {
+  return err instanceof TypeError || !navigator.onLine
+}
+
+// Tente l'envoi ; sans reseau, met en file d'attente.
+export async function signalerAvecFile(donnees) {
+  try {
+    return { envoye: true, reponse: await postSignalement(donnees) }
+  } catch (err) {
+    if (estHorsLigne(err)) {
+      await ajouter(donnees)
+      return { envoye: false }
+    }
+    throw err
+  }
+}
+
+export async function nombreEnAttente() {
+  return (await lister()).length
+}
+
+// Renvoie les signalements en attente. Retourne le nombre envoye.
+export async function viderFile() {
+  let envoyes = 0
+  for (const item of await lister()) {
+    try {
+      await postSignalement(item.donnees)
+      await retirer(item.cle)
+      envoyes += 1
+    } catch (err) {
+      if (estHorsLigne(err)) break // toujours pas de reseau : on arrete
+      await retirer(item.cle) // refus du serveur : inutile de reessayer
+    }
+  }
+  return envoyes
+}
+
+// ---- Session (connexion des roles admin, chauffeur, laabal) ----
+const CLE_SESSION = 'yilgamde_session'
+
+export function lireSession() {
+  try {
+    return JSON.parse(localStorage.getItem(CLE_SESSION))
+  } catch {
+    return null
+  }
+}
+
+export function ecrireSession(s) {
+  try {
+    if (s) localStorage.setItem(CLE_SESSION, JSON.stringify(s))
+    else localStorage.removeItem(CLE_SESSION)
+  } catch {
+    // stockage indisponible
+  }
+}
+
+// Comptes de test, mode mock uniquement.
+const COMPTES_MOCK = {
+  'admin@test': { role: 'admin', nom: 'Admin (test)' },
+  'chauffeur@test': { role: 'chauffeur', nom: 'Chauffeur (test)' },
+  'laabal@test': { role: 'laabal', nom: 'Laabal (test)' },
+}
+
+// Renvoie { access_token, role, nom }.
+export async function login(email, mot_de_passe) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 400))
+    const compte = COMPTES_MOCK[email.trim().toLowerCase()]
+    if (!compte || mot_de_passe !== 'test') {
+      const e = new Error('identifiants')
+      e.identifiants = true
+      throw e
+    }
+    return { access_token: 'mock-token', ...compte }
+  }
+  const res = await fetch(`${API_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim(), mot_de_passe }),
+  })
+  if (res.status === 401 || res.status === 403) {
+    const e = new Error('identifiants')
+    e.identifiants = true
+    throw e
+  }
+  if (!res.ok) throw new Error(`Erreur ${res.status}`)
+  const data = await res.json()
+  return { ...data, nom: data.nom ?? email.trim() }
+}
+
+// Appel authentifie (en-tete Bearer) pour les routes /admin, /chauffeur, /laabal.
+export async function appelAuth(chemin, options = {}) {
+  const s = lireSession()
+  const res = await fetch(`${API_URL}${chemin}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers ?? {}),
+      Authorization: `Bearer ${s?.token ?? ''}`,
+    },
+  })
+  if (res.status === 401) {
+    ecrireSession(null) // session expiree
+    window.location.assign('/connexion')
   }
   if (!res.ok) throw new Error(`Erreur ${res.status}`)
   return res.json()

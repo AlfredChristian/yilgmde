@@ -4,9 +4,12 @@ import Icone from './Icone'
 import DrapeauBF from './DrapeauBF'
 import { NOM } from '../config/projet'
 import './Entete.css'
+import { useAuth, ACCUEIL_ROLE } from '../auth/AuthContext'
 
 export default function Entete() {
   const [ouvert, setOuvert] = useState(false)
+
+  const { session, deconnecter } = useAuth()
 
   return (
     <header className="entete">
@@ -25,6 +28,15 @@ export default function Entete() {
 
       <nav className="entete-liens">
         <Link to="/carte">Carte</Link>
+
+        {session ? (
+            <>
+                <Link to={ACCUEIL_ROLE[session.role] ?? '/'}>Mon espace</Link>
+                <button className="entete-lien-bouton" onClick={deconnecter}>Déconnexion</button>
+            </>
+        ) : (
+            <Link to="/connexion">Connexion</Link>
+        )}
       </nav>
 
       <div className="entete-drapeau">

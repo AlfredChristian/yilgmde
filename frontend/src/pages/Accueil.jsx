@@ -6,10 +6,10 @@ import './Accueil.css'
 const SERVICES = [
   { icone: 'carte', titre: 'Carte des dépotoirs', lien: '/carte' },
   { icone: 'alerte', titre: 'Signaler un dépotoir', lien: '/signaler' },
-  { icone: 'suivi', titre: 'Suivre mon signalement', lien: '/suivi' },  
-  { icone: 'mairie', titre: 'Espace mairie' },
-  { icone: 'camion', titre: 'Espace chauffeur' },
-  { icone: 'bouclier', titre: 'Brigade Laabal' },
+  { icone: 'suivi', titre: 'Suivre mon signalement', lien: '/suivi' },
+  { icone: 'mairie', titre: 'Espace mairie', lien: '/connexion' },
+  { icone: 'camion', titre: 'Espace chauffeur', lien: '/connexion' },
+  { icone: 'bouclier', titre: 'Brigade Laabal', lien: '/connexion' },
 ]
 
 const ETAPES = [

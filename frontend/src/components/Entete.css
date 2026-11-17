@@ -100,3 +100,15 @@
 .entete-liens a[aria-current='page']::after {
   transform: scaleX(1);
 }
+
+.entete-lien-bouton {
+  font: inherit;
+  font-weight: 600;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.entete-lien-bouton:hover {
+  color: var(--vert);
+}
