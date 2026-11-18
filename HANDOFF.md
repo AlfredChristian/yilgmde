@@ -12,7 +12,7 @@
 - plan de gestion par arrondissement ou commune (points, tournées sur les voies OSM, coût expliqué), PDF ;
 - scénarios, simulation sur 30 jours, comparaison, simulation d'un quartier ;
 - espaces chauffeur (tournée, arrêts, panne) et brigade Laabal (camion animé, suivi de l'éradication) ;
-- suivi de la flotte ; gestion des comptes ; logo partout (D66).
+- suivi de la flotte ; gestion des comptes ; logo partout (D66) ; cartes animées sans clignotement (D67).
 
 **Lancer** : `powershell -ExecutionPolicy Bypass -File scripts\lancer_demo.ps1` (Windows) ou la section « Démarrer » du README. Comptes dans le README.
 
