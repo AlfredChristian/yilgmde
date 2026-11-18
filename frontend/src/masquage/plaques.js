@@ -78,16 +78,18 @@ function otsu(valeurs) {
 }
 
 // Composantes connexes (8 voisins) d'un masque : boîte englobante et surface de chacune.
-function composantes(masque, w, h) {
-  const etiq = new Int32Array(w * h), res = [], pile = []
+function composantes(masque, w, h, etiq = new Int32Array(w * h)) {
+  const res = [], pile = []
   for (let d = 0; d < w * h; d++) {
     if (!masque[d] || etiq[d]) continue
-    const c = { x0: w, y0: h, x1: 0, y1: 0, aire: 0 }
+    const c = { x0: w, y0: h, x1: 0, y1: 0, aire: 0, sx: 0, sy: 0 }
     etiq[d] = res.length + 1
     pile.push(d)
     while (pile.length) {
       const p = pile.pop(), x = p % w, y = (p - x) / w
       c.aire++
+      c.sx += x
+      c.sy += y
       if (x < c.x0) c.x0 = x
       if (x > c.x1) c.x1 = x
       if (y < c.y0) c.y0 = y
@@ -100,7 +102,7 @@ function composantes(masque, w, h) {
           if (masque[q] && !etiq[q]) { etiq[q] = res.length + 1; pile.push(q) }
         }
     }
-    res.push({ x: c.x0, y: c.y0, l: c.x1 - c.x0 + 1, h: c.y1 - c.y0 + 1, aire: c.aire })
+    res.push({ x: c.x0, y: c.y0, l: c.x1 - c.x0 + 1, h: c.y1 - c.y0 + 1, aire: c.aire, cx: c.sx / c.aire, cy: c.sy / c.aire })
   }
   return res
 }
@@ -141,5 +143,100 @@ export function plaquesParForme(gris, w, h) {
     const hs = caracteres.map((k) => k.h)
     if (Math.max(...hs) <= 1.6 * Math.min(...hs)) plaques.push([x, y0, cw, rh])
   }
+  return plaques
+}
+
+// Moyenne sur une fenêtre k x k, bords « reflect 101 », arrondie (comme cv2.blur).
+function moyenne(src, w, h, k) {
+  const r = k >> 1, tmp = new Float32Array(w * h), out = new Uint8Array(w * h)
+  for (let y = 0; y < h; y++) {
+    let s = 0
+    for (let i = -r; i <= r; i++) s += src[y * w + reflet(i, w)]
+    for (let x = 0; x < w; x++) {
+      tmp[y * w + x] = s
+      s += src[y * w + reflet(x + r + 1, w)] - src[y * w + reflet(x - r, w)]
+    }
+  }
+  for (let x = 0; x < w; x++) {
+    let s = 0
+    for (let i = -r; i <= r; i++) s += tmp[reflet(i, h) * w + x]
+    for (let y = 0; y < h; y++) {
+      out[y * w + x] = Math.round(s / (k * k))
+      s += tmp[reflet(y + r + 1, h) * w + x] - tmp[reflet(y - r, h) * w + x]
+    }
+  }
+  return out
+}
+
+// Enveloppe convexe (chaîne monotone) de points [x, y].
+function enveloppe(points) {
+  const p = [...points].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  if (p.length < 3) return p
+  const croix = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+  const bas = [], haut = []
+  for (const q of p) {
+    while (bas.length >= 2 && croix(bas[bas.length - 2], bas[bas.length - 1], q) <= 0) bas.pop()
+    bas.push(q)
+  }
+  for (let i = p.length - 1; i >= 0; i--) {
+    const q = p[i]
+    while (haut.length >= 2 && croix(haut[haut.length - 2], haut[haut.length - 1], q) <= 0) haut.pop()
+    haut.push(q)
+  }
+  return bas.slice(0, -1).concat(haut.slice(0, -1))
+}
+
+function dansEnveloppe(env, x, y) {
+  if (env.length < 3) return false
+  for (let i = 0; i < env.length; i++) {
+    const a = env[i], b = env[(i + 1) % env.length]
+    if ((b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]) < 0) return false
+  }
+  return true
+}
+
+/**
+ * Plaques vues comme un fond clair (jaune, blanc) plus lumineux que leur entourage, à peu près
+ * rectangulaire, portant 4 à 16 caractères sombres sur une ou deux lignes : plaques de moto
+ * burkinabè notamment. Portage de `_plaques_fond_clair` (backend/masquage.py).
+ */
+export function plaquesFondClair(gris, w, h) {
+  const k = Math.max(15, Math.floor(w / 20) | 1)
+  const fond = moyenne(gris, w, h, k * 3)
+  let clair = new Uint8Array(w * h)
+  for (let i = 0; i < w * h; i++) clair[i] = gris[i] - fond[i] > 25 && gris[i] > 110 ? 1 : 0
+  const m = Math.max(3, Math.floor(w / 100) | 1)
+  clair = fermer(clair, w, h, m, m)
+  const etiq = new Int32Array(w * h)
+  const plaques = []
+  composantes(clair, w, h, etiq).forEach((c, n) => {
+    const { x, y, l: cw, h: ch, aire } = c
+    if (!(aire >= 0.0005 * w * h && aire <= 0.08 * w * h && cw / ch >= 0.8 && cw / ch <= 5 && aire >= 0.5 * cw * ch && ch >= 12)) return
+    // Seul l'intérieur de la plaque compte (une plaque penchée laisse des coins sombres dans sa boîte).
+    const pts = []
+    for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) if (etiq[(y + j) * w + x + i] === n + 1) pts.push([i, j])
+    const env = enveloppe(pts)
+    let coque = new Uint8Array(cw * ch)
+    for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) coque[j * cw + i] = dansEnveloppe(env, i, j) ? 1 : 0
+    coque = eroder(coque, cw, ch, 5, 5)
+    const dedans = []
+    for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) if (coque[j * cw + i]) dedans.push(gris[(y + j) * w + x + i])
+    if (dedans.length < 20) return
+    const t = otsu(dedans)
+    const encre = new Uint8Array(cw * ch)
+    for (let j = 0; j < ch; j++) for (let i = 0; i < cw; i++) encre[j * cw + i] = coque[j * cw + i] && gris[(y + j) * w + x + i] <= t ? 1 : 0
+    const caracteres = composantes(encre, cw, ch)
+      .filter((q) => q.h >= 0.15 * ch && q.h <= 0.85 * ch && q.l <= 0.35 * cw && q.aire >= 6)
+      .sort((a, b) => a.cy - b.cy)
+    const rangees = []
+    for (const q of caracteres) {
+      const r = rangees.find((r) => Math.abs(q.cy - r.y) <= 0.5 * r.h && q.h / r.h >= 0.6 && q.h / r.h <= 1.6)
+      if (r) r.n++
+      else rangees.push({ y: q.cy, h: q.h, n: 1 })
+    }
+    const bonnes = rangees.filter((r) => r.n >= 3)
+    const total = bonnes.reduce((a, r) => a + r.n, 0)
+    if (bonnes.length >= 1 && bonnes.length <= 2 && total >= 4 && total <= 16) plaques.push([x, y, cw, ch])
+  })
   return plaques
 }
