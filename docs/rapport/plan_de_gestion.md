@@ -1,6 +1,6 @@
-# Plan de gestion des déchets — arrondissement 9
+# Plan de gestion des déchets de l’arrondissement 9
 
-Scénario **Base — arrondissement 9** · plan n° 1 calculé le 2026-11-17 23:07 UTC en 6605 ms · saison sèche · 4 zone(s), 336 483 habitants.
+Scénario **Base — arrondissement 9**, plan n° 1 calculé le 2026-11-18 03:21 UTC en 7185 ms, saison sèche, 4 zone(s), 336 483 habitants.
 
 Paramètres modifiés par rapport à la configuration de base :
 
@@ -120,9 +120,9 @@ Pourquoi ces points ? Exemple (point n° 1) : Secteur 37 : 56387 kg/jour, 60 poi
 
 ## Brigade Laabal (aujourd'hui)
 
-- Brigade 1 : 4 dépotoir(s), 40,7 km, 362 min — n° 182 (volume petit, 1 réapparition(s), 8 signalement(s)) ; n° 161 (volume moyen, 3 réapparition(s), 6 signalement(s)) ; n° 71 (volume moyen, 1 réapparition(s), 8 signalement(s)) ; n° 140 (volume petit, 1 réapparition(s), 7 signalement(s))
-- Brigade 2 : 4 dépotoir(s), 40,4 km, 361 min — n° 108 (volume petit, 3 réapparition(s), 7 signalement(s)) ; n° 107 (volume moyen, 7 signalement(s)) ; n° 195 (volume petit, 2 réapparition(s), 3 signalement(s)) ; n° 37 (volume moyen, 1 réapparition(s), 3 signalement(s))
-- Brigade 3 : 4 dépotoir(s), 33,2 km, 340 min — n° 80 (volume petit, 2 réapparition(s), 4 signalement(s)) ; n° 137 (volume moyen, 3 réapparition(s), 7 signalement(s)) ; n° 73 (volume gros, 2 réapparition(s), 4 signalement(s)) ; n° 90 (volume gros, 1 réapparition(s), 8 signalement(s))
+- Brigade 1 : 4 dépotoir(s), 40,7 km, 362 min : n° 182 (volume petit, 1 réapparition(s), 8 signalement(s)) ; n° 161 (volume moyen, 3 réapparition(s), 6 signalement(s)) ; n° 71 (volume moyen, 1 réapparition(s), 8 signalement(s)) ; n° 140 (volume petit, 1 réapparition(s), 7 signalement(s))
+- Brigade 2 : 4 dépotoir(s), 40,4 km, 361 min : n° 108 (volume petit, 3 réapparition(s), 7 signalement(s)) ; n° 107 (volume moyen, 7 signalement(s)) ; n° 195 (volume petit, 2 réapparition(s), 3 signalement(s)) ; n° 37 (volume moyen, 1 réapparition(s), 3 signalement(s))
+- Brigade 3 : 4 dépotoir(s), 33,2 km, 340 min : n° 80 (volume petit, 2 réapparition(s), 4 signalement(s)) ; n° 137 (volume moyen, 3 réapparition(s), 7 signalement(s)) ; n° 73 (volume gros, 2 réapparition(s), 4 signalement(s)) ; n° 90 (volume gros, 1 réapparition(s), 8 signalement(s))
 - En attente : 12 dépotoir(s) (capacité Laabal atteinte (3 brigade(s) × 4 dépotoir(s)/jour)).
 
 ## Ce qui n'est pas couvert

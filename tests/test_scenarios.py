@@ -278,7 +278,7 @@ def test_synthese_du_plan_en_markdown(client):
     r = client.get("/scenarios/1/plan/synthese", headers=h)
     assert r.status_code == 200 and r.headers["content-type"].startswith("text/markdown")
     texte = r.text
-    assert texte.startswith("# Plan de gestion des déchets — arrondissement 1")
+    assert texte.startswith("# Plan de gestion des déchets de l’arrondissement 1")
     for attendu in ("## En bref", "## Points de regroupement", "## Tournées de collecte", "## Brigade Laabal",
                     "## Ce qui n'est pas couvert", "camion_2", "Zone exemple A", "Pourquoi ces points ?"):
         assert attendu in texte, attendu

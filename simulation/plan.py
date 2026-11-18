@@ -182,6 +182,13 @@ def calculer_plan(donnees: dict, config: dict) -> dict:
         "camions_utilises": camions_utilises,
         "camions_indisponibles": [c["id"] for c in config.get("camions", []) if not c.get("disponible", True)],
         "camions_flotte": [c["id"] for c in config.get("camions", [])],   # pour régler les pannes depuis le front
+        # Valeurs en vigueur des leviers réglables depuis l'écran du plan (D56)
+        "leviers": {
+            "taux_abonnement_precollecteurs": config["population"].get("taux_abonnement_precollecteurs"),
+            "evolution_population_pct": config["population"].get("evolution_pct", 0) or 0,
+            "frequence_passages_par_semaine": config["collecte"].get("frequence_passages_par_semaine"),
+            "prob_apport_volontaire": (config.get("simulation") or {}).get("prob_apport_volontaire"),
+        },
         "distance_totale_km": round(sum(t["distance_km"] for t in tournees), 2),
         "cout_total_xof": round(cout_passage),
         "cout_mensuel_estime_xof": round(cout_mensuel),

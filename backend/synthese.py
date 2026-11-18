@@ -24,20 +24,20 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
     perimetre = ind.get("perimetre")
     noms = {z["id"]: z["nom"] for z in zones}
     if perimetre:
-        arr = ", ".join(str(a) for a in perimetre["arrondissements"]) or "—"
-        titre = f"Plan de gestion des déchets — arrondissement {arr}" if perimetre["arrondissements"] else \
-            "Plan de gestion des déchets — zones choisies"
+        arr = ", ".join(str(a) for a in perimetre["arrondissements"]) or "aucun"
+        titre = f"Plan de gestion des déchets de l’arrondissement {arr}" if perimetre["arrondissements"] else \
+            "Plan de gestion des déchets des zones choisies"
         lieu = f"{len(perimetre['zones'])} zone(s), {_nb(perimetre['population'])} habitants"
     else:
-        titre = f"Plan de gestion des déchets — {config.get('ville') or 'commune'}"
+        titre = f"Plan de gestion des déchets de {config.get('ville') or 'la commune'}"
         lieu = f"{len(zones)} zone(s)"
     collecte = [t for t in plan["tournees"] if t["type"] == "collecte"]
     laabal = [t for t in plan["tournees"] if t["type"] == "intervention"]
     freq = config["collecte"]["frequence_passages_par_semaine"]
 
     l = [f"# {titre}", "",
-         f"Scénario **{scenario['nom']}** · plan n° {plan['id']} calculé le {plan['calcule_le'][:16].replace('T', ' ')} UTC"
-         f" en {plan['duree_calcul_ms']} ms · saison {'des pluies' if ind['saison'] == 'pluies' else 'sèche'} · {lieu}.", ""]
+         f"Scénario **{scenario['nom']}**, plan n° {plan['id']} calculé le {plan['calcule_le'][:16].replace('T', ' ')} UTC"
+         f" en {plan['duree_calcul_ms']} ms, saison {'des pluies' if ind['saison'] == 'pluies' else 'sèche'}, {lieu}.", ""]
     if scenario.get("parametres"):
         l += ["Paramètres modifiés par rapport à la configuration de base :", "", "```json",
               json.dumps(scenario["parametres"], ensure_ascii=False), "```", ""]
@@ -57,7 +57,7 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
           f"| Distance d'un passage | {_nb(ind['distance_totale_km'], 1)} km |",
           f"| Coût d'un passage | {_xof(ind['cout_total_xof'])} |",
           f"| Coût mensuel estimé | {_xof(ind['cout_mensuel_estime_xof'])}"
-          + (f" (budget {_xof(ind['budget_mensuel_xof'])}{' — **dépassé**' if ind['budget_depasse'] else ''})"
+          + (f" (budget {_xof(ind['budget_mensuel_xof'])}{', **dépassé**' if ind['budget_depasse'] else ''})"
              if ind.get("budget_mensuel_xof") else "") + " |",
           f"| Dépotoirs actifs | {ind['depotoirs_actifs']} ({ind['depotoirs_planifies_laabal']} traités aujourd'hui"
           f" par Laabal, {ind['depotoirs_en_attente_laabal']} en attente) |", ""]
@@ -95,7 +95,7 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
     if laabal:
         for t in laabal:
             l.append(f"- Brigade {t.get('brigade', '?')} : {len(t['arrets'])} dépotoir(s), {_nb(t['distance_km'], 1)} km, "
-                     f"{_nb(t['duree_min'])} min — " + " ; ".join(
+                     f"{_nb(t['duree_min'])} min : " + " ; ".join(
                          f"n° {a['cible_id']} ({a.get('raison', '')})" for a in t["arrets"]))
     else:
         l.append("- Aucun dépotoir illégal à traiter aujourd'hui.")

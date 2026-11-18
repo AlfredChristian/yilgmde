@@ -358,7 +358,7 @@ export async function rejeterSignalement(id, motif) {
 }
 
 // ---- Scenarios et plan (admin) ----
-let MOCK_PARAMS = { arrondissement: 0, camions_en_panne: 0, saison_pluies: false, budget_xof: 500000, nb_camions: 3 }
+let MOCK_PARAMS = { arrondissement: 0, camions_en_panne: 0, saison_pluies: false, budget_xof: 500000, nb_camions: 3, evolution_population_pct: 0, abonnement_pct: 30, frequence: 2, apport_volontaire_pct: 60, quartiers: [] }
 let MOCK_SCENARIOS = [
   { id: 1, nom: 'base', parametres: {}, actif: true },
   { id: 2, nom: 'pluies', parametres: { scenario: { saison: 'pluies' } }, actif: false },
@@ -434,6 +434,16 @@ function versFormulaire(p, plan) {
     // budget de la commune : celui du perimetre divise par sa part (D39)
     budget_xof: Math.round(ind.budget_mensuel_xof / (ind.perimetre?.part_budget ?? 1)),
     nb_camions: FLOTTE.length,
+    // leviers de l'énoncé (D56) : valeurs en vigueur renvoyées par le plan
+    evolution_population_pct: ind.leviers?.evolution_population_pct ?? 0,
+    abonnement_pct: Math.round((ind.leviers?.taux_abonnement_precollecteurs ?? 0) * 100),
+    frequence: ind.leviers?.frequence_passages_par_semaine ?? 2,
+    apport_volontaire_pct: Math.round((ind.leviers?.prob_apport_volontaire ?? 0) * 100),
+    quartiers: (p.zones_ajoutees ?? []).map((z) => {
+      const f = typeof z === 'string' ? JSON.parse(z) : z
+      const props = f.properties ?? {}
+      return { nom: props.nom ?? 'Nouveau quartier', population: props.population ?? null, geometrie: f.type === 'Feature' ? f.geometry : f }
+    }),
   }
 }
 
@@ -450,6 +460,18 @@ function versApi(cle, valeur) {
       return { camions: FLOTTE.map((id, i) => ({ id, disponible: i >= valeur })) }
     case 'budget_xof':
       return { mairie: { budget_mensuel_xof: valeur } }
+    case 'evolution_population_pct':
+      return { population: { evolution_pct: valeur } }
+    case 'abonnement_pct':
+      return { population: { taux_abonnement_precollecteurs: valeur / 100 } }
+    case 'frequence':
+      return { collecte: { frequence_passages_par_semaine: valeur } }
+    case 'apport_volontaire_pct':
+      return { simulation: { prob_apport_volontaire: valeur / 100 } }
+    case 'ajouter_quartier':   // valeur : Feature GeoJSON { properties: { nom, population } }
+      return { zones_ajoutees: [valeur] }
+    case 'retirer_quartier':   // valeur : position dans la liste des quartiers ajoutés
+      return { retirer_zones: [valeur] }
     default:
       return { [cle]: valeur }
   }
@@ -476,6 +498,16 @@ export async function majParametres(partiel) {
     body: JSON.stringify(versApi(cle, valeur)),
   })
   return retenirFlotte(plan)
+}
+
+// Plan de gestion lisible (texte Markdown) du scénario de travail.
+export async function getSynthese() {
+  if (USE_MOCK) return '# Plan de gestion\n\nLa synthèse est disponible avec l’API.'
+  const id = await scenarioActif()
+  const s = lireSession()
+  const res = await fetch(`${API_URL}/scenarios/${id}/plan/synthese`, { headers: { Authorization: `Bearer ${s?.token ?? ''}` } })
+  if (!res.ok) throw new Error(`Erreur ${res.status}`)
+  return res.text()
 }
 
 export async function getPlan() {

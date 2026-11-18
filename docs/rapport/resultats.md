@@ -1,6 +1,6 @@
 # Résultats des scénarios — arrondissement 9 de Ouagadougou
 
-Généré par `scripts/resultats_scenarios.py` le 2026-11-17 : jeu `data/ouaga/`, config de Ouagadougou, simulation de 30 jours, graine 42. Arrondissement 9 : 336 483 habitants (RGPH 2019), secteurs 37 à 40. Relancer donne les mêmes chiffres.
+Généré par `scripts/resultats_scenarios.py` le 2026-11-18 : jeu `data/ouaga/`, config de Ouagadougou, simulation de 30 jours, graine 42. Arrondissement 9 : 336 483 habitants (RGPH 2019), secteurs 37 à 40. Relancer donne les mêmes chiffres.
 
 ## Scénarios
 
@@ -20,12 +20,12 @@ Généré par `scripts/resultats_scenarios.py` le 2026-11-17 : jeu `data/ouaga/`
 
 | Scénario | Capacité de collecte | Part captée estimée | Points | Camions utilisés | Distance (km) | Coût mensuel (M XOF) | Budget de l'arr. (M XOF) | Calcul |
 |---|---|---|---|---|---|---|---|---|
-| Base | 100,0 % | 60,2 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 6,6 s |
-| Pluies | 100,0 % | 55,2 % | 240 | 15 | 2 904 | 21,8 | 25,1 | 3,8 s |
-| Panne | 77,4 % | 60,2 % | 240 | 10 | 1 863 | 14,1 | 25,1 | 3,6 s |
-| Sensibilisation | 100,0 % | 70,3 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 3,9 s |
-| Abonnements | 100,0 % | 71,6 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 3,8 s |
-| Budget ÷ 2 | 100,0 % | 60,2 % | 240 | 13 | 2 591 | 19,2 | 12,5 | 3,8 s |
+| Base | 100,0 % | 60,2 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 7,2 s |
+| Pluies | 100,0 % | 55,2 % | 240 | 15 | 2 904 | 21,8 | 25,1 | 4,2 s |
+| Panne | 77,4 % | 60,2 % | 240 | 10 | 1 863 | 14,1 | 25,1 | 4,2 s |
+| Sensibilisation | 100,0 % | 70,3 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 4,2 s |
+| Abonnements | 100,0 % | 71,6 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 4,3 s |
+| Budget ÷ 2 | 100,0 % | 60,2 % | 240 | 13 | 2 591 | 19,2 | 12,5 | 4,3 s |
 
 ## Simulation sur 30 jours
 
