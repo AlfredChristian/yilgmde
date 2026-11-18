@@ -186,7 +186,23 @@ def test_zone_unie_n_est_pas_un_visage(monkeypatch):
             return 1, np.array([[2, 2, 28, 28] + [0] * 10 + [0.9]], np.float32)
 
     monkeypatch.setitem(masquage._cache, "yunet-0.6", Detecteur())
-    unie = np.full((32, 32, 3), 180, np.uint8)
+    unie = np.full((64, 64, 3), 180, np.uint8)
     assert masquage._visages_yunet(unie, 0.6) == []
-    texture = np.random.default_rng(0).integers(0, 255, (32, 32, 3), dtype=np.uint8)
+    texture = np.random.default_rng(0).integers(0, 255, (64, 64, 3), dtype=np.uint8)
     assert masquage._visages_yunet(texture, 0.6) == [(2, 2, 28, 28)]
+
+
+def test_boites_infinies_ou_hors_image_ecartees(monkeypatch):
+    """Vu sous Windows : YuNet renvoyait des coordonnées infinies (OverflowError à la conversion)."""
+    class Detecteur:
+        def setInputSize(self, taille):
+            pass
+
+        def detect(self, image):
+            return 1, np.array([[np.inf, 2, 28, 28] + [0] * 10 + [0.9],
+                                [-10, -10, 40, 40] + [0] * 10 + [0.9]], np.float32)
+
+    monkeypatch.setitem(masquage._cache, "yunet-0.6", Detecteur())
+    texture = np.random.default_rng(1).integers(0, 255, (64, 64, 3), dtype=np.uint8)
+    assert masquage._visages_yunet(texture, 0.6) == [(0, 0, 40, 40)]   # la boîte infinie est ignorée, l'autre recadrée
+    assert masquage._visages_yunet(texture[:32, :32], 0.6) == []         # trop petite : pas de recherche

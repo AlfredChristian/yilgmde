@@ -39,6 +39,7 @@ export function decoder(sorties, seuil = 0.6, seuilNms = 0.3) {
       const r = Math.floor(idx / cols), col = idx % cols
       const cx = (col + bbox[idx * 4]) * pas, cy = (r + bbox[idx * 4 + 1]) * pas
       const w = Math.exp(bbox[idx * 4 + 2]) * pas, h = Math.exp(bbox[idx * 4 + 3]) * pas
+      if (!Number.isFinite(cx + cy + w + h) || w <= 0 || h <= 0) continue   // boîte invalide
       candidats.push([cx - w / 2, cy - h / 2, w, h, score])
     }
   }
