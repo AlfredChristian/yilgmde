@@ -72,7 +72,7 @@ def main() -> None:
         w = csv.writer(f)
         w.writerow(["latitude", "longitude", "surface_m2", "confiance"])
         w.writerows(sorted(gardes))
-    print(f"{len(gardes):,} bâtiments gardés sur {lus:,} lus, écrits dans {SORTIE} ({SORTIE.stat().st_size / 1e6:.1f} Mo)".replace(",", " "))
+    print(f"{len(gardes):,} bâtiments gardés sur {lus:,} lus. Fichier : {SORTIE} ({SORTIE.stat().st_size / 1e6:.1f} Mo)".replace(",", " "))
 
 
 if __name__ == "__main__":
