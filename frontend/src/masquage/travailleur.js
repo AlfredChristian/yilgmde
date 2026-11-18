@@ -24,7 +24,7 @@ self.onmessage = async ({ data }) => {
     const { width: w, height: h, data: px } = image
     const gris = new Uint8Array(w * h)
     for (let i = 0; i < w * h; i++) gris[i] = Math.round(0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2])
-    const plaques = [...plaquesParForme(gris, w, h), ...plaquesFondClair(gris, w, h)]
+    const plaques = [...plaquesParForme(gris, w, h), ...plaquesFondClair(gris, w, h, px)]
     self.postMessage({ id, visages: visages.map((v) => v.slice(0, 4)), plaques, ms: performance.now() - debut })
   } catch (err) {
     self.postMessage({ id, erreur: String(err?.message || err) })
