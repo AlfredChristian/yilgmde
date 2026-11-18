@@ -1,4 +1,6 @@
-# yilgmde
+<p align="center"><img src="frontend/public/marque/logo-horizontal.png" alt="Yilgmdé" height="72"></p>
+
+# Yilgmdé
 
 Outil libre d'aide à la décision pour l'assainissement de Ouagadougou, du signalement des dépotoirs sauvages jusqu'au plan de gestion de la ville, avec simulation des acteurs.
 
@@ -81,6 +83,8 @@ Sur Windows, un seul script prépare la base de démo et ouvre l'API et l'interf
 powershell -ExecutionPolicy Bypass -File scripts\lancer_demo.ps1                 # -Reinitialiser pour repartir d'une base neuve
 ```
 
+Comptes de la démo (`--demo`) : mairie `admin@ouaga.bf` / `admin12345`, chauffeur `chauffeur@ouaga.bf` / `chauffeur123`, brigade Laabal `laabal@ouaga.bf` / `laabal1234`. Les citoyens n'ont pas de compte. Ces mots de passe ne servent qu'à la démonstration.
+
 À la main :
 
 ```bash
@@ -108,7 +112,7 @@ Depuis http://localhost:8000/docs, après `POST /auth/login` avec le compte admi
 ```bash
 python -m pytest -q
 ```
-Environ 250 tests. Pour aller vite, lancez seulement le fichier concerné : `python -m pytest -q tests/test_plan.py`.
+355 tests (environ 4 minutes). Pour aller vite, lancez seulement le fichier concerné : `python -m pytest -q tests/test_plan.py`.
 
 ## Configuration
 
@@ -144,9 +148,10 @@ backend/        API FastAPI : routes, base SQLite, sécurité, stockage du plan 
 simulation/     moteur pur : demande (C1), points (C2), tournées (C3, C7), plan (C4), simulation (E1–E4)
 config/         paramètres (default.yaml + <ville>.yaml)
 data/sample/    données fictives et signalements piégés pour les tests
-frontend/       interface React + Vite (carte Leaflet)
+frontend/       interface React + Vite, application installable (cartes : frontend/src/carte/, masquage sur le téléphone : frontend/src/masquage/)
+scripts/        chargement des données, lancement de la démo, rapport, logos
 tests/          tests pytest
-docs/           fonctionnalités, modèle de données, contrat d'API
+docs/           fonctionnalités, modèle de données, contrat d'API, paramètres, rapport, logo (docs/marque/)
 ```
 
 Pour aller plus loin : `CONTEXT.md` (vue d'ensemble et règles de cohérence), `docs/api-contract.md` (toutes les routes), `docs/modele-donnees.md`, `DECISIONS.md` (choix techniques et hypothèses).

@@ -92,10 +92,10 @@
 
 ## Jour 3 — Gel et répétition
 
-- [ ] Gel du code (plus de nouvelle fonctionnalité)
+- [x] Gel du code (plus de nouvelle fonctionnalité) — v1.0, D66
 - [ ] Répétition complète de l'épreuve en direct, de bout en bout, hors ligne comprise
 - [ ] Répétition du pitch, chronométrée
-- [ ] Dépôt propre : README, licence, pas de secret, données ouvertes
+- [x] Dépôt propre : README, licence, pas de secret, données ouvertes — fait le 2026-11-18
 
 ## Livrables ajoutés le 2026-11-17
 
