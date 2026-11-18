@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet'
+import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { activerScenario, affecterTournee, comparerScenarios, creerScenario, getArrondissements, getParametres, getPlan, getScenarios, getUtilisateurs, majParametres, simulerScenario } from '../api/client'
 import './Plan.css'
@@ -260,7 +261,7 @@ export default function Plan() {
 
         {params.arrondissement > 0 && (
           <p className="plan-limite">
-            <strong>Hypothèse de démonstration :</strong> ce plan d’arrondissement peut mobiliser toute la flotte communale.
+            <strong>Hypothèse :</strong> ce plan d’arrondissement peut mobiliser toute la flotte communale.
             L’affectation durable d’une part de flotte par arrondissement reste à modéliser.
           </p>
         )}
@@ -408,10 +409,7 @@ export default function Plan() {
 
       <div className={`plan-carte ${flotteOuverte ? 'plan-carte-flotte' : ''}`}>
         {flotteOuverte ? <SuiviFlotte onRetourCarte={() => setFlotteOuverte(false)} /> : <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <FondDeCarte />
           {plan.points_regroupement.map((p) => (
             <CircleMarker key={`p${p.id}`} center={[p.latitude, p.longitude]} radius={plan.points_regroupement.length > 300 ? 4 : 8}
               pathOptions={{ color: '#124a34', fillColor: '#f4b942', fillOpacity: 0.95 }}>

@@ -20,7 +20,7 @@ export default function PiedDePage() {
         </nav>
         <div className="pied-commune">
           <span className="pied-pays"><DrapeauBF largeur={28} /> Ouagadougou, Burkina Faso</span>
-          <p>Version de démonstration : les données sont fictives mais réalistes.</p>
+          <p>Une plateforme au service de la propreté de la ville.</p>
         </div>
       </div>
       <p className="pied-licences">

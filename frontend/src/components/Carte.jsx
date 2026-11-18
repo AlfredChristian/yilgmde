@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   MapContainer,
-  TileLayer,
   CircleMarker,
   Popup,
   LayersControl,
   LayerGroup,
 } from 'react-leaflet'
+import FondDeCarte from './FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { getDepotoirs, getSignalements } from '../api/client'
 import { COULEURS_DEPOTOIR, COULEURS_SIGNALEMENT } from '../config/couleurs'
@@ -45,12 +45,7 @@ export default function Carte() {
         </div>
       )}
       <MapContainer center={CENTRE} zoom={ZOOM} style={{ height: '100%', width: '100%' }}>
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        <LayersControl position="topright">
+        <FondDeCarte>
           <LayersControl.Overlay checked name="Dépotoirs vérifiés">
             <LayerGroup>
               {depotoirs.map((f) => {
@@ -107,7 +102,7 @@ export default function Carte() {
               })}
             </LayerGroup>
           </LayersControl.Overlay>
-        </LayersControl>
+        </FondDeCarte>
       </MapContainer>
     <Legende />
   </div>

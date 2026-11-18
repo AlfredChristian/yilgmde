@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Tooltip, useMap } from 'react-leaflet'
+import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { useAuth } from '../auth/AuthContext'
 import { getDepotoirsLaabal, changerStatutDepotoir } from '../api/client'
@@ -91,10 +92,7 @@ export default function Laabal() {
         <h2 className="terrain-sous-titre">Dépotoirs sur la carte</h2>
         <div className="terrain-carte">
           <MapContainer center={liste[0] ? [liste[0].latitude, liste[0].longitude] : CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+            <FondDeCarte />
             <Cadrage points={liste} choisi={choisi} />
             {liste.map((d, i) => {
               const s = STATUTS[d.statut] ?? STATUTS.actif

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, useMap, useMapEvents } from 'react-leaflet'
+import FondDeCarte from '../components/FondDeCarte'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import Icone from '../components/Icone'
@@ -192,10 +193,7 @@ if (confirmation) {
           </button>
           <div className="signaler-carte">
             <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+              <FondDeCarte />
               <ClicCarte onChoix={setPosition} />
               <Recentrer position={position} />
               {position && (
