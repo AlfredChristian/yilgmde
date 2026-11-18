@@ -15,7 +15,7 @@
 
 ## Faissal — back-end et moteur
 
-- [x] D58 — Ménages situés d'après les bâtiments Open Buildings (P2) — moteur prêt ; reste à pousser `data/ouaga/batiments.csv.gz` (script `scripts/telecharger_batiments.py`) et régénérer le rapport
+- [x] D58 — Ménages situés d'après les bâtiments Open Buildings (P2) — fichier poussé, rapport régénéré
 
 **Socle**
 - [x] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
