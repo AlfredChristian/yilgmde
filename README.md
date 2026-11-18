@@ -75,10 +75,22 @@ Le jeu de Ouaga (`data/ouaga/`, licence ODbL) a un **découpage réel** (12 arro
 
 ### 3. Démarrer
 
+Sur Windows, un seul script prépare la base de démo et ouvre l'API et l'interface (en https, pour les téléphones) :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\lancer_demo.ps1                 # -Reinitialiser pour repartir d'une base neuve
+```
+
+À la main :
+
 ```bash
 uvicorn backend.main:app --reload          # API : http://localhost:8000, documentation : http://localhost:8000/docs
-cd frontend && npm run dev                 # interface : http://localhost:5173
+cd frontend && npm run dev                 # interface : http://localhost:5173 (ce PC seulement)
+cd frontend && npm run dev:telephone       # interface en https sur le réseau local : micro et caméra sur téléphone
+cd frontend && npm run essai:installable   # version construite et installable : http://localhost:4173
 ```
+
+Le navigateur n'autorise le micro (note vocale), la caméra de l'ordinateur et l'installation qu'en https ou sur `localhost` ; `dev:telephone` crée un certificat local, que le téléphone signale par un avertissement à accepter une fois.
 
 ### 4. Essayer (épreuve en direct)
 
