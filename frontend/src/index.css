@@ -1,110 +1,202 @@
-@import '@fontsource/poppins/400.css';
-@import '@fontsource/poppins/600.css';
-@import '@fontsource/poppins/700.css';
+/* Yilgmdé : système visuel.
+   Vert Faso profond pour l'institution, or de l'étoile pour l'action principale, rouge du drapeau
+   réservé aux alertes. Un seul motif décoratif : la bande tissée Faso Dan Fani (.bande-tissee),
+   sous l'en-tête et au-dessus du pied de page. Tout le reste reste sobre. */
+@import '@fontsource/figtree/400.css';
+@import '@fontsource/figtree/500.css';
+@import '@fontsource/figtree/600.css';
+@import '@fontsource/figtree/700.css';
+@import '@fontsource/bricolage-grotesque/600.css';
+@import '@fontsource/bricolage-grotesque/700.css';
 
 :root {
-  --vert: #1b6b4a;
-  --vert-fonce: #124a34;
-  --vert-clair: #e3f1e9;
-  --jaune: #f4b942;
-  --rouge: #d62828;
-  --sable: #faf6ee;
-  --encre: #1d2b24;
-  --gris: #5b6b63;
-  --rayon: 16px;
-  --ombre: 0 8px 24px rgba(18, 74, 52, 0.12);
-  --bordure: #e3e8ec;
-  --serif: Georgia, 'Times New Roman', serif;
+  --vert: #0e5a3a;
+  --vert-fonce: #093d28;
+  --vert-clair: #e4efe8;
+  --or: #e9b824;
+  --or-fonce: #c99a0e;
+  --jaune: var(--or);              /* ancien nom, gardé pour les pages existantes */
+  --rouge: #b8322a;
+  --rouge-clair: #fbe9e7;
+  --fond: #f4f6f3;
+  --sable: var(--fond);            /* ancien nom */
+  --surface: #ffffff;
+  --encre: #16231c;
+  --gris: #5a6a61;
+  --bordure: #dce3dd;
+
+  --titre: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+  --texte: 'Figtree', system-ui, sans-serif;
+  --serif: var(--titre);           /* ancien nom : les titres n'utilisent plus d'empattement */
+
+  --rayon: 14px;
+  --rayon-petit: 8px;
+  --ombre: 0 10px 30px rgba(9, 61, 40, 0.10);
+  --ombre-douce: 0 1px 2px rgba(9, 61, 40, 0.06), 0 6px 18px rgba(9, 61, 40, 0.06);
+  --ombre-forte: 0 18px 40px rgba(9, 61, 40, 0.18);
+  --transition: 0.18s ease;
+
+  /* Bande tissée Faso Dan Fani : fils verts, or, rouges, encre et blancs */
+  --tissage: repeating-linear-gradient(90deg,
+    var(--vert) 0 14px, var(--or) 14px 18px, var(--vert) 18px 30px, #fff 30px 32px,
+    var(--rouge) 32px 40px, var(--encre) 40px 42px, var(--rouge) 42px 50px, #fff 50px 52px,
+    var(--vert-fonce) 52px 64px, var(--or) 64px 66px);
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  font-family: 'Poppins', system-ui, sans-serif;
-  background: var(--sable);
-  color: var(--encre);
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.btn {
-  display: inline-block;
-  padding: 14px 28px;
-  border-radius: 999px;
-  font-weight: 600;
+  font-family: var(--texte);
   font-size: 1rem;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  line-height: 1.55;
+  background: var(--fond);
+  color: var(--encre);
+  -webkit-font-smoothing: antialiased;
 }
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--ombre);
-}
-.btn-primaire {
-  background: var(--jaune);
+
+h1, h2, h3 {
+  font-family: var(--titre);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
   color: var(--encre);
 }
-.btn-secondaire {
-  background: transparent;
-  color: white;
-  border-color: rgba(255, 255, 255, 0.6);
+h1 { font-size: clamp(1.75rem, 3.2vw, 2.4rem); }
+h2 { font-size: clamp(1.3rem, 2.2vw, 1.6rem); }
+h3 { font-size: 1.15rem; }
+
+a { color: inherit; text-decoration: none; }
+p a, .lien { color: var(--vert); text-decoration: underline; text-underline-offset: 3px; }
+
+img { max-width: 100%; }
+
+.bande-tissee { height: 6px; background: var(--tissage); }
+
+/* ---------- Boutons ---------- */
+.btn,
+.btn-contour {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1.5px solid var(--bordure);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--encre);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
-.btn[disabled] {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+.btn:hover, .btn-contour:hover { border-color: var(--vert); color: var(--vert); }
+
+/* Action principale de la page : or de l'étoile */
+.btn-primaire { background: var(--or); border-color: var(--or); color: var(--encre); }
+.btn-primaire:hover { background: var(--or-fonce); border-color: var(--or-fonce); color: var(--encre); }
+
+/* Action affirmée dans les espaces de travail */
+.btn-contour.plein { background: var(--vert); border-color: var(--vert); color: #fff; }
+.btn-contour.plein:hover { background: var(--vert-fonce); border-color: var(--vert-fonce); color: #fff; }
+
+.btn-secondaire { background: transparent; border-color: rgba(255, 255, 255, 0.55); color: #fff; }
+.btn-secondaire:hover { border-color: #fff; color: #fff; background: rgba(255, 255, 255, 0.08); }
+
+.btn-contour.danger { color: var(--rouge); border-color: #e7b7b2; }
+.btn-contour.danger:hover { background: var(--rouge-clair); border-color: var(--rouge); color: var(--rouge); }
+
+.btn[disabled], .btn-contour[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- Carte (élément de liste ou bloc) ---------- */
+.carte {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px 18px;
+  align-items: start;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: 20px 60px 20px 20px;
+}
+.carte-gauche { display: grid; justify-items: center; gap: 6px; min-width: 72px; text-align: center; }
+.tuile {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--vert-clair);
+  color: var(--vert);
+  display: grid;
+  place-items: center;
+}
+.tuile-jaune { background: #fbf1cf; color: #7a5b00; }
+.statut { font-size: 0.8rem; font-weight: 600; }
+.statut-ok { color: var(--vert); }
+.statut-attente { color: #8a6400; }
+.statut-rejet { color: var(--rouge); }
+.carte-note { font-size: 0.8rem; color: var(--gris); }
+.carte-titre {
+  font-family: var(--titre);
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.25;
+  margin: 0 0 6px;
+  color: var(--encre);
+}
+.carte-texte { margin: 0 0 14px; color: var(--encre); line-height: 1.55; }
+.carte-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  min-width: 34px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  color: var(--encre);
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: grid;
+  place-items: center;
 }
 
-/* --- Profondeur et mouvement --- */
-:root {
-  --ombre-douce: 0 2px 6px rgba(18, 74, 52, 0.08), 0 8px 20px rgba(18, 74, 52, 0.08);
-  --ombre-forte: 0 12px 32px rgba(18, 74, 52, 0.22);
-  --rayon-petit: 10px;
-  --transition: 0.2s ease;
+/* Puce d'information discrète (remplace les suites « a · b · c ») */
+.puces { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  font-size: 0.85rem;
+  color: var(--encre);
 }
 
-/* Focus clavier soigné (remplace le cadre noir par défaut) */
-:focus-visible {
-  outline: 3px solid var(--vert);
-  outline-offset: 3px;
-  border-radius: 6px;
-}
-:focus:not(:focus-visible) {
-  outline: none;
-}
-.hero :focus-visible,
-.bande-verte :focus-visible {
-  outline-color: var(--jaune);
-}
+/* ---------- En-tête d'un espace de travail ---------- */
+.espace-tete { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 24px; flex-wrap: wrap; margin-bottom: 24px; }
+.espace-tete h1 { margin: 0 0 6px; }
+.espace-tete p { margin: 0; color: var(--gris); }
+.espace-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
-/* Apparition douce : à utiliser avec la classe .apparait */
-@keyframes apparition {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.apparait {
-  animation: apparition 0.6s ease both;
-}
+/* ---------- Accessibilité et mouvement ---------- */
+:focus-visible { outline: 3px solid var(--or); outline-offset: 2px; border-radius: 6px; }
+:focus:not(:focus-visible) { outline: none; }
 
-/* Respect des personnes qui réduisent les animations */
+@keyframes apparition { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.apparait { animation: apparition 0.5s ease both; }
+
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -112,82 +204,7 @@ a {
   }
 }
 
-/* ---------- Modèle de carte ---------- */
-.carte {
-  position: relative;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px 20px;
-  align-items: start;
-  background: white;
-  border: 1px solid var(--bordure);
-  border-radius: 14px;
-  padding: 20px 64px 20px 20px;
-  box-shadow: 0 1px 2px rgba(16, 40, 30, 0.05);
+@media (max-width: 560px) {
+  .carte { padding: 16px 52px 16px 16px; grid-template-columns: 1fr; }
+  .carte-gauche { justify-items: start; text-align: left; grid-auto-flow: column; align-items: center; min-width: 0; }
 }
-.carte-gauche {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  min-width: 84px;
-  text-align: center;
-}
-.tuile {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: var(--vert);
-  color: white;
-  display: grid;
-  place-items: center;
-}
-.statut { font-size: 0.8rem; font-weight: 700; }
-.statut-ok { color: var(--vert); }
-.statut-attente { color: #a86b00; }
-.statut-rejet { color: var(--rouge); }
-.carte-note { font-size: 0.8rem; color: var(--gris); }
-.carte-titre {
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 1.25rem;
-  line-height: 1.25;
-  margin: 0 0 6px;
-  color: var(--vert-fonce);
-}
-.carte-texte { margin: 0 0 14px; color: var(--encre); line-height: 1.5; }
-.carte-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  min-width: 40px;
-  height: 38px;
-  padding: 0 12px;
-  border-radius: 10px;
-  background: var(--vert);
-  color: white;
-  font-weight: 700;
-  display: grid;
-  place-items: center;
-}
-.btn-contour {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border: 1.5px solid var(--vert);
-  border-radius: 10px;
-  background: white;
-  color: var(--vert);
-  font: inherit;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.btn-contour:hover { background: var(--vert-clair); }
-.btn-contour.danger { color: var(--rouge); border-color: var(--rouge); }
-.btn-contour.danger:hover { background: #fde8e8; }
-.btn-contour.plein { background: var(--vert); color: white; }
-.btn-contour.plein:hover { background: var(--vert-fonce); }
-.btn-contour[disabled] { opacity: 0.55; cursor: not-allowed; }
