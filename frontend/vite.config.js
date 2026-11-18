@@ -20,18 +20,18 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Yilgamdé',
-        short_name: 'Yilgamdé',
-        description: 'Signaler et cartographier les dépotoirs de Ouagadougou',
+        name: 'Yilgmdé, propreté de Ouagadougou',
+        short_name: 'Yilgmdé',
+        description: 'Signaler les dépotoirs, organiser la collecte et suivre les interventions à Ouagadougou',
         lang: 'fr',
-        theme_color: '#1b6b4a',
-        background_color: '#faf6ee',
+        theme_color: '#0e5a3a',
+        background_color: '#f6f2e7',
         display: 'standalone',
         start_url: '/',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          { src: 'maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
       workbox: {

@@ -243,3 +243,11 @@ input[type='checkbox'], input[type='radio'], input[type='range'] { accent-color:
 .icone-quartier { background: none; border: 0; }
 .icone-quartier-corps { display: block; line-height: 0; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .25)); }
 .icone-quartier-corps.vers-gauche { transform: scaleX(-1); }
+
+/* Page introuvable et chargement d'une page (D66) */
+.introuvable { max-width: 560px; margin: 0 auto; padding: 64px 20px 80px; text-align: center; }
+.introuvable img { display: block; margin: 0 auto 20px; }
+.introuvable h1 { margin: 0 0 10px; color: var(--vert-fonce); }
+.introuvable p { margin: 0 0 24px; color: var(--gris); line-height: 1.6; }
+.introuvable-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.page-chargement { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 40vh; margin: 0; color: var(--gris); }

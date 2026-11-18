@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 import re
+from pathlib import Path
 from xml.sax.saxutils import escape
 
 from reportlab.lib import colors
@@ -16,8 +17,9 @@ from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import HRFlowable, KeepTogether, ListFlowable, ListItem, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import HRFlowable, Image, KeepTogether, ListFlowable, ListItem, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+LOGO = Path(__file__).resolve().parent / "ressources" / "logo.png"   # scripts/generer_logos.py (D66)
 VERT = colors.HexColor("#0e5a3a")
 OR = colors.HexColor("#e9b824")
 ENCRE = colors.HexColor("#1d2b24")
@@ -92,6 +94,10 @@ def synthese_pdf(markdown: str) -> bytes:
     largeur = A4[0] - 2 * marge
     titre = next((l[2:].strip() for l in markdown.splitlines() if l.startswith("# ")), "Plan de gestion")
     elements, lignes, i = [], markdown.splitlines(), 0
+    if LOGO.exists():
+        logo = Image(str(LOGO), width=41 * mm, height=12 * mm)       # 328 × 96 px, même proportion
+        logo.hAlign = "LEFT"
+        elements += [logo, Spacer(1, 4 * mm)]
     while i < len(lignes):
         l = lignes[i]
         if not l.strip():

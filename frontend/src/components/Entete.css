@@ -21,24 +21,9 @@
   background: var(--tissage);
 }
 
-.marque {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--titre);
-  font-weight: 700;
-  font-size: 1.35rem;
-  letter-spacing: -0.02em;
-  color: var(--vert-fonce);
-}
-.marque-tissu {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--tissage);
-  background-size: 66px 100%;
-  box-shadow: inset 0 0 0 1px rgba(9, 61, 40, 0.15);
-}
+.marque { display: inline-flex; align-items: center; line-height: 0; }
+.marque img { display: block; height: 40px; width: auto; }
+@media (max-width: 600px) { .marque img { height: 34px; } }
 
 .entete-liens { display: flex; gap: 6px; }
 .entete-liens a,
