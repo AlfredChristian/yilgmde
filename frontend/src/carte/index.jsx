@@ -6,7 +6,7 @@
 // CircleMarker, Circle, Polyline, Polygon, Tooltip, Popup, useMap, useMapEvents. Une seule
 // propriété en plus : `<Popup ouvert>` ouvre la bulle (utilisé par la carte publique).
 
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -47,7 +47,9 @@ export function MapContainer({ center, zoom, style, className, children, ...opti
     // La vue initiale ne compte qu'à la création ; ensuite on passe par useMap().
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  const conteneur = map && { ajouter: (c) => c.addTo(map), retirer: (c) => c.remove() }
+  // Même objet tant que la carte existe : les couches s'y accrochent une seule fois, même
+  // quand le composant parent se redessine plusieurs fois par seconde (animations).
+  const conteneur = useMemo(() => map && { ajouter: (c) => c.addTo(map), retirer: (c) => c.remove() }, [map])
   return (
     <div ref={div} style={style} className={className}>
       {map && (
@@ -95,9 +97,15 @@ export function TileLayer({ url, ...options }) {
 }
 
 // Groupe de couches : ses enfants s'y ajoutent ; le groupe s'ajoute à son propre conteneur.
+// Le conteneur doit rester le même objet d'un rendu à l'autre : les couches enfants en
+// dépendent, et un nouvel objet les ferait retirer puis rajouter (la carte clignoterait).
 function useGroupe() {
   const groupe = useCouche(() => L.layerGroup(), () => {}, [])
-  return groupe && { groupe, conteneur: { ajouter: (c) => groupe.addLayer(c), retirer: (c) => groupe.removeLayer(c) } }
+  const conteneur = useMemo(
+    () => groupe && { ajouter: (c) => groupe.addLayer(c), retirer: (c) => groupe.removeLayer(c) },
+    [groupe],
+  )
+  return groupe && { groupe, conteneur }
 }
 
 export function LayerGroup({ children }) {
@@ -128,7 +136,9 @@ function CoucheDuControle({ name, checked = false, children, fond }) {
     // `checked` ne vaut qu'au départ : ensuite c'est l'utilisateur qui choisit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [controle, groupe, name, map, fond])
-  const conteneur = { ajouter: (c) => groupe.addLayer(c), retirer: (c) => groupe.removeLayer(c) }
+  // Même objet à chaque rendu (voir useGroupe) : sinon le fond de carte est recréé et
+  // ses tuiles rechargées à chaque image d'une animation.
+  const conteneur = useMemo(() => ({ ajouter: (c) => groupe.addLayer(c), retirer: (c) => groupe.removeLayer(c) }), [groupe])
   return <ConteneurContexte.Provider value={conteneur}>{children}</ConteneurContexte.Provider>
 }
 LayersControl.BaseLayer = function BaseLayer(props) { return <CoucheDuControle {...props} fond /> }
