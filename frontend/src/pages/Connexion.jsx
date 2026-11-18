@@ -33,6 +33,7 @@ export default function Connexion() {
 
   return (
     <main className="connexion">
+      <img className="connexion-symbole" src={`${import.meta.env.BASE_URL}marque/symbole.png`} alt="" width="72" height="75" />
       <h1>Connexion</h1>
       <p className="connexion-intro">
         Réservé à la mairie, aux chauffeurs et à la brigade Laabal. Les comptes sont créés par

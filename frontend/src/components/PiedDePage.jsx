@@ -9,7 +9,7 @@ export default function PiedDePage() {
       <div className="bande-tissee" />
       <div className="pied-contenu">
         <div className="pied-marque">
-          <Marque />
+          <Marque clair />
           <p>Signaler les dépotoirs, organiser la collecte et suivre les interventions dans la commune de Ouagadougou.</p>
         </div>
         <nav className="pied-liens" aria-label="Liens du pied de page">

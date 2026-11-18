@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import RouteProtegee from './components/RouteProtegee'
@@ -5,16 +6,24 @@ import Entete from './components/Entete'
 import BandeauReseau from './components/BandeauReseau'
 import PiedDePage from './components/PiedDePage'
 import Accueil from './pages/Accueil'
-import Carte from './components/Carte'
-import Signaler from './pages/Signaler'
-import Suivi from './pages/Suivi'
-import Connexion from './pages/Connexion'
-import Admin from './pages/Admin'
-import Plan from './pages/Plan'
-import Chauffeur from './pages/Chauffeur'
-import Laabal from './pages/Laabal'
-import Utilisateurs from './pages/Utilisateurs'
-import ModerationDetail from './pages/ModerationDetail'
+import Introuvable from './pages/Introuvable'
+
+// Chaque page est chargée quand on l'ouvre (D66) : le citoyen qui signale ne télécharge
+// ni le plan de gestion ni les suivis. Toutes restent disponibles hors ligne (service worker).
+const Carte = lazy(() => import('./components/Carte'))
+const Signaler = lazy(() => import('./pages/Signaler'))
+const Suivi = lazy(() => import('./pages/Suivi'))
+const Connexion = lazy(() => import('./pages/Connexion'))
+const Admin = lazy(() => import('./pages/Admin'))
+const Plan = lazy(() => import('./pages/Plan'))
+const Chauffeur = lazy(() => import('./pages/Chauffeur'))
+const Laabal = lazy(() => import('./pages/Laabal'))
+const Utilisateurs = lazy(() => import('./pages/Utilisateurs'))
+const ModerationDetail = lazy(() => import('./pages/ModerationDetail'))
+
+function Chargement() {
+  return <p className="page-chargement" role="status"><span className="role-spinner" /> Chargement…</p>
+}
 
 // Le pied de page accompagne les pages publiques ; les cartes plein écran et les espaces de travail s'en passent.
 function PiedSiPublic() {
@@ -28,6 +37,7 @@ export default function App() {
       <AuthProvider>
         <Entete />
         <BandeauReseau />
+        <Suspense fallback={<Chargement />}>
         <Routes>
           <Route path="/" element={<Accueil />} />
           <Route
@@ -61,7 +71,9 @@ export default function App() {
           <Route path="/admin/utilisateurs" element={<RouteProtegee roles={['admin']}><Utilisateurs /></RouteProtegee>} />
           <Route path="/chauffeur" element={<RouteProtegee roles={['chauffeur']}><Chauffeur /></RouteProtegee>} />
           <Route path="/laabal" element={<RouteProtegee roles={['laabal']}><Laabal /></RouteProtegee>} />
+          <Route path="*" element={<Introuvable />} />
         </Routes>
+        </Suspense>
         <PiedSiPublic />
       </AuthProvider>
     </BrowserRouter>

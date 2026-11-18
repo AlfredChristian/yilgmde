@@ -7,11 +7,11 @@ import { useAuth, ACCUEIL_ROLE } from '../auth/AuthContext'
 
 const ESPACES = { admin: 'Espace mairie', chauffeur: 'Ma tournée', laabal: 'Mes interventions' }
 
-export function Marque() {
+// Logo de l'application (D66) ; `clair` pour les fonds sombres (pied de page).
+export function Marque({ clair = false }) {
   return (
     <span className="marque">
-      <span className="marque-tissu" aria-hidden="true" />
-      {NOM}
+      <img src={`${import.meta.env.BASE_URL}marque/logo-horizontal${clair ? '-clair' : ''}.png`} alt={NOM} width="164" height="48" />
     </span>
   )
 }
