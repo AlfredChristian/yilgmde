@@ -630,6 +630,40 @@ export async function getSuiviFlotte() {
   return appelAuth('/admin/suivi')
 }
 
+// Suivi de l'éradication des dépotoirs (admin, D60) : signalé, validé, intervention, éradiqué.
+export async function getSuiviDepotoirs() {
+  if (USE_MOCK) {
+    const jour = 86400000, maintenant = Date.now()
+    const iso = (t) => (t == null ? null : new Date(t).toISOString())
+    const statuts = ['actif', 'actif', 'intervention_planifiee', 'eradique', 'eradique', 'sous_surveillance']
+    const depotoirs = Array.from({ length: 36 }, (_, i) => {
+      const statut = statuts[i % statuts.length]
+      const lat = 12.33 + ((i * 37) % 100) / 1000, lon = -1.56 + ((i * 53) % 110) / 1000
+      const signale = maintenant - (40 - i) * jour
+      const valide = signale + 5 * 3600000
+      const intervention = statut === 'actif' ? null : valide + 2 * jour
+      const eradique = ['eradique', 'sous_surveillance'].includes(statut) ? intervention + jour : null
+      return {
+        id: i + 1, latitude: lat, longitude: lon, zone_nom: `Secteur ${(i % 12) + 1}`, volume_estime: ['petit', 'moyen', 'gros'][i % 3],
+        statut, nb_signalements: 1 + (i % 3), nb_reapparitions: 0, brigade: intervention ? 'Awa Laabal' : null,
+        etapes: { signale: iso(signale), valide: iso(valide), intervention: iso(intervention), eradique: iso(eradique),
+          surveillance: statut === 'sous_surveillance' ? iso(eradique + 3 * jour) : null },
+        dates_estimees: false, photo_intervention: Boolean(eradique),
+        delai_eradication_jours: eradique ? Math.round(((eradique - signale) / jour) * 10) / 10 : null,
+        signalements: Array.from({ length: 1 + (i % 3) }, (_, k) => ({ id: i * 10 + k, latitude: lat + k * 0.0004, longitude: lon - k * 0.0003, cree_le: iso(signale + k * jour) })),
+      }
+    })
+    const n = (s) => depotoirs.filter((d) => d.statut === s).length
+    return {
+      debut: depotoirs[0].etapes.signale, fin: iso(maintenant),
+      resume: { depotoirs: depotoirs.length, a_traiter: n('actif'), en_intervention: n('intervention_planifiee'),
+        eradiques: n('eradique') + n('sous_surveillance'), sous_surveillance: n('sous_surveillance'), delai_median_jours: 2.2 },
+      depotoirs,
+    }
+  }
+  return appelAuth('/admin/suivi-depotoirs')
+}
+
 // ---- Comptes (admin, D49) ----
 let MOCK_UTILISATEURS = [
   { id: 1, nom: 'Administrateur', email: 'admin@test', role: 'admin', actif: true },

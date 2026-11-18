@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MapContainer, Marker, useMap, useMapEvents } from 'react-leaflet'
 import FondDeCarte from '../components/FondDeCarte'
@@ -8,6 +8,7 @@ import Icone from '../components/Icone'
 import EnregistreurVocal from '../components/EnregistreurVocal'
 import { signalerAvecFile } from '../api/client'
 import { masquerPhoto } from '../masquage'
+import PriseDeVue from '../components/PriseDeVue'
 import './Signaler.css'
 
 const CENTRE = [12.3714, -1.5197] // [H] a deplacer dans la config
@@ -36,7 +37,7 @@ function texteMasquage(m) {
   if (!m.visages && !m.plaques) return 'Aucun visage ni plaque repéré. Position GPS de la photo retirée.'
   const parts = [m.visages && pluriel(m.visages, 'visage'), m.plaques && pluriel(m.plaques, 'plaque')].filter(Boolean)
   const accord = (m.visages ? 'masqué' : 'masquée') + (m.visages + m.plaques > 1 ? 's' : '')
-  return `${parts.join(' et ')} ${accord} sur votre téléphone.`
+  return `${parts.join(' et ')} ${accord} sur votre appareil.`
 }
 
 function ClicCarte({ onChoix }) {
@@ -59,6 +60,10 @@ export default function Signaler() {
   const [description, setDescription] = useState('')
   const [photo, setPhoto] = useState(null)
   const [photoUrl, setPhotoUrl] = useState(null)
+  const [cameraOuverte, setCameraOuverte] = useState(false)
+  const choixFichier = useRef(null)
+  // Téléphone ou tablette : l'attribut `capture` ouvre l'appareil photo. Ordinateur : la webcam en fenêtre.
+  const ecranTactile = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches
   const [masquage, setMasquage] = useState(null) // { etat: 'en_cours' | 'fait' | 'serveur', visages, plaques }
   const [audio, setAudio] = useState(null)
   const [message, setMessage] = useState(null)
@@ -75,10 +80,13 @@ export default function Signaler() {
     return () => URL.revokeObjectURL(url)
   }, [photo])
 
-  async function choisirPhoto(e) {
+  function choisirPhoto(e) {
     const fichier = e.target.files?.[0]
     e.target.value = ''
-    if (!fichier) return
+    if (fichier) traiterPhoto(fichier)
+  }
+
+  async function traiterPhoto(fichier) {
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(fichier.type)) {
       setMessage('Format non accepté. Utilisez une image JPEG, PNG ou WebP.')
       return
@@ -298,17 +306,30 @@ if (confirmation) {
           <h2>Photo <span className="facultatif">facultatif</span></h2>
           <p className="signaler-aide">Prenez une photo sur place ou choisissez une image dans votre appareil.</p>
           <div className="photo-actions">
-                <label className="btn-contour photo-bouton">
-                  <Icone nom="photo" taille={18} /> Prendre une photo
-                  <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={choisirPhoto} />
-                </label>
+                {ecranTactile ? (
+                  <label className="btn-contour photo-bouton">
+                    <Icone nom="photo" taille={18} /> Prendre une photo
+                    <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={choisirPhoto} />
+                  </label>
+                ) : (
+                  <button type="button" className="btn-contour photo-bouton" onClick={() => setCameraOuverte(true)}>
+                    <Icone nom="photo" taille={18} /> Prendre une photo
+                  </button>
+                )}
                 <label className="btn-contour photo-bouton">
                   <Icone nom="image" taille={18} /> Choisir une image
-                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={choisirPhoto} />
+                  <input ref={choixFichier} type="file" accept="image/jpeg,image/png,image/webp" onChange={choisirPhoto} />
                 </label>
+                {cameraOuverte && (
+                  <PriseDeVue
+                    onFermer={() => setCameraOuverte(false)}
+                    onPhoto={(f) => { setCameraOuverte(false); traiterPhoto(f) }}
+                    onChoisirFichier={() => { setCameraOuverte(false); choixFichier.current?.click() }}
+                  />
+                )}
               </div>
               {masquage?.etat === 'en_cours' && (
-                <p className="photo-masquage" role="status">Masquage des visages et des plaques sur votre téléphone…</p>
+                <p className="photo-masquage" role="status">Masquage des visages et des plaques sur votre appareil…</p>
               )}
               {photo && (
                 <div className="photo-apercu">

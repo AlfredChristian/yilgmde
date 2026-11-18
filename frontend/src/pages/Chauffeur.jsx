@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, CircleMarker, Tooltip, Polyline, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Marker, Tooltip, Polyline, useMap } from 'react-leaflet'
 import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { useAuth } from '../auth/AuthContext'
 import { getTournee, marquerArret } from '../api/client'
 import Icone from '../components/Icone'
+import { iconeCamion, svgCamion } from '../components/iconeCamion'
 import './Roles.css'
 
 const CENTRE = [12.3714, -1.5197]
@@ -78,6 +79,15 @@ export default function Chauffeur() {
   const total = tournee.arrets.length
   const positions = tournee.arrets.map((a) => [a.latitude, a.longitude])
   const prochain = tournee.arrets.find((a) => a.statut !== 'effectue')
+  // Le camion est montré au dernier arrêt validé (au premier arrêt avant le départ), tourné
+  // vers le prochain arrêt.
+  const dernierFait = [...tournee.arrets].reverse().find((a) => a.statut === 'effectue')
+  const posCamion = dernierFait ?? tournee.arrets[0]
+  const iconeVehicule = posCamion && iconeCamion({
+    couleur: '#0e5a3a',
+    largeur: 52,
+    versGauche: Boolean(prochain && prochain !== posCamion && prochain.longitude < posCamion.longitude),
+  })
 
   return (
     <main className="terrain">
@@ -115,12 +125,21 @@ export default function Chauffeur() {
                 </CircleMarker>
               )
             })}
+            {posCamion && (
+              <Marker position={[posCamion.latitude, posCamion.longitude]} icon={iconeVehicule} zIndexOffset={1000} keyboard={false}>
+                <Tooltip direction="top">
+                  {tournee.camion_id}, {dernierFait ? `arrêt ${dernierFait.ordre} validé` : 'avant le premier arrêt'}
+                  {prochain ? `, prochain : arrêt ${prochain.ordre}` : ', tournée terminée'}
+                </Tooltip>
+              </Marker>
+            )}
           </MapContainer>
         </div>
         <p className="terrain-legende">
           <span><i className="terrain-pastille a-faire" /> À faire</span>
           <span><i className="terrain-pastille fait" /> Effectué</span>
           <span><i className="terrain-trait" /> Trajet par les rues</span>
+          <span><i className="icone-camion-legende" dangerouslySetInnerHTML={{ __html: svgCamion('#0e5a3a', { largeur: 28 }) }} />Votre camion, au dernier arrêt validé</span>
         </p>
       </section>
 

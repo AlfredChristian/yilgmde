@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css'
 import { activerScenario, affecterTournee, comparerScenarios, creerScenario, getArrondissements, getParametres, getPlan, getScenarios, getSynthese, getUtilisateurs, majParametres, simulerScenario } from '../api/client'
 import './Plan.css'
 import SuiviFlotte from '../components/SuiviFlotte'
+import SuiviEradication from '../components/SuiviEradication'
 import Affectations from '../components/Affectations'
 import LectureMarkdown from '../components/LectureMarkdown'
 
@@ -140,6 +141,7 @@ export default function Plan() {
   const [nomVariante, setNomVariante] = useState('')
   const [utilisateurs, setUtilisateurs] = useState([])
   const [flotteOuverte, setFlotteOuverte] = useState(false)
+  const [eradicationOuverte, setEradicationOuverte] = useState(false)
   const [vue, setVue] = useState('carte')     // panneau de droite : 'carte', 'affectations' ou 'synthese'
   const [trace, setTrace] = useState(null)     // coins du quartier en cours de tracé, null hors tracé
   const [nouveauQuartier, setNouveauQuartier] = useState({ nom: '', population: '' })
@@ -548,12 +550,14 @@ export default function Plan() {
                 {vue === 'affectations' ? 'Revenir à la carte' : 'Affecter les tournées'}
               </button>
               <button className="btn-contour" onClick={() => setFlotteOuverte(true)}>Suivi de la flotte</button>
+              <button className="btn-contour" onClick={() => setEradicationOuverte(true)}>Suivi de l’éradication</button>
             </div>
           </div>
         </section>
       </aside>
 
       <div className={`plan-carte ${flotteOuverte ? 'plan-carte-flotte' : ''}`}>
+        {eradicationOuverte && <SuiviEradication onRetour={() => setEradicationOuverte(false)} />}
         {flotteOuverte ? <SuiviFlotte onRetourCarte={() => setFlotteOuverte(false)} /> : vue === 'affectations' ? (
           <Affectations tournees={plan.tournees} utilisateurs={utilisateurs} onAffecter={affecterSimple} onRetour={() => setVue('carte')} />
         ) : vue === 'synthese' ? (
