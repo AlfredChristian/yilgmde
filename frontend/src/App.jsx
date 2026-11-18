@@ -19,7 +19,7 @@ import ModerationDetail from './pages/ModerationDetail'
 // Le pied de page accompagne les pages publiques ; les cartes plein écran et les espaces de travail s'en passent.
 function PiedSiPublic() {
   const { pathname } = useLocation()
-  return ['/', '/signaler', '/suivi', '/connexion'].includes(pathname) ? <PiedDePage /> : null
+  return ['/', '/suivi', '/connexion'].includes(pathname) ? <PiedDePage /> : null
 }
 
 export default function App() {
