@@ -54,6 +54,7 @@ export default defineConfig(({ mode }) => ({
     }),
   ],
   // Même relais vers l'API pour `npm run dev` et pour `vite preview` (version construite, installable).
-  server: { proxy: PROXY_API },
+  // `.trycloudflare.com` : tunnel de secours (adresse https publique) si un téléphone refuse le certificat local.
+  server: { proxy: PROXY_API, allowedHosts: ['.trycloudflare.com'] },
   preview: { proxy: PROXY_API },
 }))
