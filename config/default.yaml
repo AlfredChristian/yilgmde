@@ -91,6 +91,7 @@ masquage:                                # livrable 1 : visages et plaques flout
   voisins_min_plaque: 4                  # [H]
   taille_min_px: 20                      # plus petit visage ou plaque cherché (en pixels de la photo)
   marge: 0.25                            # zone floutée élargie de 25 % de chaque côté
+  seuil_visage: 0.6                      # [H] confiance minimale de YuNet pour flouter un visage (D57)
   qualite_jpeg: 85
 
 import:                                  # A4, POST /admin/signalements/import

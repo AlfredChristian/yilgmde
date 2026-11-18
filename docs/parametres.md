@@ -81,6 +81,7 @@ Les sources sont détaillées dans `data/ouaga/LISEZMOI.md`. Un test (`tests/tes
 | `masquage.voisins_min_plaque` | Idem pour les plaques | — | 4 | [H] |
 | `masquage.taille_min_px` | Plus petit visage ou plaque cherché | px | 20 | technique |
 | `masquage.marge` | Zone floutée élargie de chaque côté | fraction | 0,25 | choix (prudence) |
+| `masquage.seuil_visage` | Confiance minimale du détecteur de visages YuNet ; plus bas = plus de visages floutés, plus de faux positifs | 0–1 | 0,6 | | [H] |
 | `masquage.qualite_jpeg` | Qualité du JPEG enregistré | 0–100 | 85 | technique |
 
 ## Points de regroupement (C2)

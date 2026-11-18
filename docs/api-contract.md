@@ -64,7 +64,7 @@ Toute modification d'API passe par une PR qui met à jour ce fichier. La documen
 Réponse `201` :
 ```json
 { "id": 12, "code_suivi": "K7M-4QD", "statut": "en_attente_revue", "motif": null,
-  "photo_masquee": { "visages": 1, "plaques": 0, "methode": "opencv-haar" }, "deja_recu": false }
+  "photo_masquee": { "visages": 1, "plaques": 0, "methode": "opencv-yunet" }, "deja_recu": false }
 ```
 - Rejeté automatiquement : `"statut": "rejete_auto"` et `"motif": "hors zone d'étude"` ; ni photo ni note vocale ne sont gardées.
 - **Envoi différé (file d'attente hors connexion)** :
