@@ -1,6 +1,6 @@
 # Plan de gestion des déchets de l’arrondissement 9
 
-Scénario **Base — arrondissement 9**, plan n° 1 calculé le 2026-11-18 04:04 UTC en 8608 ms, saison sèche, 4 zone(s), 336 483 habitants.
+Scénario **Base — arrondissement 9**, plan n° 1 calculé le 2026-11-18 11:18 UTC en 9109 ms, saison sèche, 4 zone(s), 336 483 habitants.
 
 Paramètres modifiés par rapport à la configuration de base :
 
@@ -14,7 +14,7 @@ Paramètres modifiés par rapport à la configuration de base :
 | Points de regroupement | 228 |
 | Collecte | 2 passage(s) par semaine, 76 rotation(s) sur 3 jour(s) par passage |
 | Capacité de collecte des camions (part du stock des points vidée à chaque passage) | 100,0 % |
-| Part des déchets captée, estimée (arrive aux points : pré-collecte 30,0 % + apport volontaire 36,3 %) | 66,3 % |
+| Part des déchets captée, estimée (arrive aux points : pré-collecte 35,0 % + apport volontaire 12,9 %) | 47,9 % |
 | Camions utilisés | camion_1, camion_10, camion_11, camion_12, camion_13, camion_2, camion_3, camion_4, camion_5, camion_6, camion_7, camion_8, camion_9 |
 | Camions indisponibles | aucun |
 | Distance d'un passage | 2 478,2 km |
