@@ -13,6 +13,7 @@ population:
   production_dechets_kg_hab_jour: 0.5    # [H]
   taux_abonnement_precollecteurs: 0.3    # [H] part des ménages abonnés à un pré-collecteur
   evolution_pct: 0                       # scénario : évolution de la population de toutes les zones (%), D56
+  batiments: null                        # fichier des bâtiments Open Buildings (D58) ; null = ménages répartis uniformément [H]
 
 saisons:
   seche:  {coef_production: 1.0, coef_vitesse_camion: 1.0, coef_depots_sauvages: 1.0}

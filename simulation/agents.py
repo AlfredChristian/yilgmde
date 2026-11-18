@@ -37,6 +37,7 @@ from __future__ import annotations
 import math
 import random
 
+from simulation.batiments import batiments_de
 from simulation.captage import couverture, ratio_precollecte
 from simulation.demande import estimer_demande
 from simulation.plan import budget_du_perimetre, calculer_plan, preparer
@@ -69,6 +70,7 @@ def _parametres(config: dict) -> dict:
         "pas_m": float(config["points_regroupement"].get("pas_echantillonnage_m", 100)),
         "jpp": jours_entre_passages(config),
         "pas_couverture": int(s.get("max_echantillons_couverture", 400)),
+        "batiments": batiments_de(config),       # D58
     }
 
 

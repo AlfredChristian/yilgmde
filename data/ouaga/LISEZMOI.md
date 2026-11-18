@@ -83,3 +83,12 @@ téléchargées par `python scripts/telecharger_reseau_routier.py` (Overpass) le
 48 683 voies, 400 282 nœuds, 1 457 voies à sens unique. Retirés : accès interdit ou privé, voies
 militaires, allées de parking, voies situées dans un camp militaire ou un aéroport.
 © contributeurs OpenStreetMap, licence ODbL. Relancer le script met le fichier à jour.
+
+## Bâtiments (`batiments.csv.gz`, D58)
+
+Empreintes de bâtiments détectées sur l'imagerie satellite par Google (Open Buildings v3, mai 2023),
+gardées dans la même boîte avec une confiance ≥ 0,65, par `python scripts/telecharger_batiments.py`.
+Colonnes : `latitude`, `longitude` (centre du bâtiment), `surface_m2`, `confiance`.
+Le moteur s'en sert pour placer les points de regroupement là où sont les maisons et pour mesurer
+la couverture à pied ; la population de chaque zone reste celle de l'INSD.
+Licence : CC BY 4.0 et ODbL, © Google. Sans ce fichier, la répartition uniforme [H] est utilisée.

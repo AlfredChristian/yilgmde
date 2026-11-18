@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Sequence
 
+from simulation.batiments import batiments_de, menages_dans_zone
 from simulation.geometrie import distance_m, echantillonner
 
 
@@ -32,20 +33,27 @@ def parametres_captage(config: dict) -> dict:
         "distance_marche": float(config["points_regroupement"]["distance_max_a_pied_m"]),
         "pas_m": float(config["points_regroupement"].get("pas_echantillonnage_m", 100)),
         "pas_couverture": int(s.get("max_echantillons_couverture", 400)),
+        "batiments": batiments_de(config),       # D58 : None = grille uniforme
     }
 
 
 def couverture(zone: dict, points: Sequence[dict], p: dict) -> tuple[float, list]:
     """Part des ménages de la zone à distance de marche d'un point, et la grille utilisée."""
-    grille = echantillonner(zone["geometrie"], p["pas_m"], p["pas_couverture"])
+    grille, poids = [], []
+    if p.get("batiments") is not None:          # ménages là où sont les bâtiments, pondérés par leur surface (D58)
+        grille, surfaces = menages_dans_zone(p["batiments"], zone["geometrie"], p["pas_m"], p["pas_couverture"])
+        poids = surfaces.tolist()
+    if not grille:
+        grille = echantillonner(zone["geometrie"], p["pas_m"], p["pas_couverture"])
+        poids = [1.0] * len(grille)
     proches = [pt for pt in points if pt.get("zone_id") == zone["id"]]
     if not proches:
         return 0.0, grille
     dedans = sum(
-        1 for la, lo in grille
+        w for (la, lo), w in zip(grille, poids)
         if min(distance_m(la, lo, pt["latitude"], pt["longitude"]) for pt in proches) <= p["distance_marche"]
     )
-    return dedans / len(grille), grille
+    return dedans / sum(poids), grille
 
 
 def ratio_precollecte(zones: Sequence[dict], demandes: dict, avec_points: set, p: dict) -> float:
