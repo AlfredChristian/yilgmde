@@ -114,7 +114,7 @@ export default function ModerationDetail() {
         <section className="carte fiche-bloc fiche-carte">
           <h2 className="carte-titre">Emplacement</h2>
           <div className="fiche-carte-map">
-            <MapContainer center={[s.latitude, s.longitude]} zoom={17} style={{ height: '100%', width: '100%' }}>
+            <MapContainer center={[s.latitude, s.longitude]} zoom={16} style={{ height: '100%', width: '100%' }}>
               <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
               <Circle center={[s.latitude, s.longitude]} radius={300} pathOptions={{ color: '#8fa89a', weight: 1, fillOpacity: 0.04, dashArray: '4 4' }} />
               {s.signalements_proches.map((v) => (

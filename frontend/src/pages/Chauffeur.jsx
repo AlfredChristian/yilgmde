@@ -39,7 +39,9 @@ export default function Chauffeur() {
     setErreur(null)
     getTournee().then(setTournee).catch((e) => setErreur(e.message)).finally(() => setCharge(true))
   }
-  useEffect(charger, [])
+  useEffect(() => {
+    getTournee().then(setTournee).catch((e) => setErreur(e.message)).finally(() => setCharge(true))
+  }, [])
 
   // Un arrêt validé ne se décoche pas : le serveur garde la trace du passage.
   async function valider(a) {

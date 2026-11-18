@@ -93,6 +93,7 @@ img { max-width: 100%; }
   font-size: 0.95rem;
   line-height: 1.2;
   cursor: pointer;
+  text-decoration: none;
   transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
 .btn:hover, .btn-contour:hover { border-color: var(--vert); color: var(--vert); }
