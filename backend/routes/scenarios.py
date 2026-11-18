@@ -9,12 +9,13 @@ Chaque création, modification ou activation est écrite dans `journal_audit` (r
 from __future__ import annotations
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 
 from backend import db, plans
 from backend.config import ConfigError
 from backend.deps import acces_db
 from backend.synthese import synthese_markdown
+from backend.synthese_pdf import synthese_pdf
 from simulation.plan import zones_du_scenario
 from backend.zones import lire_zones
 from backend.schemas import Role, ScenarioCreation, ScenarioSortie, SimulationEntree
@@ -219,6 +220,14 @@ def synthese(request: Request, scenario_id: int, _=Depends(admin)):
     texte = synthese_markdown(plan, scenario, zones, config)
     return PlainTextResponse(texte, media_type="text/markdown; charset=utf-8",
                              headers={"Content-Disposition": f'inline; filename="plan_scenario_{scenario_id}.md"'})
+
+
+@router.get("/scenarios/{scenario_id}/plan/synthese.pdf")
+def synthese_en_pdf(request: Request, scenario_id: int, _=Depends(admin)):
+    """Le même plan de gestion, mis en page en PDF A4 (D65)."""
+    texte = synthese(request, scenario_id).body.decode("utf-8")
+    return Response(synthese_pdf(texte), media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="plan_de_gestion_scenario_{scenario_id}.pdf"'})
 
 
 @router.post("/scenarios/{scenario_id}/simuler")

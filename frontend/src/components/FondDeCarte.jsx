@@ -1,4 +1,4 @@
-import { LayersControl, TileLayer } from 'react-leaflet'
+import { LayersControl, TileLayer } from '../carte'
 
 // Fond de toutes les cartes : le plan (OpenStreetMap) par défaut et une vue satellite,
 // au choix avec le petit carré en haut à droite. Le choix se fait carte par carte.

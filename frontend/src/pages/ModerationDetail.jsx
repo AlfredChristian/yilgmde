@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { MapContainer, CircleMarker, Circle, Tooltip } from 'react-leaflet'
+import { MapContainer, CircleMarker, Circle, Tooltip } from '../carte'
 import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { getFileModeration, getSignalementDetail, validerSignalement, rejeterSignalement } from '../api/client'

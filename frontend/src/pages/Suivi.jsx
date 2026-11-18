@@ -65,7 +65,7 @@ export default function Suivi() {
           <h2>{info.titre}</h2>
           {resultat.motif && <p>Motif : {resultat.motif}</p>}
           {resultat.depotoir_id && (
-            <Link to="/carte" className="btn btn-vert">Voir sur la carte</Link>
+            <Link to={`/carte?depotoir=${resultat.depotoir_id}`} className="btn btn-vert">Voir sur la carte</Link>
           )}
         </section>
       )}

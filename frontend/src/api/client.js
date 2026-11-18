@@ -510,6 +510,16 @@ export async function getSynthese() {
   return res.text()
 }
 
+// Le même plan de gestion en PDF (D65), pour le téléchargement.
+export async function getSynthesePdf() {
+  if (USE_MOCK) throw new Error('Le PDF est disponible avec l’API.')
+  const id = await scenarioActif()
+  const s = lireSession()
+  const res = await fetch(`${API_URL}/scenarios/${id}/plan/synthese.pdf`, { headers: { Authorization: `Bearer ${s?.token ?? ''}` } })
+  if (!res.ok) throw new Error(`Erreur ${res.status}`)
+  return res.blob()
+}
+
 export async function getPlan() {
   if (USE_MOCK) return planMock(MOCK_PARAMS)
   const id = await scenarioActif()

@@ -292,3 +292,21 @@ def test_synthese_du_plan_en_markdown(client):
     assert "Zone exemple B" not in texte                               # hors périmètre
     assert client.get("/scenarios/1/plan/synthese", headers=entetes(client, Role.chauffeur)).status_code == 403
     assert client.get("/scenarios/99/plan/synthese", headers=h).status_code == 404
+
+
+def test_plan_de_gestion_en_pdf(client):
+    """D65 : le plan de gestion se télécharge en PDF, avec le même contenu que la synthèse."""
+    h = entetes(client)
+    r = client.get("/scenarios/1/plan/synthese.pdf", headers=h)
+    assert r.status_code == 200 and r.headers["content-type"] == "application/pdf"
+    assert r.content.startswith(b"%PDF") and "attachment" in r.headers["content-disposition"]
+    assert client.get("/scenarios/1/plan/synthese.pdf").status_code == 401
+
+
+def test_cout_mensuel_explique(client):
+    """D65 : le coût mensuel = (km × coût au km + journées de camion × coût par jour) × passages par mois."""
+    plan = client.get("/scenarios/1/plan", headers=entetes(client)).json()
+    i = plan["indicateurs"]
+    d = i["cout_detail"]
+    assert abs(d["cout_km_passage_xof"] + d["cout_jours_passage_xof"] - i["cout_total_xof"]) <= len(plan["tournees"])
+    assert abs(i["cout_total_xof"] * d["passages_par_mois"] - i["cout_mensuel_estime_xof"]) <= 0.01 * i["cout_mensuel_estime_xof"] + 1

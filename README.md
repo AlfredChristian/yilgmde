@@ -159,6 +159,26 @@ Pour aller plus loin : `CONTEXT.md` (vue d'ensemble et règles de cohérence), `
 - L'**export OpenStreetMap** ne contient que des étiquettes OSM (type de site, type de déchets, date), sans photo, ni contributeur, ni texte libre.
 - Verser ces données dans OpenStreetMap est un **import** : il faut l'annoncer et le faire valider par la communauté OSM du Burkina, avec une licence compatible ODbL.
 
+## Briques et licences
+
+Toutes les briques du code sont open source, sous des licences reconnues par l'OSI et compatibles avec la licence MIT du projet (relevées dans les paquets installés, novembre 2026). Les cartes sont écrites directement sur Leaflet (`frontend/src/carte/`, D65) : react-leaflet, sous licence Hippocratic 2.1 non reconnue par l'OSI, n'est plus utilisé.
+
+| Brique | Rôle | Licence |
+|---|---|---|
+| React, React DOM, React Router | interface | MIT |
+| Leaflet | cartes | BSD-2-Clause |
+| Vite, vite-plugin-pwa, @vitejs/plugin-react, @vitejs/plugin-basic-ssl, oxlint | construction, application installable, https local, contrôle du code | MIT |
+| Bricolage Grotesque, Figtree (@fontsource) | polices | OFL-1.1 |
+| FastAPI, Pydantic, PyJWT, PyYAML, pyproj, pytest | API, validation, jetons, configuration, projections, tests | MIT |
+| Uvicorn, httpx | serveur, client de test | BSD-3-Clause |
+| NumPy, pandas, SciPy, scikit-learn, Shapely, GeoPandas | calcul, données, itinéraires, regroupement, géométrie | BSD |
+| ReportLab | plan de gestion en PDF | BSD |
+| OR-Tools | optimisation des tournées | Apache-2.0 |
+| OpenCV, python-multipart, bcrypt | masquage des photos, envoi de fichiers, mots de passe | Apache-2.0 |
+| Modèle YuNet (OpenCV Zoo) | détection des visages | MIT |
+
+Données : OpenStreetMap (rues, fond de carte « Plan ») sous ODbL ; Google Open Buildings v3 sous CC BY 4.0 et ODbL ; découpage et population de l'INSD. Le fond « Satellite » vient du service World Imagery d'Esri : ce n'est pas une donnée ouverte, il est seulement affiché, avec son attribution, et peut être retiré sans rien perdre d'autre.
+
 ## Licence
 
 Code : **MIT** (voir `LICENSE`, décision D16). Réutilisable librement, y compris par d'autres communes.

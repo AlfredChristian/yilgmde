@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   MapContainer,
   CircleMarker,
   Popup,
   LayersControl,
   LayerGroup,
-} from 'react-leaflet'
+  useMap,
+} from '../carte'
 import FondDeCarte from './FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { getDepotoirs, getSignalements } from '../api/client'
@@ -23,7 +25,18 @@ function couleurSignalement(attendu = '') {
   return COULEURS_SIGNALEMENT.enAttente
 }
 
+// Depuis le suivi d'un signalement (/carte?depotoir=12) : la carte se centre sur ce dépotoir.
+function Viser({ lat, lon }) {
+  const map = useMap()
+  useEffect(() => {
+    map.flyTo([lat, lon], 17, { duration: 0.8 })
+  }, [map, lat, lon])
+  return null
+}
+
 export default function Carte() {
+  const [parametres] = useSearchParams()
+  const cible = Number(parametres.get('depotoir')) || null
   const [depotoirs, setDepotoirs] = useState([])
   const [signalements, setSignalements] = useState([])
   const [erreur, setErreur] = useState(null)
@@ -45,6 +58,10 @@ export default function Carte() {
         </div>
       )}
       <MapContainer center={CENTRE} zoom={ZOOM} style={{ height: '100%', width: '100%' }}>
+        {(() => {
+          const f = cible && depotoirs.find((x) => x.properties.id === cible)
+          return f ? <Viser lat={f.geometry.coordinates[1]} lon={f.geometry.coordinates[0]} /> : null
+        })()}
         <FondDeCarte>
           <LayersControl.Overlay checked name="Dépotoirs vérifiés">
             <LayerGroup>
@@ -61,7 +78,7 @@ export default function Carte() {
                       fillOpacity: 0.7,
                     }}
                   >
-                    <Popup>
+                    <Popup ouvert={p.id === cible}>
                       <strong>{p.legalite === 'officiel' ? 'Centre de collecte' : 'Dépotoir'} n°{p.id}</strong>
                       <br />
                       Statut : {p.statut}
