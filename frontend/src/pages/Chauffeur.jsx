@@ -77,9 +77,9 @@ export default function Chauffeur() {
   const prochain = tournee.arrets.find((a) => a.statut !== 'effectue')
 
   return (
-    <main className="chauffeur">
-      <section className="chauffeur-gauche">
-        <header className="chauffeur-tete">
+    <main className="terrain">
+      <section className="terrain-gauche">
+        <header className="terrain-tete">
           <h1>Ma tournée</h1>
           <ul className="puces">
             <li className="puce">{session.nom}</li>
@@ -87,14 +87,14 @@ export default function Chauffeur() {
             <li className="puce">{tournee.distance_km} km</li>
             <li className="puce">environ {Math.round(tournee.duree_min / 60 * 10) / 10} h</li>
           </ul>
-          <div className="chauffeur-progression" aria-label={`${faits} arrêts effectués sur ${total}`}>
-            <div className="chauffeur-barre"><span style={{ width: `${total ? (100 * faits) / total : 0}%` }} /></div>
+          <div className="terrain-progression" aria-label={`${faits} arrêts effectués sur ${total}`}>
+            <div className="terrain-barre"><span style={{ width: `${total ? (100 * faits) / total : 0}%` }} /></div>
             <strong>{faits} sur {total} arrêts effectués</strong>
           </div>
         </header>
 
-        <h2 className="chauffeur-sous-titre">Votre parcours du jour</h2>
-        <div className="chauffeur-carte">
+        <h2 className="terrain-sous-titre">Votre parcours du jour</h2>
+        <div className="terrain-carte">
           <MapContainer center={positions[0] ?? CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -117,15 +117,15 @@ export default function Chauffeur() {
             })}
           </MapContainer>
         </div>
-        <p className="chauffeur-legende">
-          <span><i className="chauffeur-pastille a-faire" /> À faire</span>
-          <span><i className="chauffeur-pastille fait" /> Effectué</span>
-          <span><i className="chauffeur-trait" /> Trajet par les rues</span>
+        <p className="terrain-legende">
+          <span><i className="terrain-pastille a-faire" /> À faire</span>
+          <span><i className="terrain-pastille fait" /> Effectué</span>
+          <span><i className="terrain-trait" /> Trajet par les rues</span>
         </p>
       </section>
 
-      <section className="chauffeur-droite" aria-labelledby="titre-arrets">
-        <div className="chauffeur-droite-tete">
+      <section className="terrain-droite" aria-labelledby="titre-arrets">
+        <div className="terrain-droite-tete">
           <h2 id="titre-arrets">Points de regroupement</h2>
           {prochain && <button className="btn-contour" onClick={() => setChoisi(prochain)}>Aller au prochain arrêt</button>}
         </div>
