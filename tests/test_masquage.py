@@ -174,3 +174,19 @@ def test_pas_de_fausse_plaque_sur_un_tas_de_dechets(config):
             cv2.ellipse(image, (int(rng.integers(0, 900)), int(rng.integers(0, 600))),
                         (int(rng.integers(5, 60)), int(rng.integers(5, 40))), int(rng.integers(0, 180)), 0, 360, couleur, -1)
         assert detecter(image, config)["plaques"] == []
+
+
+def test_zone_unie_n_est_pas_un_visage(monkeypatch):
+    """Vu sous Windows (OpenCV 4.14) : YuNet voyait un visage dans une image grise unie."""
+    class Detecteur:
+        def setInputSize(self, taille):
+            pass
+
+        def detect(self, image):
+            return 1, np.array([[2, 2, 28, 28] + [0] * 10 + [0.9]], np.float32)
+
+    monkeypatch.setitem(masquage._cache, "yunet-0.6", Detecteur())
+    unie = np.full((32, 32, 3), 180, np.uint8)
+    assert masquage._visages_yunet(unie, 0.6) == []
+    texture = np.random.default_rng(0).integers(0, 255, (32, 32, 3), dtype=np.uint8)
+    assert masquage._visages_yunet(texture, 0.6) == [(2, 2, 28, 28)]

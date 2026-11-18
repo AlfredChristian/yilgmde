@@ -18,10 +18,10 @@ pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="Node.js ab
 
 HARNAIS = """
 import fs from 'node:fs'
-import { Reseau } from '%(r)s/frontend/src/masquage/reseau.js'
-import { detecterVisages } from '%(r)s/frontend/src/masquage/visages.js'
-import { plaquesFondClair, plaquesParForme } from '%(r)s/frontend/src/masquage/plaques.js'
-import { flouterPixels } from '%(r)s/frontend/src/masquage/flou.js'
+import { Reseau } from '%(u)s/frontend/src/masquage/reseau.js'
+import { detecterVisages } from '%(u)s/frontend/src/masquage/visages.js'
+import { plaquesFondClair, plaquesParForme } from '%(u)s/frontend/src/masquage/plaques.js'
+import { flouterPixels } from '%(u)s/frontend/src/masquage/flou.js'
 const [, , fichier, w, h] = process.argv
 const W = +w, H = +h
 const rgba = new Uint8ClampedArray(fs.readFileSync(fichier))
@@ -48,7 +48,8 @@ console.log(JSON.stringify({ visages, plaques, fondClair }))
 
 def executer(image_bgr, tmp_path):
     h, w = image_bgr.shape[:2]
-    (tmp_path / "h.mjs").write_text(HARNAIS % {"r": RACINE.as_posix()})
+    # Sous Windows, Node n'importe un fichier que par une adresse file:///, pas par C:/…
+    (tmp_path / "h.mjs").write_text(HARNAIS % {"r": RACINE.as_posix(), "u": RACINE.as_uri()}, encoding="utf-8")
     rgba = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGBA)
     rgba.tofile(tmp_path / "img.rgba")
     sortie = subprocess.check_output(["node", str(tmp_path / "h.mjs"), str(tmp_path / "img.rgba"), str(w), str(h)])
