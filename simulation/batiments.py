@@ -76,6 +76,16 @@ def _dans_geometrie(lat: np.ndarray, lon: np.ndarray, geometrie: dict) -> np.nda
     return resultat
 
 
+def batiments_dans_zone(batiments: np.ndarray, geometrie: dict) -> np.ndarray:
+    """Bâtiments (lat, lon, surface) situés dans la zone, un par ligne."""
+    min_lat, min_lon, max_lat, max_lon = emprise(geometrie)
+    debut = int(np.searchsorted(batiments[:, 0], min_lat, side="left"))
+    fin = int(np.searchsorted(batiments[:, 0], max_lat, side="right"))
+    b = batiments[debut:fin]
+    b = b[(b[:, 1] >= min_lon) & (b[:, 1] <= max_lon)]
+    return b[_dans_geometrie(b[:, 0], b[:, 1], geometrie)] if len(b) else b
+
+
 def menages_dans_zone(batiments: np.ndarray, geometrie: dict, pas_m: float, max_paquets: int
                       ) -> tuple[list[tuple[float, float]], np.ndarray]:
     """Paquets de bâtiments de la zone : positions (lat, lon) et surface bâtie de chacun (m²).
@@ -84,12 +94,7 @@ def menages_dans_zone(batiments: np.ndarray, geometrie: dict, pas_m: float, max_
     ne pas dépasser `max_paquets`.
     """
     min_lat, min_lon, max_lat, max_lon = emprise(geometrie)
-    debut = int(np.searchsorted(batiments[:, 0], min_lat, side="left"))
-    fin = int(np.searchsorted(batiments[:, 0], max_lat, side="right"))
-    b = batiments[debut:fin]
-    b = b[(b[:, 1] >= min_lon) & (b[:, 1] <= max_lon)]
-    if len(b):
-        b = b[_dans_geometrie(b[:, 0], b[:, 1], geometrie)]
+    b = batiments_dans_zone(batiments, geometrie)
     if not len(b):
         return [], np.array([])
 

@@ -21,6 +21,8 @@
 
 - [x] D61 — Camion de la brigade animé sur sa carte (aller par les rues, travail sur place, retour)
 
+- [x] D62 — Simulation d'un quartier : ménages, précollecteurs en tricycle, apports volontaires, dépôts sauvages, camion
+
 **Socle**
 - [x] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
 - [x] Modèle de données SQLite + schémas Pydantic (P1)

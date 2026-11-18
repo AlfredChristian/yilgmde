@@ -240,3 +240,6 @@ input[type='checkbox'], input[type='radio'], input[type='range'] { accent-color:
 .icone-camion-corps.vers-gauche { transform: scaleX(-1); }
 .icone-camion-legende { display: inline-block; vertical-align: middle; line-height: 0; margin-right: 6px; }
 @media (prefers-reduced-motion: reduce) { .icone-camion-corps { transition: none; } }
+.icone-quartier { background: none; border: 0; }
+.icone-quartier-corps { display: block; line-height: 0; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, .25)); }
+.icone-quartier-corps.vers-gauche { transform: scaleX(-1); }

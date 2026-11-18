@@ -664,6 +664,70 @@ export async function getSuiviDepotoirs() {
   return appelAuth('/admin/suivi-depotoirs')
 }
 
+// Simulation d'un quartier (admin, D62).
+export async function getSecteursQuartier() {
+  if (USE_MOCK) return [{ id: 1, nom: 'Secteur 1', population: 42000, points: 6 }]
+  return appelAuth('/admin/simulation-quartier/secteurs')
+}
+
+export async function getSimulationQuartier(zoneId, pointId = null, graine = 1) {
+  if (!USE_MOCK) {
+    const q = new URLSearchParams({ zone_id: zoneId, graine })
+    if (pointId != null) q.set('point_id', pointId)
+    return appelAuth(`/admin/simulation-quartier?${q}`)
+  }
+  // Démonstration hors serveur : un petit quartier en grille, trajets en ligne droite.
+  let x = graine * 9301 + 49297
+  const hasard = () => ((x = (x * 9301 + 49297) % 233280) / 233280)
+  const c = [12.371, -1.52], d = 0.004
+  const points = [{ id: 1, latitude: c[0], longitude: c[1], vide_min: null, dans_le_secteur: true }, { id: 2, latitude: c[0] + 0.0025, longitude: c[1] - 0.002, vide_min: null, dans_le_secteur: true }]
+  const sauvage = { id: 'v1', latitude: c[0] - 0.0032, longitude: c[1] + 0.003, existant: false, depotoir_id: null }
+  const maisons = Array.from({ length: 60 }, (_, i) => {
+    const la = c[0] + (hasard() - 0.5) * d * 2, lo = c[1] + (hasard() - 0.5) * d * 2
+    const r = hasard(), mode = r < 0.3 ? 'abonne' : r < 0.7 ? 'apport' : 'sauvage'
+    const p = Math.abs(la - points[0].latitude) + Math.abs(lo - points[0].longitude) < Math.abs(la - points[1].latitude) + Math.abs(lo - points[1].longitude) ? points[0] : points[1]
+    return { id: i + 1, latitude: la, longitude: lo, mode, point_id: p.id, sortie_min: 360 + hasard() * 90, ...(mode === 'sauvage' ? { sauvage_id: 'v1' } : {}) }
+  })
+  const seg = (a, b, t0, v) => { const l = Math.hypot(a[0] - b[0], a[1] - b[1]) * 111000; return { t0, t1: t0 + Math.max(0.5, l / v), trace: [a, b] } }
+  const pietons = maisons.filter((m) => m.mode !== 'abonne').map((m) => {
+    const cible = m.mode === 'apport' ? points.find((p) => p.id === m.point_id) : sauvage
+    const t0 = Math.max(m.sortie_min, 390 + hasard() * 150)
+    const aller = seg([m.latitude, m.longitude], [cible.latitude, cible.longitude], t0, 67)
+    const depose = { t0: aller.t1, t1: aller.t1 + 1, trace: [[cible.latitude, cible.longitude]] }
+    m.depart_min = t0; m.depot_min = depose.t0
+    return { maison_id: m.id, mode: m.mode, segments: [aller, depose, seg([cible.latitude, cible.longitude], [m.latitude, m.longitude], depose.t1, 67)] }
+  })
+  const tricycles = points.map((p, k) => {
+    const groupe = maisons.filter((m) => m.mode === 'abonne' && m.point_id === p.id)
+    let t = 420 + 4 * k, ici = [p.latitude, p.longitude]
+    const segments = [], arrets = []
+    for (const m of groupe) {
+      const s1 = seg(ici, [m.latitude, m.longitude], t, 133); segments.push(s1); t = Math.max(s1.t1, m.sortie_min) + 1.5
+      segments.push({ t0: s1.t1, t1: t, trace: [[m.latitude, m.longitude]] }); m.collecte_min = t; arrets.push({ maison_id: m.id, t }); ici = [m.latitude, m.longitude]
+    }
+    const s2 = seg(ici, [p.latitude, p.longitude], t, 133); segments.push(s2)
+    segments.push({ t0: s2.t1, t1: s2.t1 + 6, trace: [[p.latitude, p.longitude]] })
+    return { id: k + 1, point_id: p.id, segments, arrets, vidage_min: s2.t1 + 6, poubelles: groupe.length }
+  })
+  const camions = points.map((p) => {
+    const arrivee = Math.max(...tricycles.filter((x) => x.point_id === p.id).map((x) => x.vidage_min), ...pietons.filter((x) => x.mode === 'apport' && maisons[x.maison_id - 1].point_id === p.id).map((x) => x.segments[1].t0)) + 30
+    p.vide_min = arrivee + 6
+    const loin = [p.latitude + 0.01, p.longitude + 0.012]
+    return { point_id: p.id, vide_min: arrivee + 6, segments: [{ t0: arrivee - 6, t1: arrivee, trace: [loin, [p.latitude, p.longitude]] }, { t0: arrivee, t1: arrivee + 6, trace: [[p.latitude, p.longitude]] }, { t0: arrivee + 6, t1: arrivee + 12, trace: [[p.latitude, p.longitude], loin] }] }
+  })
+  const n = (mode) => maisons.filter((m) => m.mode === mode).length
+  const cercle = { type: 'Polygon', coordinates: [Array.from({ length: 33 }, (_, k) => [c[1] + 0.0047 * Math.cos((k / 32) * 2 * Math.PI), c[0] + 0.0045 * Math.sin((k / 32) * 2 * Math.PI)])] }
+  return {
+    zone: { id: zoneId, nom: 'Secteur 1', population: 900, geometrie: cercle }, secteur: { id: zoneId, nom: 'Secteur 1', population: 42000, geometrie: cercle },
+    centre: { point_id: 1, latitude: c[0], longitude: c[1], rayon_m: 450 }, points_du_secteur: points, graine,
+    horaire: { debut: 345, fin: Math.ceil(Math.max(...camions.map((x) => x.segments[2].t1), ...pietons.map((x) => x.segments[2].t1)) + 10) },
+    echelle: { maisons: maisons.length, batiments_du_quartier: 2400, menages_par_maison: 6, kg_par_maison: 21.6 },
+    regles: { taux_abonnement: 0.3, prob_apport: 0.6, distance_max_a_pied_m: 300, sur_les_voies: false },
+    maisons, points, sauvages: [sauvage], tricycles, pietons, camions,
+    resume: { abonnes: n('abonne'), apport_volontaire: n('apport'), depot_sauvage: n('sauvage'), kg_precollectes: n('abonne') * 21.6, kg_apportes: n('apport') * 21.6, kg_sauvages: n('sauvage') * 21.6, tricycles: tricycles.length },
+  }
+}
+
 // ---- Comptes (admin, D49) ----
 let MOCK_UTILISATEURS = [
   { id: 1, nom: 'Administrateur', email: 'admin@test', role: 'admin', actif: true },

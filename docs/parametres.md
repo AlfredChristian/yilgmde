@@ -146,6 +146,25 @@ Les sources sont détaillées dans `data/ouaga/LISEZMOI.md`. Un test (`tests/tes
 | `simulation.prob_tentative_depot_surveille` | Tentative de dépôt sur un site surveillé, par jour | 0–1 | 0,1 |  | [H] |
 | `simulation.jours_par_mois` | Répartition du budget mensuel | jours | 30 |  | technique |
 | `simulation.max_echantillons_couverture` | Borne le calcul de la couverture à pied | points | 400 |  | technique |
+## Simulation d'un quartier (D62)
+
+Journée animée d'un secteur : les maisons sont réelles (Open Buildings), les gestes des ménages et les tournées des tricycles sont simulés avec les règles du simulateur (`taux_abonnement_precollecteurs`, `prob_apport_volontaire`, `distance_max_a_pied_m`).
+
+| Paramètre | Rôle | Unité | Défaut | Ouaga | Statut |
+|---|---|---|---|---|---|
+| `quartier.rayon_m` | Le quartier animé : disque autour d'un point de regroupement du secteur (par défaut le plus habité) | m | 450 |  | [H] |
+| `quartier.maisons_affichees` | Maisons tirées parmi les bâtiments du secteur, au prorata de leur surface ; chacune représente plusieurs ménages | maisons | 150 |  | technique |
+| `quartier.maisons_par_tricycle` | Poubelles ramassées par tournée de tricycle | maisons | 20 |  | [H] |
+| `quartier.vitesse_tricycle_kmh` | Vitesse d'un tricycle de précollecte dans les rues | km/h | 8 |  | [H] |
+| `quartier.vitesse_a_pied_kmh` | Vitesse d'un habitant qui porte ses déchets | km/h | 4 |  | [H] |
+| `quartier.arret_maison_min` | Arrêt du tricycle devant une maison | min | 1,5 |  | [H] |
+| `quartier.vidage_min` | Vidage d'un tricycle au point, ou du point dans le camion | min | 6 |  | [H] |
+| `quartier.sortie_poubelles` | Heures où les ménages sortent leur poubelle | h | 6,0–7,5 |  | [H] |
+| `quartier.depart_tricycles` | Départ des précollecteurs | h | 7,0 |  | [H] |
+| `quartier.heures_apport` | Heures où les non-abonnés portent eux-mêmes leurs déchets | h | 6,5–9,0 |  | [H] |
+| `quartier.delai_camion_min` | Passage du camion après le dernier apport au point | min | 30 |  | [H] |
+| `quartier.approche_camion_m` | Part du trajet du camion montrée dans le secteur | m | 2 500 |  | technique |
+
 ## Périmètre d'un plan (livrable 3)
 
 | Paramètre | Rôle | Unité | Défaut | Statut |

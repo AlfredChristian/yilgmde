@@ -1,0 +1,19 @@
+/* Simulation d'un quartier (D62) */
+.quartier .suivi-corps { grid-template-columns: minmax(0, 1fr) 320px; }
+.quartier-choix { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--gris); }
+.quartier-choix select { font: inherit; color: #1d2b24; padding: 7px 10px; border: 1px solid var(--bordure); border-radius: 10px; background: white; }
+.quartier-horloge { min-width: 58px; font-size: 1.25rem; color: var(--vert-fonce, #0b3d2a); font-variant-numeric: tabular-nums; }
+.quartier-panneau { display: grid; align-content: start; gap: 12px; padding: 14px; background: white; border: 1px solid var(--bordure); border-radius: 14px; overflow: auto; }
+.quartier-lieu { margin: 0; font-size: .8rem; line-height: 1.45; color: #34443b; }
+.quartier-chiffres { display: grid; gap: 8px; margin: 0; }
+.quartier-chiffres div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 8px 10px; background: #f4f6f3; border-radius: 10px; }
+.quartier-chiffres dt { font-size: .8rem; color: var(--gris); }
+.quartier-chiffres dd { margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--vert-fonce, #0b3d2a); font-variant-numeric: tabular-nums; }
+.quartier-chiffres dd small { margin-left: 4px; font-size: .72rem; font-weight: 600; color: var(--gris); }
+.quartier-chiffres dd.rouge { color: var(--rouge); }
+.quartier-panneau h3 { margin: 4px 0 0; font-size: .85rem; }
+.quartier-parts { list-style: none; display: grid; gap: 6px; margin: 0; padding: 0; font-size: .8rem; line-height: 1.4; }
+.quartier-parts li { display: grid; grid-template-columns: 10px 1fr; gap: 8px; align-items: baseline; }
+.quartier-parts i { width: 10px; height: 10px; border-radius: 50%; }
+.quartier-regles { margin: 0; font-size: .72rem; line-height: 1.45; color: var(--gris); }
+@media (max-width: 900px) { .quartier .suivi-corps { grid-template-columns: 1fr; } }
