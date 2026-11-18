@@ -94,6 +94,7 @@ def _parametres(config: dict) -> dict:
     }
 
 
+COTE_MIN_YUNET = 48          # px : en dessous, pas de recherche de visage
 CONTRASTE_MIN_VISAGE = 6.0   # écart type des gris en dessous duquel une zone est jugée unie
 
 
@@ -102,6 +103,10 @@ def _visages_yunet(image, seuil: float) -> list[tuple[int, int, int, int]] | Non
     if not MODELE_YUNET.exists() or not hasattr(cv2, "FaceDetectorYN"):
         return None
     h, w = image.shape[:2]
+    if min(h, w) < COTE_MIN_YUNET:
+        # Trop petite pour contenir un visage lisible ; sur une si petite entrée, YuNet peut
+        # renvoyer des boîtes infinies (vu sous Windows avec OpenCV 4.14).
+        return []
     cle = f"yunet-{seuil}"
     if cle not in _cache:
         _cache[cle] = cv2.FaceDetectorYN.create(str(MODELE_YUNET), "", (w, h), seuil, 0.3, 5000)
@@ -113,8 +118,13 @@ def _visages_yunet(image, seuil: float) -> list[tuple[int, int, int, int]] | Non
     gris = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image
     sortie = []
     for v in visages:
-        x, y, vw, vh = (int(v[0]), int(v[1]), int(v[2]), int(v[3]))
-        zone = gris[max(0, y):max(0, y + vh), max(0, x):max(0, x + vw)]
+        if not np.all(np.isfinite(v[:4])) or v[2] <= 0 or v[3] <= 0:
+            continue                       # boîte invalide renvoyée par le détecteur
+        x, y = max(0, int(v[0])), max(0, int(v[1]))
+        vw, vh = min(w - x, int(v[2])), min(h - y, int(v[3]))
+        if vw <= 0 or vh <= 0:
+            continue
+        zone = gris[y:y + vh, x:x + vw]
         # Un vrai visage a du relief (yeux, nez, bouche). Certaines versions d'OpenCV (vu sous
         # Windows, 4.14) voient un « visage » dans une zone unie : on l'écarte.
         if zone.size and float(zone.std()) >= CONTRASTE_MIN_VISAGE:
