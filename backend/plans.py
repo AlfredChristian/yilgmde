@@ -62,15 +62,22 @@ def normaliser_parametres(parametres: dict) -> dict:
 
 
 def fusionner_parametres(anciens: dict, nouveaux: dict) -> dict:
-    """Fusion partielle ; `zones_ajoutees` s'**ajoute** aux zones déjà ajoutées (D4)."""
+    """Fusion partielle ; `zones_ajoutees` s'**ajoute** aux zones déjà ajoutées (D4) ;
+    `retirer_zones` (positions dans la liste, à partir de 0) retire des quartiers ajoutés (D56)."""
     nouveaux = normaliser_parametres(nouveaux)
     zones = list(anciens.get("zones_ajoutees") or [])
+    retirer = nouveaux.pop("retirer_zones", None) or []
+    if not isinstance(retirer, list) or not all(isinstance(i, int) for i in retirer):
+        raise ConfigError("retirer_zones : liste de positions entières attendue")
+    zones = [z for i, z in enumerate(zones) if i not in set(retirer)]
     for z in nouveaux.pop("zones_ajoutees", None) or []:
         if z not in zones:
             zones.append(z)
     resultat = fusion_profonde(anciens, nouveaux)
     if zones:
         resultat["zones_ajoutees"] = zones
+    else:
+        resultat.pop("zones_ajoutees", None)
     return resultat
 
 

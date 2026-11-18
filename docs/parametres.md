@@ -42,6 +42,7 @@ Les sources sont détaillées dans `data/ouaga/LISEZMOI.md`. Un test (`tests/tes
 |---|---|---|---|---|---|
 | `population.production_dechets_kg_hab_jour` | Déchets produits par habitant (demande, C1) | kg/hab/jour | 0,5 | 0,60 | source : DGEP (cité par *Sidwaya*) ; mairie 0,57 |
 | `population.taux_abonnement_precollecteurs` | Part des ménages abonnés à un pré-collecteur | 0–1 | 0,3 | 0,3 | [H] |
+| `population.evolution_pct` | Scénario : évolution de la population de toutes les zones (exode, croissance) ; la demande suit | % | 0 | 0 | levier de scénario |
 | `population.habitants_par_menage` | Taille moyenne d'un ménage | habitants | 6 | | informatif (pas encore utilisé) |
 | `saisons.seche.coef_production` | Multiplie la production en saison sèche | × | 1,0 | | référence |
 | `saisons.seche.coef_vitesse_camion` | Multiplie la vitesse des camions | × | 1,0 | | référence |
