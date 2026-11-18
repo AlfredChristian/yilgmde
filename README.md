@@ -192,4 +192,10 @@ Données (signalements publiés, jeu de démonstration `data/ouaga/`, données d
 
 ## Équipe
 
-Christian (front-end), Faissal (back-end, moteur), Cramer (docs, données, présentation).
+Équipe **Harmattan**, élèves ingénieurs en 3e année à l'École polytechnique de Ouagadougou :
+
+- **ZAGRE Alfred Christian**, génie informatique, option génie logiciel : interface et cartes ;
+- **CISSÉ Abdoul-Faïsal**, génie informatique, option intelligence artificielle et science des données : API, moteur de calcul et simulation ;
+- **BADIEL Cramer**, génie des télécommunications : données, documentation, tests de terrain et présentation.
+
+Projet réalisé pour la finale du Hackathon des Universités, édition 2026 (Challenge 01, « Assainissement de Ouaga »).
