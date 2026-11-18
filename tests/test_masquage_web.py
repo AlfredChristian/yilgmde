@@ -20,7 +20,7 @@ HARNAIS = """
 import fs from 'node:fs'
 import { Reseau } from '%(r)s/frontend/src/masquage/reseau.js'
 import { detecterVisages } from '%(r)s/frontend/src/masquage/visages.js'
-import { plaquesParForme } from '%(r)s/frontend/src/masquage/plaques.js'
+import { plaquesFondClair, plaquesParForme } from '%(r)s/frontend/src/masquage/plaques.js'
 import { flouterPixels } from '%(r)s/frontend/src/masquage/flou.js'
 const [, , fichier, w, h] = process.argv
 const W = +w, H = +h
@@ -32,6 +32,7 @@ const visages = detecterVisages(reseau, { width: W, height: H, data: rgba }, 0.6
 const gris = new Uint8Array(W * H)
 for (let i = 0; i < W * H; i++) gris[i] = Math.round(0.299 * rgba[i * 4] + 0.587 * rgba[i * 4 + 1] + 0.114 * rgba[i * 4 + 2])
 const plaques = plaquesParForme(gris, W, H)
+const fondClair = plaquesFondClair(gris, W, H)
 for (const [x, y, zw, zh] of visages) {
   const x0 = Math.max(0, Math.floor(x - zw / 4)), y0 = Math.max(0, Math.floor(y - zh / 4))
   const x1 = Math.min(W, Math.ceil(x + zw * 1.25)), y1 = Math.min(H, Math.ceil(y + zh * 1.25))
@@ -41,7 +42,7 @@ for (const [x, y, zw, zh] of visages) {
   for (let j = 0; j < y1 - y0; j++) rgba.set(zone.subarray(j * (x1 - x0) * 4, (j + 1) * (x1 - x0) * 4), ((y0 + j) * W + x0) * 4)
 }
 fs.writeFileSync(fichier + '.floue', rgba)
-console.log(JSON.stringify({ visages, plaques }))
+console.log(JSON.stringify({ visages, plaques, fondClair }))
 """
 
 
@@ -78,3 +79,14 @@ def test_meme_plaque_que_le_serveur(tmp_path):
     js, _ = executer(image, tmp_path)
     serveur = masquage._plaques_par_forme(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
     assert [tuple(p) for p in js["plaques"]] == [tuple(int(v) for v in p) for p in serveur]
+
+
+def test_meme_plaque_de_moto_que_le_serveur(tmp_path):
+    sys.path.insert(0, str(Path(__file__).parent))
+    from test_masquage import _photo_avec_plaque_moto
+
+    image = _photo_avec_plaque_moto()
+    js, _ = executer(image, tmp_path)
+    serveur = masquage._plaques_fond_clair(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+    assert len(serveur) == 1
+    assert [tuple(p) for p in js["fondClair"]] == serveur

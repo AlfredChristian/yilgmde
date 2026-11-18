@@ -14,7 +14,8 @@ Méthode (OpenCV, sans service externe ; D57) :
      230 Ko dans `backend/modeles/`, licence MIT), qui voit aussi les visages de trois
      quarts, petits ou dans l'ombre. Sans le modèle, retour aux cascades de Haar de
      face et de profil ;
-   - plaques : **recherche par la forme**, valable quel que soit le pays : un rectangle
+   - plaques : **recherche par la forme**, valable quel que soit le pays (et, D59, un fond
+     clair portant des caractères sur une ou deux lignes, comme les plaques de moto jaunes) : un rectangle
      plus clair que son entourage, 2 à 6,5 fois plus large que haut, qui contient une
      rangée de 4 à 12 caractères sombres de même hauteur (2 à 10 fois plus large que haute) ; complétée par les cascades
      `russian_plate_number` et `license_plate_rus_16stages` ;
@@ -143,6 +144,53 @@ def _plaques_par_forme(gris) -> list[tuple[int, int, int, int]]:
     return plaques
 
 
+def _plaques_fond_clair(gris) -> list[tuple[int, int, int, int]]:
+    """Plaques vues comme un fond clair (jaune, blanc) plus lumineux que leur entourage,
+    à peu près rectangulaire, portant 4 à 16 caractères sombres sur **une ou deux lignes**.
+    Couvre les plaques de moto burkinabè (jaunes, deux lignes, presque carrées) que la
+    recherche par rangée unique ne voit pas (D59)."""
+    h, w = gris.shape[:2]
+    k = max(15, (w // 20) | 1)
+    fond = cv2.blur(gris, (k * 3, k * 3))
+    clair = ((gris.astype(np.int16) - fond > 25) & (gris > 110)).astype(np.uint8)
+    m = max(3, (w // 100) | 1)
+    clair = cv2.morphologyEx(clair, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (m, m)))
+    n, etiquettes, stats, _ = cv2.connectedComponentsWithStats(clair)
+    plaques = []
+    for i in range(1, n):
+        x, y, cw, ch, aire = (int(v) for v in stats[i])
+        if not (0.0005 * w * h <= aire <= 0.08 * w * h and 0.8 <= cw / ch <= 5 and aire >= 0.5 * cw * ch and ch >= 12):
+            continue
+        region = gris[y:y + ch, x:x + cw]
+        # Seul l'intérieur de la plaque compte (une plaque penchée laisse des coins sombres dans sa boîte).
+        pts = np.column_stack(np.nonzero(etiquettes[y:y + ch, x:x + cw] == i))[:, ::-1].astype(np.int32)
+        coque = np.zeros((ch, cw), np.uint8)
+        cv2.fillConvexPoly(coque, cv2.convexHull(pts), 1)
+        coque = cv2.erode(coque, np.ones((3, 3), np.uint8), iterations=2)
+        dedans = region[coque > 0]
+        if dedans.size < 20:
+            continue
+        seuil, _ = cv2.threshold(dedans.reshape(-1, 1), 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        encre = ((region <= seuil) & (coque > 0)).astype(np.uint8)
+        nn, _, s2, c2 = cv2.connectedComponentsWithStats(encre)
+        caracteres = sorted(
+            ((s2[j], c2[j]) for j in range(1, nn)
+             if 0.15 * ch <= s2[j][3] <= 0.85 * ch and s2[j][2] <= 0.35 * cw and s2[j][4] >= 6),
+            key=lambda t: t[1][1])
+        rangees = []          # caractères de même hauteur, centres alignés
+        for st, centre in caracteres:
+            for r in rangees:
+                if abs(centre[1] - r["y"]) <= 0.5 * r["h"] and 0.6 <= st[3] / r["h"] <= 1.6:
+                    r["n"] += 1
+                    break
+            else:
+                rangees.append({"y": centre[1], "h": int(st[3]), "n": 1})
+        bonnes = [r for r in rangees if r["n"] >= 3]
+        if 1 <= len(bonnes) <= 2 and 4 <= sum(r["n"] for r in bonnes) <= 16:
+            plaques.append((x, y, cw, ch))
+    return plaques
+
+
 def _detecter(gris, cascades, facteur, voisins, taille_min, miroir=False) -> list[tuple[int, int, int, int]]:
     zones = []
     largeur = gris.shape[1]
@@ -177,7 +225,8 @@ def detecter(image, config: dict) -> dict[str, list[tuple[int, int, int, int]]]:
     else:
         visages = yunet
     gris_brut = cv2.cvtColor(petite, cv2.COLOR_BGR2GRAY)
-    plaques = _detecter(gris, CASCADES_PLAQUES, p["facteur"], p["voisins_plaque"], taille_min) + _plaques_par_forme(gris_brut)
+    plaques = _detecter(gris, CASCADES_PLAQUES, p["facteur"], p["voisins_plaque"], taille_min) + _plaques_par_forme(gris_brut) \
+        + _plaques_fond_clair(gris_brut)
     return {"visages": remettre(visages), "plaques": remettre(plaques)}
 
 

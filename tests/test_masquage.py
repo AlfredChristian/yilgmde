@@ -118,6 +118,32 @@ def test_plaque_trouvee_par_sa_forme_quel_que_soit_le_pays(config):
     assert r.plaques >= 1
 
 
+def _photo_avec_plaque_moto(angle=8.0):
+    """Plaque de moto burkinabè : fond jaune, deux lignes, presque carrée, un peu penchée."""
+    rng = np.random.default_rng(5)
+    fond = rng.normal(70, 20, (600, 900, 3)).clip(0, 255).astype(np.uint8)
+    plaque = np.full((120, 150, 3), (40, 205, 235), np.uint8)          # jaune (BGR)
+    cv2.putText(plaque, "4562", (18, 52), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (20, 20, 20), 4)
+    cv2.putText(plaque, "4012", (18, 108), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (20, 20, 20), 4)
+    rot = cv2.getRotationMatrix2D((75, 60), angle, 1.0)
+    masque = cv2.warpAffine(np.full((120, 150), 255, np.uint8), rot, (150, 120))
+    plaque = cv2.warpAffine(plaque, rot, (150, 120))
+    zone = fond[380:500, 100:250]
+    zone[masque > 0] = plaque[masque > 0]
+    return fond
+
+
+def test_plaque_de_moto_jaune_sur_deux_lignes(config):
+    """D59 : sur une vraie photo, la recherche par rangée unique ne voit pas ces plaques presque carrées."""
+    image = _photo_avec_plaque_moto()
+    gris = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    zones = masquage._plaques_fond_clair(gris)
+    assert len(zones) == 1
+    x, y, w, h = zones[0]
+    assert x <= 110 and x + w >= 240 and y <= 390 and y + h >= 490       # toute la plaque est couverte
+    assert masquer_photo(cv2.imencode(".png", image)[1].tobytes(), config).plaques >= 1
+
+
 def test_pas_de_fausse_plaque_sur_un_tas_de_dechets(config):
     rng = np.random.default_rng(7)
     for _ in range(10):

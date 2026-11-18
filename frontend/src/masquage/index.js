@@ -67,14 +67,14 @@ export async function masquerPhoto(fichier) {
   const e = Math.min(1, COTE_MAX / Math.max(bitmap.width, bitmap.height))
   const W = Math.round(bitmap.width * e), H = Math.round(bitmap.height * e)
   const grande = toile(W, H)
-  const ctx = grande.getContext('2d')
+  const ctx = grande.getContext('2d', { willReadFrequently: true })
   ctx.drawImage(bitmap, 0, 0, W, H)
   bitmap.close?.()
 
   const d = Math.min(1, COTE_DETECTION / Math.max(W, H))
   const pw = Math.max(1, Math.round(W * d)), ph = Math.max(1, Math.round(H * d))
   const petite = toile(pw, ph)
-  const pctx = petite.getContext('2d')
+  const pctx = petite.getContext('2d', { willReadFrequently: true })
   pctx.drawImage(grande, 0, 0, pw, ph)
   const resultat = await detecter(pctx.getImageData(0, 0, pw, ph))
 
