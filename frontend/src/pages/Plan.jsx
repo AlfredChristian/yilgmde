@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet'
+import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { activerScenario, affecterTournee, comparerScenarios, creerScenario, getArrondissements, getParametres, getPlan, getScenarios, getUtilisateurs, majParametres, simulerScenario } from '../api/client'
 import './Plan.css'
 import SuiviFlotte from '../components/SuiviFlotte'
+import Affectations from '../components/Affectations'
 
 const CENTRE = [12.3714, -1.5197]
 const COULEURS = ['#1b6b4a', '#f4b942', '#7b2cbf', '#0077b6', '#d62828']
@@ -41,6 +43,37 @@ function valeurIndicateur(cle, n, ecart = false) {
   if (n == null) return '-'
   if (cle.endsWith('_kg')) return fmt(n / 1000)
   return fmtNombre(n) + (cle.endsWith('_pct') ? (ecart ? ' pts' : ' %') : '')
+}
+
+// Champ numérique saisi librement : la valeur n'est appliquée (et le plan recalculé) qu'avec
+// Entrée ou en quittant le champ. Les espaces sont acceptés (« 180 000 000 »).
+function ChampNombre({ valeur, min, max, onValider }) {
+  const [texte, setTexte] = useState(null)        // null : on affiche la valeur du plan
+  const affiche = texte ?? fmt(valeur)
+  const invalide = texte != null && !/^\d+$/.test(texte.replace(/[\s\u202f\u00a0]/g, ''))
+
+  function valider() {
+    if (texte == null) return
+    const n = Number(texte.replace(/[\s\u202f\u00a0]/g, ''))
+    setTexte(null)
+    if (!Number.isFinite(n) || texte.trim() === '') return
+    const borne = Math.min(max ?? n, Math.max(min, Math.round(n)))
+    if (borne !== valeur) onValider(borne)
+  }
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      className={invalide ? 'champ-invalide' : ''}
+      value={affiche}
+      onFocus={(e) => e.target.select()}
+      onChange={(e) => setTexte(e.target.value)}
+      onBlur={valider}
+      onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); if (e.key === 'Escape') { setTexte(null); e.currentTarget.blur() } }}
+      aria-invalid={invalide}
+    />
+  )
 }
 
 // Recadre la carte sur les points du plan quand le perimetre change.
@@ -90,9 +123,8 @@ export default function Plan() {
   const [scenarioCompare, setScenarioCompare] = useState('')
   const [nomVariante, setNomVariante] = useState('')
   const [utilisateurs, setUtilisateurs] = useState([])
-  const [affectations, setAffectations] = useState({})
   const [flotteOuverte, setFlotteOuverte] = useState(false)
-  const [affectationEnCours, setAffectationEnCours] = useState(null)
+  const [vue, setVue] = useState('carte')     // 'carte' ou 'affectations' dans le panneau de droite
   const delai = useRef(null)
 
   useEffect(() => {
@@ -108,21 +140,25 @@ export default function Plan() {
     getArrondissements().then(setArrondissements).catch(() => {})
   }, [])
 
+  // Seule la réponse du dernier changement est affichée (un calcul plus ancien peut finir après).
+  const dernierAppel = useRef(0)
   function changer(cle, valeur) {
     setParams((p) => ({ ...p, [cle]: valeur }))
     clearTimeout(delai.current)
     delai.current = setTimeout(async () => {
+      const appel = ++dernierAppel.current
       setCalcul(true)
       setErreur(null)
       const debut = performance.now()
       try {
         const nouveau = await majParametres({ [cle]: valeur })
+        if (appel !== dernierAppel.current) return
         setPlan(nouveau)
         setDernierMs(Math.round(performance.now() - debut))
       } catch (e) {
-        setErreur(`Recalcul impossible : ${e.message}`)
+        if (appel === dernierAppel.current) setErreur(`Recalcul impossible : ${e.message}`)
       } finally {
-        setCalcul(false)
+        if (appel === dernierAppel.current) setCalcul(false)
       }
     }, 300)
   }
@@ -200,21 +236,16 @@ export default function Plan() {
   const ind = plan.indicateurs
   const actif = scenarios.find((s) => s.actif)
   const resume = simulation?.resume
-  const chauffeurs = utilisateurs.filter((u) => u.role === 'chauffeur')
-  const brigades = utilisateurs.filter((u) => u.role === 'laabal')
 
-  async function affecter(tournee, utilisateurId) {
-    if (!utilisateurId) return
-    setAffectationEnCours(tournee.id)
+  // Utilisée par l'écran des affectations : lève l'erreur pour qu'il arrête la série.
+  async function affecterSimple(tournee, utilisateurId) {
     setErreur(null)
     try {
       const resultat = await affecterTournee(tournee.id, Number(utilisateurId))
       setPlan((courant) => ({ ...courant, tournees: courant.tournees.map((t) => t.id === tournee.id ? { ...t, affectee_a: resultat.affectee_a } : t) }))
-      setAffectations((courant) => ({ ...courant, [tournee.id]: '' }))
     } catch (e) {
       setErreur(`Affectation impossible : ${e.message}`)
-    } finally {
-      setAffectationEnCours(null)
+      throw e
     }
   }
 
@@ -247,10 +278,11 @@ export default function Plan() {
                 ) : d.type === 'bool' ? (
                   <input type="checkbox" checked={!!params[d.cle]} onChange={(e) => changer(d.cle, e.target.checked)} />
                 ) : (
-                  <input
-                    type="number" min={d.min} max={d.cle === 'camions_en_panne' ? params.nb_camions : d.max} step={d.pas ?? 1}
-                    value={params[d.cle] ?? 0}
-                    onChange={(e) => changer(d.cle, Number(e.target.value))}
+                  <ChampNombre
+                    valeur={params[d.cle] ?? 0}
+                    min={d.min ?? 0}
+                    max={d.cle === 'camions_en_panne' ? params.nb_camions : d.max}
+                    onValider={(v) => changer(d.cle, v)}
                   />
                 )}
               </label>
@@ -260,7 +292,7 @@ export default function Plan() {
 
         {params.arrondissement > 0 && (
           <p className="plan-limite">
-            <strong>Hypothèse de démonstration :</strong> ce plan d’arrondissement peut mobiliser toute la flotte communale.
+            <strong>Hypothèse :</strong> ce plan d’arrondissement peut mobiliser toute la flotte communale.
             L’affectation durable d’une part de flotte par arrondissement reste à modéliser.
           </p>
         )}
@@ -381,37 +413,25 @@ export default function Plan() {
 
         <section className="carte plan-bloc">
           <div>
-            <div className="plan-section-entete"><h2 className="carte-titre">Affecter les tournées</h2><button className="btn-contour plan-flotte-bouton" onClick={() => setFlotteOuverte(true)}>Suivi de la flotte</button></div>
-            {plan.tournees.length === 0 && <p className="carte-texte">Aucune tournée à affecter.</p>}
-            {plan.tournees.map((tournee) => {
-              const candidats = tournee.type === 'collecte' ? chauffeurs : brigades
-              const affecte = utilisateurs.find((u) => u.id === tournee.affectee_a)
-              return (
-                <div className="plan-affectation" key={tournee.id}>
-                  <strong>{tournee.type === 'collecte' ? `${tournee.camion_id}, jour ${tournee.jour ?? 1}` : `Laabal, brigade ${tournee.brigade ?? 1}`}</strong>
-                  <small>{affecte ? `Affectée à ${affecte.nom}` : 'Non affectée'}</small>
-                  <div>
-                    <select value={affectations[tournee.id] ?? ''} onChange={(e) => setAffectations((courant) => ({ ...courant, [tournee.id]: e.target.value }))}>
-                      <option value="">{candidats.length ? 'Choisir un agent' : `Aucun ${tournee.type === 'collecte' ? 'chauffeur' : 'agent Laabal'} actif`}</option>
-                      {candidats.map((u) => <option key={u.id} value={u.id}>{u.nom}</option>)}
-                    </select>
-                    <button className="btn-contour" disabled={affectationEnCours === tournee.id || !affectations[tournee.id]} onClick={() => affecter(tournee, affectations[tournee.id])}>
-                      {affectationEnCours === tournee.id ? 'Affectation…' : 'Affecter'}
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+            <h2 className="carte-titre">Équipes et flotte</h2>
+            <p className="carte-texte">
+              {plan.tournees.filter((t) => t.affectee_a).length} tournées affectées sur {plan.tournees.length}.
+            </p>
+            <div className="plan-boutons">
+              <button className={`btn-contour${vue === 'affectations' ? ' plein' : ''}`} onClick={() => setVue(vue === 'affectations' ? 'carte' : 'affectations')}>
+                {vue === 'affectations' ? 'Revenir à la carte' : 'Affecter les tournées'}
+              </button>
+              <button className="btn-contour" onClick={() => setFlotteOuverte(true)}>Suivi de la flotte</button>
+            </div>
           </div>
         </section>
       </aside>
 
       <div className={`plan-carte ${flotteOuverte ? 'plan-carte-flotte' : ''}`}>
-        {flotteOuverte ? <SuiviFlotte onRetourCarte={() => setFlotteOuverte(false)} /> : <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+        {flotteOuverte ? <SuiviFlotte onRetourCarte={() => setFlotteOuverte(false)} /> : vue === 'affectations' ? (
+          <Affectations tournees={plan.tournees} utilisateurs={utilisateurs} onAffecter={affecterSimple} onRetour={() => setVue('carte')} />
+        ) : <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
+          <FondDeCarte />
           {plan.points_regroupement.map((p) => (
             <CircleMarker key={`p${p.id}`} center={[p.latitude, p.longitude]} radius={plan.points_regroupement.length > 300 ? 4 : 8}
               pathOptions={{ color: '#124a34', fillColor: '#f4b942', fillOpacity: 0.95 }}>

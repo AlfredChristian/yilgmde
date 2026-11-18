@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, useMap, useMapEvents } from 'react-leaflet'
+import FondDeCarte from '../components/FondDeCarte'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import Icone from '../components/Icone'
@@ -178,24 +179,19 @@ if (confirmation) {
   }
 
   return (
-    <main className="signaler">
-      <h1 className="signaler-titre">Signaler un dépotoir</h1>
-      <p className="signaler-intro">
-        Aucun compte nécessaire. Placez le point à l'endroit exact du dépotoir.
-      </p>
-
-      <form onSubmit={valider} className="signaler-form">
-        <section>
+    <main className="signaler signaler-deux">
+      <section className="signaler-gauche">
+        <h1 className="signaler-titre">Signaler un dépotoir</h1>
+        <p className="signaler-intro">Aucun compte nécessaire. Placez le point à l’endroit exact du dépotoir.</p>
+        <div className="signaler-question">
           <h2>Où est-il ?</h2>
-          <button type="button" className="btn btn-vert" onClick={utiliserMaPosition}>
-            Utiliser ma position
+          <button type="button" className="btn-contour plein" onClick={utiliserMaPosition}>
+            <Icone nom="carte" taille={18} /> Utiliser ma position
           </button>
+        </div>
           <div className="signaler-carte">
             <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
+              <FondDeCarte />
               <ClicCarte onChoix={setPosition} />
               <Recentrer position={position} />
               {position && (
@@ -213,16 +209,16 @@ if (confirmation) {
               )}
             </MapContainer>
           </div>
-          <p className="signaler-aide">
-            {position
-              ? `Position : ${position[0].toFixed(5)}, ${position[1].toFixed(5)} (glissez le point pour ajuster)`
-              : 'Touchez la carte pour placer le point.'}
-          </p>
-        </section>
+        <p className="signaler-aide">
+          {position
+            ? `Point placé : ${position[0].toFixed(5)}, ${position[1].toFixed(5)}. Glissez-le pour ajuster.`
+            : 'Touchez la carte pour placer le point.'}
+        </p>
+      </section>
 
-        <section>
+      <form onSubmit={valider} className="signaler-droite signaler-form">
+        <section className="signaler-bloc">
           <h2>De quoi s’agit-il ?</h2>
-
           <fieldset>
             <legend>Type de déchet</legend>
             <div className="choix choix-icones">
@@ -261,14 +257,12 @@ if (confirmation) {
             </div>
           </fieldset>
 
-          <div className="description">
-            <p className="description-titre">Décrivez en quelques mots (facultatif)</p>
-            <div className="photo-signalement">
-              <div>
-                <p className="description-titre">Ajoutez une photo (facultatif)</p>
-                <p className="signaler-aide">Prenez une photo sur place ou choisissez une image dans votre appareil.</p>
-              </div>
-              <div className="photo-actions">
+        </section>
+
+        <section className="signaler-bloc">
+          <h2>Photo <span className="facultatif">facultatif</span></h2>
+          <p className="signaler-aide">Prenez une photo sur place ou choisissez une image dans votre appareil.</p>
+          <div className="photo-actions">
                 <label className="btn-contour photo-bouton">
                   <Icone nom="photo" taille={18} /> Prendre une photo
                   <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={choisirPhoto} />
@@ -285,10 +279,13 @@ if (confirmation) {
                   <button type="button" className="photo-supprimer" onClick={() => setPhoto(null)}>Supprimer</button>
                 </div>
               )}
-            </div>
-            <EnregistreurVocal onChange={setAudio} />
-            <label>
-              Ou écrivez
+        </section>
+
+        <section className="signaler-bloc">
+          <h2>Description <span className="facultatif">facultatif</span></h2>
+          <EnregistreurVocal onChange={setAudio} />
+          <label>
+            Ou écrivez
               <textarea
                 rows={3}
                 maxLength={300}
@@ -296,14 +293,13 @@ if (confirmation) {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Ex. : tas d'ordures au bord de la route, près du marché"
               />
-            </label>
-          </div>
+          </label>
         </section>
 
         {message && <p className="signaler-message">{message}</p>}
-
-        <button type="submit" className="btn btn-jaune" disabled={envoiEnCours}>
-          {envoiEnCours ? 'Envoi en cours…' : 'Signaler'}
+        {!position && <p className="signaler-aide signaler-rappel">Placez d’abord le point sur la carte.</p>}
+        <button type="submit" className="btn btn-primaire signaler-envoyer" disabled={envoiEnCours}>
+          {envoiEnCours ? 'Envoi en cours…' : 'Envoyer le signalement'}
         </button>
       </form>
     </main>

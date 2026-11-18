@@ -9,36 +9,15 @@
 
 .signaler-form { display: grid; gap: 20px; counter-reset: etape; }
 .signaler-form section {
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--bordure);
-  border-radius: 14px;
+  border-radius: var(--rayon);
   padding: 22px;
-  box-shadow: 0 1px 2px rgba(16, 40, 30, 0.05);
   display: grid;
   gap: 18px;
 }
-.signaler-form section h2 {
-  counter-increment: etape;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 0;
-  font-family: var(--serif);
-  font-size: 1.2rem;
-  color: var(--vert-fonce);
-}
-.signaler-form section h2::before {
-  content: counter(etape);
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  background: var(--vert);
-  color: white;
-  display: grid;
-  place-items: center;
-  font-family: 'Poppins', sans-serif;
-  font-size: 1rem;
-}
+.signaler-form section h2 { display: flex; align-items: baseline; gap: 10px; margin: 0; font-size: 1.2rem; color: var(--encre); }
+.facultatif { font-family: var(--texte); font-size: 0.85rem; font-weight: 500; color: var(--gris); }
 
 .signaler-carte {
   height: 340px;
@@ -177,4 +156,37 @@
   background: var(--rouge);
   border: 3px solid white;
   box-shadow: 0 0 0 2px var(--rouge), 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Deux colonnes, comme l'espace chauffeur : la position et sa carte à gauche, le reste à droite */
+.signaler-deux {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  height: calc(100vh - 64px);
+}
+.signaler-gauche {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 24px clamp(16px, 3vw, 32px);
+  background: var(--surface);
+  border-right: 1px solid var(--bordure);
+}
+.signaler-gauche .signaler-titre { margin: 0; }
+.signaler-gauche .signaler-intro { margin: 0 0 8px; }
+.signaler-question { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.signaler-question h2 { margin: 0; font-size: 1.2rem; }
+.signaler-deux .signaler-carte { flex: 1; height: auto; min-height: 300px; border-radius: var(--rayon); }
+.signaler-droite { min-height: 0; overflow-y: auto; padding: 24px clamp(16px, 3vw, 32px) 40px; align-content: start; }
+.signaler-envoyer { width: 100%; min-height: 54px; font-size: 1.05rem; }
+.signaler-rappel { text-align: center; }
+@media (max-width: 900px) {
+  .signaler-deux { grid-template-columns: 1fr; height: auto; }
+  .signaler-gauche { border-right: 0; border-bottom: 1px solid var(--bordure); }
+  .signaler-deux .signaler-carte { flex: none; height: 52vh; }
+  .signaler-droite { overflow: visible; }
 }

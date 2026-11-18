@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { MapContainer, TileLayer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet'
+import FondDeCarte from './FondDeCarte'
 import { getSuiviFlotte } from '../api/client'
 
 // Suivi de la flotte (D51), en 2D sur la vraie carte, avec deux informations bien séparées :
@@ -185,7 +186,7 @@ function VueSuivi({ onRetourCarte }) {
       <div className="suivi-corps">
         <div className="suivi-carte">
           <MapContainer center={depot} zoom={13} style={{ height: '100%', width: '100%' }}>
-            <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            <FondDeCarte />
             <Recadrer positions={positions} />
             {camions.map((c) => c.rotations.map((t) => (
               <Polyline key={`l${t.id}`} positions={t.trace ? t.trace.flat() : [depot, ...t.arrets.map((a) => [a.latitude, a.longitude]), depot]}

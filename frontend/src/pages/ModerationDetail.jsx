@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { MapContainer, TileLayer, CircleMarker, Circle, Tooltip } from 'react-leaflet'
+import { MapContainer, CircleMarker, Circle, Tooltip } from 'react-leaflet'
+import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { getFileModeration, getSignalementDetail, validerSignalement, rejeterSignalement } from '../api/client'
 import Icone from '../components/Icone'
@@ -115,7 +116,7 @@ export default function ModerationDetail() {
           <h2 className="carte-titre">Emplacement</h2>
           <div className="fiche-carte-map">
             <MapContainer center={[s.latitude, s.longitude]} zoom={16} style={{ height: '100%', width: '100%' }}>
-              <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <FondDeCarte />
               <Circle center={[s.latitude, s.longitude]} radius={300} pathOptions={{ color: '#8fa89a', weight: 1, fillOpacity: 0.04, dashArray: '4 4' }} />
               {s.signalements_proches.map((v) => (
                 <CircleMarker key={`s${v.id}`} center={[v.latitude, v.longitude]} radius={5}

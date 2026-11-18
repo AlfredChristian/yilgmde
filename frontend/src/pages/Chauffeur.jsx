@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Tooltip, Polyline, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Tooltip, Polyline, useMap } from 'react-leaflet'
+import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { useAuth } from '../auth/AuthContext'
 import { getTournee, marquerArret } from '../api/client'
@@ -98,10 +99,7 @@ export default function Chauffeur() {
         <h2 className="terrain-sous-titre">Votre parcours du jour</h2>
         <div className="terrain-carte">
           <MapContainer center={positions[0] ?? CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+            <FondDeCarte />
             <Cadrage arrets={tournee.arrets} choisi={choisi} />
             {positions.length > 1 && (
               <Polyline positions={tournee.trace?.length ? tournee.trace : positions} pathOptions={{ color: '#0e5a3a', weight: 5, opacity: 0.85 }} />
