@@ -130,6 +130,35 @@ def test_nouveau_quartier_s_ajoute(client):
     assert len(plan["zones_ajoutees"]) == 2                             # ajout, pas remplacement
 
 
+def test_synthese_compte_le_nouveau_quartier(client):
+    h = entetes(client)
+    q = dict(NOUVEAU_QUARTIER, properties={"nom": "Extension test", "population": 5000})
+    client.put("/scenarios/1/parametres", json={"zones_ajoutees": [q]}, headers=h)
+    assert "Extension test" in client.get("/scenarios/1/plan/synthese", headers=h).text
+
+
+def test_retirer_un_quartier_ajoute(client):
+    """D56 : un quartier ajouté par erreur se retire par sa position."""
+    h = entetes(client)
+    deuxieme = dict(NOUVEAU_QUARTIER, properties={"nom": "Extension sud", "population": 1000})
+    client.put("/scenarios/1/parametres", json={"zones_ajoutees": [NOUVEAU_QUARTIER, deuxieme]}, headers=h)
+    plan = client.put("/scenarios/1/parametres", json={"retirer_zones": [0]}, headers=h).json()
+    assert len(plan["zones_ajoutees"]) == 1
+    params = client.get("/scenarios/1", headers=h).json()["parametres"]
+    assert [z["properties"]["nom"] for z in params["zones_ajoutees"]] == ["Extension sud"]
+    plan = client.put("/scenarios/1/parametres", json={"retirer_zones": [0]}, headers=h).json()
+    assert plan["zones_ajoutees"] == [] and "zones_ajoutees" not in client.get("/scenarios/1", headers=h).json()["parametres"]
+    assert client.put("/scenarios/1/parametres", json={"retirer_zones": "0"}, headers=h).status_code == 422
+
+
+def test_evolution_de_la_population(client):
+    """D56 : +20 % d'habitants, +20 % de déchets."""
+    h = entetes(client)
+    avant = client.get("/scenarios/1/plan", headers=h).json()["indicateurs"]["demande_totale_kg_jour"]
+    apres = client.put("/scenarios/1/parametres", json={"population": {"evolution_pct": 20}}, headers=h).json()
+    assert apres["indicateurs"]["demande_totale_kg_jour"] == __import__("pytest").approx(avant * 1.2, rel=0.01)
+
+
 def test_parametres_invalides_rien_n_est_enregistre(client):
     h = entetes(client)
     for corps in ({"saison": "hiver"},
@@ -256,7 +285,7 @@ def test_synthese_du_plan_en_markdown(client):
     r = client.get("/scenarios/1/plan/synthese", headers=h)
     assert r.status_code == 200 and r.headers["content-type"].startswith("text/markdown")
     texte = r.text
-    assert texte.startswith("# Plan de gestion des déchets — arrondissement 1")
+    assert texte.startswith("# Plan de gestion des déchets de l’arrondissement 1")
     for attendu in ("## En bref", "## Points de regroupement", "## Tournées de collecte", "## Brigade Laabal",
                     "## Ce qui n'est pas couvert", "camion_2", "Zone exemple A", "Pourquoi ces points ?"):
         assert attendu in texte, attendu

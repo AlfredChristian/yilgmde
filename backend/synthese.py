@@ -24,23 +24,23 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
     perimetre = ind.get("perimetre")
     noms = {z["id"]: z["nom"] for z in zones}
     if perimetre:
-        arr = ", ".join(str(a) for a in perimetre["arrondissements"]) or "—"
-        titre = f"Plan de gestion des déchets — arrondissement {arr}" if perimetre["arrondissements"] else \
-            "Plan de gestion des déchets — zones choisies"
+        arr = ", ".join(str(a) for a in perimetre["arrondissements"]) or "aucun"
+        titre = f"Plan de gestion des déchets de l’arrondissement {arr}" if perimetre["arrondissements"] else \
+            "Plan de gestion des déchets des zones choisies"
         lieu = f"{len(perimetre['zones'])} zone(s), {_nb(perimetre['population'])} habitants"
     else:
-        titre = f"Plan de gestion des déchets — {config.get('ville') or 'commune'}"
+        titre = f"Plan de gestion des déchets de {config.get('ville') or 'la commune'}"
         lieu = f"{len(zones)} zone(s)"
     collecte = [t for t in plan["tournees"] if t["type"] == "collecte"]
     laabal = [t for t in plan["tournees"] if t["type"] == "intervention"]
     freq = config["collecte"]["frequence_passages_par_semaine"]
 
     l = [f"# {titre}", "",
-         f"Scénario **{scenario['nom']}** · plan n° {plan['id']} calculé le {plan['calcule_le'][:16].replace('T', ' ')} UTC"
-         f" en {plan['duree_calcul_ms']} ms · saison {'des pluies' if ind['saison'] == 'pluies' else 'sèche'} · {lieu}.", ""]
-    if scenario.get("parametres"):
-        l += ["Paramètres modifiés par rapport à la configuration de base :", "", "```json",
-              json.dumps(scenario["parametres"], ensure_ascii=False), "```", ""]
+         f"Scénario **{scenario['nom']}**, plan n° {plan['id']} calculé le {plan['calcule_le'][:16].replace('T', ' ')} UTC"
+         f" en {plan['duree_calcul_ms']} ms, saison {'des pluies' if ind['saison'] == 'pluies' else 'sèche'}, {lieu}.", ""]
+    resume = _parametres_lisibles(scenario.get("parametres") or {})
+    if resume:
+        l += ["Paramètres modifiés par rapport à la configuration de base :", "", *[f"- {x}" for x in resume], ""]
 
     l += ["## En bref", "",
           "| Indicateur | Valeur |", "|---|---|",
@@ -57,7 +57,7 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
           f"| Distance d'un passage | {_nb(ind['distance_totale_km'], 1)} km |",
           f"| Coût d'un passage | {_xof(ind['cout_total_xof'])} |",
           f"| Coût mensuel estimé | {_xof(ind['cout_mensuel_estime_xof'])}"
-          + (f" (budget {_xof(ind['budget_mensuel_xof'])}{' — **dépassé**' if ind['budget_depasse'] else ''})"
+          + (f" (budget {_xof(ind['budget_mensuel_xof'])}{', **dépassé**' if ind['budget_depasse'] else ''})"
              if ind.get("budget_mensuel_xof") else "") + " |",
           f"| Dépotoirs actifs | {ind['depotoirs_actifs']} ({ind['depotoirs_planifies_laabal']} traités aujourd'hui"
           f" par Laabal, {ind['depotoirs_en_attente_laabal']} en attente) |", ""]
@@ -95,7 +95,7 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
     if laabal:
         for t in laabal:
             l.append(f"- Brigade {t.get('brigade', '?')} : {len(t['arrets'])} dépotoir(s), {_nb(t['distance_km'], 1)} km, "
-                     f"{_nb(t['duree_min'])} min — " + " ; ".join(
+                     f"{_nb(t['duree_min'])} min : " + " ; ".join(
                          f"n° {a['cible_id']} ({a.get('raison', '')})" for a in t["arrets"]))
     else:
         l.append("- Aucun dépotoir illégal à traiter aujourd'hui.")
@@ -120,3 +120,36 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
           "Plan calculé par yilgmde (code MIT). Les valeurs marquées [H] dans la configuration sont des hypothèses "
           "de départ ; voir `docs/parametres.md`.", ""]
     return "\n".join(l)
+
+
+def _parametres_lisibles(p: dict) -> list[str]:
+    """Paramètres du scénario en phrases, pour la mairie (le détail technique reste dans l'API)."""
+    lignes = []
+    arr = (p.get("perimetre") or {}).get("arrondissements")
+    if arr:
+        lignes.append(f"périmètre : arrondissement{'s' if len(arr) > 1 else ''} {', '.join(map(str, arr))}")
+    saison = (p.get("scenario") or {}).get("saison") or p.get("saison")
+    if saison:
+        lignes.append(f"saison : {'des pluies' if saison == 'pluies' else 'sèche'}")
+    pannes = [c["id"] for c in p.get("camions") or [] if c.get("disponible") is False]
+    if pannes:
+        lignes.append(f"camions en panne : {len(pannes)}")
+    budget = (p.get("mairie") or {}).get("budget_mensuel_xof")
+    if budget is not None:
+        lignes.append(f"budget mensuel de la commune : {_xof(budget)}")
+    pop = p.get("population") or {}
+    if pop.get("evolution_pct"):
+        lignes.append(f"évolution de la population : {pop['evolution_pct']:+g} %")
+    if pop.get("taux_abonnement_precollecteurs") is not None:
+        lignes.append(f"ménages abonnés aux pré-collecteurs : {_nb(pop['taux_abonnement_precollecteurs'] * 100)} %")
+    freq = (p.get("collecte") or {}).get("frequence_passages_par_semaine")
+    if freq is not None:
+        lignes.append(f"passages de collecte : {freq} par semaine")
+    apport = (p.get("simulation") or {}).get("prob_apport_volontaire")
+    if apport is not None:
+        lignes.append(f"apport volontaire aux points : {_nb(apport * 100)} %")
+    for z in p.get("zones_ajoutees") or []:
+        props = (json.loads(z) if isinstance(z, str) else z).get("properties") or {}
+        lignes.append(f"nouveau quartier : {props.get('nom', 'sans nom')}"
+                      + (f", {_nb(props['population'])} habitants" if props.get("population") else ""))
+    return lignes

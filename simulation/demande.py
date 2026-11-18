@@ -4,7 +4,7 @@ Fonction pure (D09) : `demande = f(zones, config)`. Aucun paramètre en dur (D10
 production par habitant et coefficient de saison viennent de la config, donc un
 changement de saison ou de production recalcule la demande sans autre modification.
 
-    demande_kg_jour = population × production_dechets_kg_hab_jour × coef_production(saison)
+    demande_kg_jour = population × (1 + evolution_pct / 100) × production_dechets_kg_hab_jour × coef_production(saison)
 """
 
 from __future__ import annotations
@@ -25,9 +25,13 @@ def estimer_demande(zones: Sequence[dict], config: dict) -> list[dict]:
     """
     par_habitant = config["population"]["production_dechets_kg_hab_jour"]
     coef = coefficient_production(config)
+    # Scénario « la population évolue de x % » (D56) : appliqué à toutes les zones connues.
+    evolution = 1 + float(config["population"].get("evolution_pct", 0) or 0) / 100
     resultat = []
     for zone in zones:
         population = zone.get("population")
+        if population is not None and evolution != 1:
+            population = round(population * evolution)
         connue = population is not None
         resultat.append(
             {

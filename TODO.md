@@ -106,3 +106,4 @@
 - [x] Tournées sur les vraies voies (réseau OSM hors ligne, sens uniques, sans camps ni aéroport) (D52)
 - [x] Modération : fiche détaillée avant décision (carte, photo, voix, voisinage, appareil) (D54)
 - [x] Commune entière sur les routes (D53)
+- [x] Épreuve en direct dans l'écran : nouveau quartier dessiné sur la carte, population, abonnements, fréquence, apport volontaire ; plan de gestion lisible dans l'écran (D56)

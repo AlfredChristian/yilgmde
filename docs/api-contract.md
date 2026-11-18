@@ -151,6 +151,8 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
 - `PUT /scenarios/{id}/parametres` : modification **partielle**, fusionnée sur les paramètres du scénario ; renvoie le **plan recalculé**. `422` (et rien n'est enregistré) si la config devient invalide.
   - `{"saison": "pluies"}` (raccourci de `{"scenario": {"saison": "pluies"}}`) : production × `coef_production`, vitesse × `coef_vitesse_camion` (D3).
   - `{"camions": [{"id": "camion_2", "disponible": false}]}` : fusion par `id` ; un camion indisponible n'est jamais utilisé (D2).
+  - `{"retirer_zones": [0, 2]}` : retire des quartiers ajoutés (positions dans `zones_ajoutees`, à partir de 0) (D56).
+  - `{"population": {"evolution_pct": 10}}` : population de toutes les zones + 10 % (D56).
   - `{"zones_ajoutees": [<Feature ou géométrie GeoJSON, ou sa chaîne JSON>]}` : nouveau quartier (D4), propriétés `nom`, `population` (sans population : seuls ses dépotoirs reçoivent un point). Les zones **s'ajoutent** à celles déjà ajoutées. Les dépotoirs sans zone qu'elles contiennent leur sont rattachés.
   - tout autre paramètre de la config : `{"collecte": {"frequence_passages_par_semaine": 3}}`, `{"points_regroupement": {"distance_max_a_pied_m": 200}}`, `{"laabal": {"nombre_brigades": 2}}`, `{"mairie": {"budget_mensuel_xof": 4000000}}`…
 - `POST /scenarios/{id}/activer` → scénario, devenu le seul actif.

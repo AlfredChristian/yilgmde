@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapContainer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Polyline, Polygon, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
-import { activerScenario, affecterTournee, comparerScenarios, creerScenario, getArrondissements, getParametres, getPlan, getScenarios, getUtilisateurs, majParametres, simulerScenario } from '../api/client'
+import { activerScenario, affecterTournee, comparerScenarios, creerScenario, getArrondissements, getParametres, getPlan, getScenarios, getSynthese, getUtilisateurs, majParametres, simulerScenario } from '../api/client'
 import './Plan.css'
 import SuiviFlotte from '../components/SuiviFlotte'
 import Affectations from '../components/Affectations'
+import LectureMarkdown from '../components/LectureMarkdown'
 
 const CENTRE = [12.3714, -1.5197]
 const COULEURS = ['#1b6b4a', '#f4b942', '#7b2cbf', '#0077b6', '#d62828']
@@ -16,6 +17,10 @@ const PARAMETRES = [
   { cle: 'camions_en_panne', libelle: 'Camions en panne', type: 'nombre', min: 0 },
   { cle: 'saison_pluies', libelle: 'Saison des pluies', type: 'bool' },
   { cle: 'budget_xof', libelle: 'Budget mensuel (XOF)', type: 'nombre', min: 0, pas: 1000000 },
+  { cle: 'evolution_population_pct', libelle: 'Évolution de la population (%)', type: 'nombre', min: -50, max: 100 },
+  { cle: 'abonnement_pct', libelle: 'Ménages abonnés aux pré-collecteurs (%)', type: 'nombre', min: 0, max: 100 },
+  { cle: 'frequence', libelle: 'Passages de collecte par semaine', type: 'nombre', min: 1, max: 7 },
+  { cle: 'apport_volontaire_pct', libelle: 'Apport volontaire aux points (%)', type: 'nombre', min: 0, max: 100 },
 ]
 const TOURNEES_AFFICHEES = 30
 const fmt = (n) => Math.round(n).toLocaleString('fr-FR')
@@ -50,7 +55,7 @@ function valeurIndicateur(cle, n, ecart = false) {
 function ChampNombre({ valeur, min, max, onValider }) {
   const [texte, setTexte] = useState(null)        // null : on affiche la valeur du plan
   const affiche = texte ?? fmt(valeur)
-  const invalide = texte != null && !/^\d+$/.test(texte.replace(/[\s\u202f\u00a0]/g, ''))
+  const invalide = texte != null && !/^-?\d+$/.test(texte.replace(/[\s\u202f\u00a0]/g, ''))
 
   function valider() {
     if (texte == null) return
@@ -74,6 +79,17 @@ function ChampNombre({ valeur, min, max, onValider }) {
       aria-invalid={invalide}
     />
   )
+}
+
+// Tracé d'un nouveau quartier : chaque clic ajoute un coin.
+function TraceQuartier({ actif, onPoint }) {
+  const map = useMapEvents({ click: (e) => actif && onPoint([e.latlng.lat, e.latlng.lng]) })
+  useEffect(() => {
+    if (actif) map.doubleClickZoom.disable()
+    else map.doubleClickZoom.enable()
+    map.getContainer().style.cursor = actif ? 'crosshair' : ''
+  }, [actif, map])
+  return null
 }
 
 // Recadre la carte sur les points du plan quand le perimetre change.
@@ -124,7 +140,10 @@ export default function Plan() {
   const [nomVariante, setNomVariante] = useState('')
   const [utilisateurs, setUtilisateurs] = useState([])
   const [flotteOuverte, setFlotteOuverte] = useState(false)
-  const [vue, setVue] = useState('carte')     // 'carte' ou 'affectations' dans le panneau de droite
+  const [vue, setVue] = useState('carte')     // panneau de droite : 'carte', 'affectations' ou 'synthese'
+  const [trace, setTrace] = useState(null)     // coins du quartier en cours de tracé, null hors tracé
+  const [nouveauQuartier, setNouveauQuartier] = useState({ nom: '', population: '' })
+  const [synthese, setSynthese] = useState(null)
   const delai = useRef(null)
 
   useEffect(() => {
@@ -161,6 +180,54 @@ export default function Plan() {
         if (appel === dernierAppel.current) setCalcul(false)
       }
     }, 300)
+  }
+
+  // Nouveau quartier dessiné sur la carte (épreuve en direct) : ajout puis plan recalculé.
+  async function modifierQuartiers(cle, valeur) {
+    setCalcul(true)
+    setErreur(null)
+    try {
+      setPlan(await majParametres({ [cle]: valeur }))
+      setParams(await getParametres())
+      return true
+    } catch (e) {
+      setErreur(`Quartier non pris en compte : ${e.message}`)
+      return false
+    } finally {
+      setCalcul(false)
+    }
+  }
+
+  async function ajouterQuartier() {
+    const population = Number(String(nouveauQuartier.population).replace(/\s/g, ''))
+    const anneau = [...trace, trace[0]].map(([lat, lon]) => [Number(lon.toFixed(6)), Number(lat.toFixed(6))])
+    const feature = {
+      type: 'Feature',
+      properties: { nom: nouveauQuartier.nom.trim() || 'Nouveau quartier', population },
+      geometry: { type: 'Polygon', coordinates: [anneau] },
+    }
+    if (await modifierQuartiers('ajouter_quartier', feature)) {
+      setTrace(null)
+      setNouveauQuartier({ nom: '', population: '' })
+    }
+  }
+
+  async function ouvrirSynthese() {
+    setVue('synthese')
+    setSynthese(null)
+    try {
+      setSynthese(await getSynthese())
+    } catch (e) {
+      setSynthese(`Le plan de gestion n’a pas pu être chargé : ${e.message}`)
+    }
+  }
+
+  function telechargerSynthese() {
+    const lien = document.createElement('a')
+    lien.href = URL.createObjectURL(new Blob([synthese], { type: 'text/markdown;charset=utf-8' }))
+    lien.download = 'plan-de-gestion.md'
+    lien.click()
+    URL.revokeObjectURL(lien.href)
   }
 
   async function rafraichirScenario() {
@@ -413,6 +480,65 @@ export default function Plan() {
 
         <section className="carte plan-bloc">
           <div>
+            <h2 className="carte-titre">Nouveau quartier</h2>
+            {trace === null ? (
+              <>
+                {params.quartiers?.length > 0 ? (
+                  <ul className="plan-quartiers">
+                    {params.quartiers.map((q, k) => (
+                      <li key={k}>
+                        <span><strong>{q.nom}</strong>{q.population != null && <small>{fmt(q.population)} habitants</small>}</span>
+                        <button className="btn-contour danger" disabled={calcul} onClick={() => modifierQuartiers('retirer_quartier', k)}>Retirer</button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="carte-texte">Ajoutez un quartier qui n’existe pas encore : le plan lui attribue des points de regroupement et des tournées.</p>
+                )}
+                <button className="btn-contour plein" disabled={calcul} onClick={() => { setVue('carte'); setFlotteOuverte(false); setTrace([]) }}>
+                  Dessiner un quartier sur la carte
+                </button>
+              </>
+            ) : (
+              <div className="plan-trace">
+                <p className="carte-texte">
+                  Cliquez sur la carte pour placer les coins du quartier.
+                  {trace.length < 3 ? ` Encore ${3 - trace.length} point${3 - trace.length > 1 ? 's' : ''} au minimum.` : ` ${trace.length} coins placés.`}
+                </p>
+                <label className="plan-select">
+                  <span>Nom du quartier</span>
+                  <input type="text" value={nouveauQuartier.nom} placeholder="Ex. : extension de Yagma" maxLength={80}
+                    onChange={(e) => setNouveauQuartier((q) => ({ ...q, nom: e.target.value }))} />
+                </label>
+                <label className="plan-select">
+                  <span>Population estimée</span>
+                  <input type="text" inputMode="numeric" value={nouveauQuartier.population} placeholder="Ex. : 12 000"
+                    onChange={(e) => setNouveauQuartier((q) => ({ ...q, population: e.target.value }))} />
+                </label>
+                <div className="plan-boutons">
+                  <button className="btn-contour plein" disabled={calcul || trace.length < 3 || !(Number(String(nouveauQuartier.population).replace(/\s/g, '')) > 0)} onClick={ajouterQuartier}>
+                    Ajouter le quartier
+                  </button>
+                  <button className="btn-contour" disabled={!trace.length} onClick={() => setTrace((t) => t.slice(0, -1))}>Retirer le dernier coin</button>
+                  <button className="btn-contour" onClick={() => setTrace(null)}>Annuler</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="carte plan-bloc">
+          <div>
+            <h2 className="carte-titre">Plan de gestion</h2>
+            <p className="carte-texte">Le document de synthèse du scénario de travail : points, tournées, coûts et recommandations.</p>
+            <button className={`btn-contour${vue === 'synthese' ? ' plein' : ''}`} onClick={() => (vue === 'synthese' ? setVue('carte') : ouvrirSynthese())}>
+              {vue === 'synthese' ? 'Revenir à la carte' : 'Lire le plan de gestion'}
+            </button>
+          </div>
+        </section>
+
+        <section className="carte plan-bloc">
+          <div>
             <h2 className="carte-titre">Équipes et flotte</h2>
             <p className="carte-texte">
               {plan.tournees.filter((t) => t.affectee_a).length} tournées affectées sur {plan.tournees.length}.
@@ -430,6 +556,16 @@ export default function Plan() {
       <div className={`plan-carte ${flotteOuverte ? 'plan-carte-flotte' : ''}`}>
         {flotteOuverte ? <SuiviFlotte onRetourCarte={() => setFlotteOuverte(false)} /> : vue === 'affectations' ? (
           <Affectations tournees={plan.tournees} utilisateurs={utilisateurs} onAffecter={affecterSimple} onRetour={() => setVue('carte')} />
+        ) : vue === 'synthese' ? (
+          <section className="synthese">
+            <header className="affectations-tete synthese-tete">
+              <div className="plan-boutons">
+                {synthese && <button className="btn-contour" onClick={telechargerSynthese}>Télécharger</button>}
+                <button className="btn-contour" onClick={() => setVue('carte')}>Revenir à la carte</button>
+              </div>
+            </header>
+            {synthese ? <LectureMarkdown texte={synthese} /> : <p className="carte-texte"><span className="role-spinner" /> Chargement du plan de gestion</p>}
+          </section>
         ) : <MapContainer center={CENTRE} zoom={13} style={{ height: '100%', width: '100%' }}>
           <FondDeCarte />
           {plan.points_regroupement.map((p) => (
@@ -443,6 +579,19 @@ export default function Plan() {
               pathOptions={{ color: COULEURS[i % COULEURS.length], weight: 2 }} />
           ))}
           <Recadrer points={plan.points_regroupement} />
+          <TraceQuartier actif={trace !== null} onPoint={(p) => setTrace((t) => [...t, p])} />
+          {(params.quartiers ?? []).map((q, k) => q.geometrie?.type === 'Polygon' && (
+            <Polygon key={`q${k}`} positions={q.geometrie.coordinates[0].map(([lon, lat]) => [lat, lon])}
+              pathOptions={{ color: '#b8322a', weight: 2, dashArray: '6 4', fillOpacity: 0.08 }}>
+              <Tooltip sticky>{q.nom}{q.population != null ? `, ${fmt(q.population)} habitants` : ''}</Tooltip>
+            </Polygon>
+          ))}
+          {trace?.length > 0 && (
+            <>
+              <Polygon positions={trace} pathOptions={{ color: '#b8322a', weight: 2, fillOpacity: 0.12 }} />
+              {trace.map((p, k) => <CircleMarker key={`c${k}`} center={p} radius={5} pathOptions={{ color: '#fff', weight: 2, fillColor: '#b8322a', fillOpacity: 1 }} />)}
+            </>
+          )}
         </MapContainer>}
       </div>
     </main>
