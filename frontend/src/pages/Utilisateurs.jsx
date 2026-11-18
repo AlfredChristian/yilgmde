@@ -80,7 +80,7 @@ export default function Utilisateurs() {
   const actifs = comptes.filter((c) => c.actif).length
   return (
     <main className="admin">
-      <p><Link to="/admin">← Espace mairie</Link></p>
+      <p><Link to="/admin" className="btn-contour">Retour à l’espace mairie</Link></p>
       <h1>Comptes</h1>
       <p className="admin-intro">
         {comptes.length} comptes, dont {actifs} actifs. Un compte désactivé ne peut plus se connecter

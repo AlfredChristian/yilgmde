@@ -186,7 +186,7 @@ if (confirmation) {
 
       <form onSubmit={valider} className="signaler-form">
         <section>
-          <h2>1. Où est-il ?</h2>
+          <h2>Où est-il ?</h2>
           <button type="button" className="btn btn-vert" onClick={utiliserMaPosition}>
             Utiliser ma position
           </button>
@@ -221,7 +221,7 @@ if (confirmation) {
         </section>
 
         <section>
-          <h2>2. De quoi s'agit-il ?</h2>
+          <h2>De quoi s’agit-il ?</h2>
 
           <fieldset>
             <legend>Type de déchet</legend>
@@ -270,11 +270,11 @@ if (confirmation) {
               </div>
               <div className="photo-actions">
                 <label className="btn-contour photo-bouton">
-                  <Icone nom="carte" taille={18} /> Prendre une photo
+                  <Icone nom="photo" taille={18} /> Prendre une photo
                   <input type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={choisirPhoto} />
                 </label>
                 <label className="btn-contour photo-bouton">
-                  <Icone nom="suivi" taille={18} /> Choisir une image
+                  <Icone nom="image" taille={18} /> Choisir une image
                   <input type="file" accept="image/jpeg,image/png,image/webp" onChange={choisirPhoto} />
                 </label>
               </div>

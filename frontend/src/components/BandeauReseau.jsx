@@ -33,7 +33,7 @@ export default function BandeauReseau() {
 
   if (enLigne && attente === 0 && !info) return null
   const texte = !enLigne
-    ? `Hors ligne${attente ? ` · ${attente} signalement(s) en attente` : ''}`
+    ? `Hors ligne${attente ? `, ${attente} signalement(s) en attente d’envoi` : ''}`
     : attente
       ? `${attente} signalement(s) en attente d'envoi…`
       : info

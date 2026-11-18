@@ -3,22 +3,22 @@
   grid-template-columns: 380px 1fr;
   height: calc(100vh - 64px);
 }
-.plan-panneau { overflow-y: auto; padding: 20px; display: grid; gap: 14px; align-content: start; background: #f6f8f7; }
-.plan-panneau h1 { margin: 0; font-family: var(--serif); color: var(--vert-fonce); font-size: 1.6rem; }
+.plan-panneau { overflow-y: auto; overflow-x: hidden; padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-content: start; background: var(--fond); border-right: 1px solid var(--bordure); }
+.plan-panneau h1 { margin: 0; font-size: 1.6rem; }
 .plan-carte { height: 100%; }
 .plan-bloc { grid-template-columns: 1fr; padding-right: 20px; }
 .plan-section-entete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .plan-section-entete .carte-titre { margin: 0; }
 .plan-flotte-bouton { font-size: .74rem; padding: 8px 10px; white-space: nowrap; }
 .plan-champ { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--bordure); font-size: 0.9rem; font-weight: 600; }
-.plan-champ input[type='number'] { width: 110px; font: inherit; padding: 8px; border: 1.5px solid #d5dde0; border-radius: 10px; text-align: right; }
+.plan-champ input[type='number'] { width: 150px; text-align: right; }
 .plan-champ input:focus { outline: none; border-color: var(--vert); box-shadow: 0 0 0 3px rgba(27,107,74,.15); }
 .plan-chiffre { font-size: 1.6rem; font-weight: 700; margin: 0 0 6px; color: var(--vert-fonce); }
 .plan-chiffre small { font-size: 0.8rem; font-weight: 400; color: var(--gris); }
 .plan-tournee { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 0.9rem; }
 .plan-pastille { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-.plan-select, .plan-reglages label { display: grid; gap: 6px; font-size: .85rem; font-weight: 700; color: var(--vert-fonce); }
-.plan-select select, .plan-reglages input { width: 100%; box-sizing: border-box; font: inherit; padding: 9px; border: 1.5px solid #d5dde0; border-radius: 10px; background: white; }
+.plan-select, .plan-reglages label { display: grid; gap: 6px; font-size: .85rem; font-weight: 600; color: var(--encre); }
+.plan-select select, .plan-select input, .plan-reglages input { width: 100%; }
 .plan-bouton { width: 100%; justify-content: center; margin-top: 10px; }
 .plan-reglages { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .plan-resultat { margin-top: 12px; border-top: 1px solid var(--bordure); padding-top: 10px; }
@@ -105,3 +105,10 @@
 .suivi-barre span { position: relative; }
 .suivi-retard { font-size: .72rem; color: #a5520c; font-weight: 600; }
 .suivi-cle-barre { display: inline-block; width: 18px; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #1f9d55 50%, #b9c4be 50%); }
+
+.plan-panneau .carte { min-width: 0; }
+.plan-champ > span:first-child, .plan-champ label { min-width: 0; }
+.plan-champ select { flex: 1 1 auto; min-width: 0; max-width: 220px; }
+.plan-champ input[type='number'] { flex: 0 1 150px; min-width: 0; }
+.plan-champ:has(select) { flex-direction: column; align-items: stretch; gap: 6px; }
+.plan-champ:has(select) select { max-width: none; width: 100%; }

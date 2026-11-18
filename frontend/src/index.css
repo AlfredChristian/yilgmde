@@ -208,3 +208,24 @@ img { max-width: 100%; }
   .carte { padding: 16px 52px 16px 16px; grid-template-columns: 1fr; }
   .carte-gauche { justify-items: start; text-align: left; grid-auto-flow: column; align-items: center; min-width: 0; }
 }
+
+/* Le pied de page reste en bas même sur une page courte */
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+#root > main { flex: 1 0 auto; }
+
+/* ---------- Champs de formulaire ---------- */
+input[type='text'], input[type='email'], input[type='password'], input[type='number'], input[type='search'], select, textarea {
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--encre);
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  background: var(--surface);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+select { padding-right: 32px; }
+input:hover, select:hover, textarea:hover { border-color: #b9c6bd; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--vert); box-shadow: 0 0 0 3px var(--vert-clair); }
+input[type='checkbox'], input[type='radio'], input[type='range'] { accent-color: var(--vert); }
