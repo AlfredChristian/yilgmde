@@ -1,16 +1,16 @@
-.admin { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
-.admin h1 { margin: 0 0 4px; font-family: var(--serif); color: var(--vert-fonce); }
+.admin { max-width: 1160px; margin: 0 auto; padding: 32px clamp(16px, 4vw, 40px) 64px; }
+.admin h1 { margin: 0 0 4px; }
 .admin-intro { color: var(--gris); margin: 0 0 24px; }
 .mod-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 16px; }
 .mod-photo { width: 100%; max-height: 200px; object-fit: cover; border-radius: 10px; margin-bottom: 12px; }
 .mod-alerte {
   margin: 0 0 12px;
-  background: #f3e8fb;
-  border: 1px solid #dcc3f0;
+  background: #fbf3d9;
+  border: 1px solid #efd88f;
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 0.9rem;
-  color: #5a1d8c;
+  color: #5c4500;
 }
 .mod-rejet { display: grid; gap: 12px; }
 .mod-rejet label { display: grid; gap: 6px; font-weight: 700; font-size: 0.9rem; color: var(--vert-fonce); }
@@ -21,8 +21,8 @@
   border-radius: 12px;
   background: #fbfcfc;
 }
-.mod-erreur { padding: 10px 14px; background: #fde8e8; border-radius: 10px; border: 1px solid #f3b9b9; }
-.admin-etat { display: grid; justify-items: center; gap: 8px; margin: 20px 0; padding: 34px 24px; color: var(--gris); background: #f5f8f6; border: 1px solid var(--bordure); border-radius: 16px; text-align: center; }
+.mod-erreur { padding: 10px 14px; background: var(--rouge-clair); border-radius: 10px; border: 1px solid #ecc1bc; color: #7d1f19; }
+.admin-etat { display: grid; justify-items: center; gap: 8px; margin: 20px 0; padding: 34px 24px; color: var(--gris); background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon); text-align: center; }
 .admin-etat strong { color: var(--vert-fonce); font-size: 1.1rem; }
 .admin-etat-icone { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 20px; color: var(--vert); background: var(--vert-clair); }
 .admin-etat-ok { color: var(--vert); }
@@ -30,7 +30,6 @@
 /* File : cartes cliquables (D54) */
 .mod-carte { color: inherit; text-decoration: none; cursor: pointer; transition: box-shadow .15s, transform .15s; }
 .mod-carte:hover, .mod-carte:focus-visible { box-shadow: 0 6px 20px rgba(18, 74, 52, .14); transform: translateY(-1px); }
-.mod-examiner { display: inline-block; margin-top: 6px; color: var(--vert); font-weight: 600; font-size: .9rem; }
 
 /* Fiche d'un signalement */
 .fiche-nav { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -54,3 +53,26 @@
 .fiche-choix select { padding: 8px 10px; border: 1px solid var(--bordure); border-radius: 8px; font: inherit; }
 .fiche-decision { grid-column: 1 / -1; }
 @media (max-width: 860px) { .fiche-grille { grid-template-columns: 1fr; } .fiche-carte { grid-row: auto; } .fiche-ligne { grid-template-columns: 1fr; } }
+
+/* File de modération en lignes */
+.file-tete { display: flex; align-items: center; gap: 12px; }
+.file-tete h2 { margin: 0; }
+.file-compte { min-width: 32px; height: 28px; padding: 0 10px; display: inline-grid; place-items: center; border-radius: 999px; background: var(--or); color: var(--encre); font-weight: 700; font-size: .9rem; }
+.file .admin-intro { margin: 6px 0 18px; }
+.file-liste { margin: 0; padding: 0; list-style: none; background: var(--surface); border: 1px solid var(--bordure); border-radius: var(--rayon); overflow: hidden; }
+.file-liste li + li { border-top: 1px solid var(--bordure); }
+.file-ligne { display: grid; grid-template-columns: 70px minmax(0, 1.3fr) minmax(0, 0.9fr) minmax(0, 1.4fr) auto; align-items: center; gap: 16px; padding: 14px 18px; transition: background var(--transition); }
+.file-ligne:hover { background: #f8faf8; }
+.file-ligne:hover .file-bouton { border-color: var(--vert); color: var(--vert); }
+.file-id { font-family: var(--titre); font-weight: 700; color: var(--gris); }
+.file-quoi { display: grid; gap: 2px; }
+.file-quoi span, .file-recu { color: var(--gris); font-size: .9rem; }
+.file-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.puce-alerte { background: #fbf3d9; border-color: #efd88f; color: #5c4500; }
+.file-bouton { min-height: 38px; padding: 8px 14px; }
+@media (max-width: 760px) {
+  .file-ligne { grid-template-columns: 1fr auto; gap: 6px 12px; }
+  .file-id { grid-column: 1; }
+  .file-quoi, .file-recu, .file-tags { grid-column: 1; }
+  .file-bouton { grid-column: 2; grid-row: 1 / span 3; }
+}

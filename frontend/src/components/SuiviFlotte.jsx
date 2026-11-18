@@ -156,7 +156,7 @@ function VueSuivi({ onRetourCarte }) {
           <h2 className="carte-titre">Suivi de la flotte</h2>
           <p className="flotte-sous-titre">
             <span className="flotte-live" /> Avancement réel relu toutes les 15 s
-            {majLe && ` · dernière mise à jour ${majLe.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}
+            {majLe && `. Dernière mise à jour ${majLe.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}
           </p>
         </div>
         <button className="flotte-retour" onClick={onRetourCarte}>Retour au plan</button>
@@ -165,7 +165,7 @@ function VueSuivi({ onRetourCarte }) {
       <div className="suivi-chiffres">
         <p><strong>{r.arrets_effectues} / {r.arrets_total}</strong> arrêts effectués (tout le passage)</p>
         <p><strong>{faitsDuJour} / {tousLesArrets.length}</strong> le jour {jour}</p>
-        <p><strong>{r.tournees_affectees}</strong> tournées affectées · <strong>{r.tournees_terminees}</strong> terminées</p>
+        <p><strong>{r.tournees_affectees}</strong> tournées affectées, <strong>{r.tournees_terminees}</strong> terminées</p>
       </div>
 
       <div className="suivi-commandes">
@@ -174,7 +174,7 @@ function VueSuivi({ onRetourCarte }) {
             <button key={j} className={j === jour ? 'actif' : ''} aria-pressed={j === jour} onClick={() => setJour(j)}>Jour {j}</button>
           ))}
         </div>
-        <button className="btn-contour" onClick={() => setLecture((l) => !l)}>{lecture ? '❚❚ Pause' : '▶ Rejouer la journée'}</button>
+        <button className="btn-contour" onClick={() => setLecture((l) => !l)}>{lecture ? 'Mettre en pause' : 'Rejouer la journée'}</button>
         <label className="suivi-heure">
           Horaire prévu : <strong>{heure(minute)}</strong>
           <input type="range" min={DEBUT_JOURNEE_MIN} max={Math.ceil(finJournee)} step={1} value={Math.min(minute, finJournee)}
@@ -197,7 +197,7 @@ function VueSuivi({ onRetourCarte }) {
                   ? { color: '#ffffff', weight: 2, fillColor: '#1f9d55', fillOpacity: 1 }
                   : { color: '#6b7c72', weight: 1.5, fillColor: '#ffffff', fillOpacity: 1 }}>
                 <Tooltip>
-                  Point n°{a.cible_id} · {a.statut === 'effectue' ? `fait à ${heureReelle(a.effectue_le) ?? '?'}` : 'à faire'}
+                  Point n°{a.cible_id}, {a.statut === 'effectue' ? `fait à ${heureReelle(a.effectue_le) ?? '?'}` : 'à faire'}
                 </Tooltip>
               </CircleMarker>
             ))}
@@ -206,7 +206,7 @@ function VueSuivi({ onRetourCarte }) {
               return pos ? (
                 <CircleMarker key={`c${c.id}`} center={pos} radius={8}
                   pathOptions={{ color: '#ffffff', weight: 2, fillColor: c.agent ? '#e0a100' : '#52514e', fillOpacity: 1 }}>
-                  <Tooltip>{c.id}{c.agent ? ` · ${c.agent}` : ''} · {etat} (prévu à {heure(minute)})</Tooltip>
+                  <Tooltip>{c.id}{c.agent ? `, ${c.agent}` : ''}, {etat} (prévu à {heure(minute)})</Tooltip>
                 </CircleMarker>
               ) : null
             })}
@@ -238,8 +238,8 @@ function VueSuivi({ onRetourCarte }) {
                   <span style={{ width: `${pct}%` }} />
                 </div>
                 <small>
-                  {c.agent ?? 'Non affecté : personne ne peut cocher ses arrêts'} · {c.rotations.length} rotation{c.rotations.length > 1 ? 's' : ''} · fin prévue {heure(c.plan.fin)}
-                  {c.derniere && ` · dernier arrêt coché à ${heureReelle(c.derniere)}`}
+                  {c.agent ?? 'Non affecté : personne ne peut cocher ses arrêts'}, {c.rotations.length} rotation{c.rotations.length > 1 ? 's' : ''}, fin prévue {heure(c.plan.fin)}
+                  {c.derniere && `, dernier arrêt coché à ${heureReelle(c.derniere)}`}
                 </small>
               </li>
             )

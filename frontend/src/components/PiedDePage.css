@@ -1,0 +1,25 @@
+.pied { background: var(--vert-fonce); color: #d7e6dc; }
+.pied-contenu {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 40px clamp(16px, 4vw, 40px) 28px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 32px;
+}
+.pied .marque { color: #fff; }
+.pied-marque p { max-width: 38ch; margin: 12px 0 0; line-height: 1.6; }
+.pied-liens { display: grid; gap: 10px; align-content: start; }
+.pied-liens a { color: #fff; font-weight: 500; }
+.pied-liens a:hover { color: var(--or); }
+.pied-pays { display: inline-flex; align-items: center; gap: 10px; color: #fff; font-weight: 600; }
+.pied-commune p { margin: 10px 0 0; font-size: 0.9rem; }
+.pied-licences {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 16px clamp(16px, 4vw, 40px) 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.85rem;
+  color: #a9c2b3;
+}
+@media (max-width: 760px) { .pied-contenu { grid-template-columns: 1fr; gap: 24px; } }

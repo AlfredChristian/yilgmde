@@ -1,8 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import RouteProtegee from './components/RouteProtegee'
 import Entete from './components/Entete'
 import BandeauReseau from './components/BandeauReseau'
+import PiedDePage from './components/PiedDePage'
 import Accueil from './pages/Accueil'
 import Carte from './components/Carte'
 import Signaler from './pages/Signaler'
@@ -14,6 +15,12 @@ import Chauffeur from './pages/Chauffeur'
 import Laabal from './pages/Laabal'
 import Utilisateurs from './pages/Utilisateurs'
 import ModerationDetail from './pages/ModerationDetail'
+
+// Le pied de page accompagne les pages publiques ; les cartes plein écran et les espaces de travail s'en passent.
+function PiedSiPublic() {
+  const { pathname } = useLocation()
+  return ['/', '/signaler', '/suivi', '/connexion'].includes(pathname) ? <PiedDePage /> : null
+}
 
 export default function App() {
   return (
@@ -55,6 +62,7 @@ export default function App() {
           <Route path="/chauffeur" element={<RouteProtegee roles={['chauffeur']}><Chauffeur /></RouteProtegee>} />
           <Route path="/laabal" element={<RouteProtegee roles={['laabal']}><Laabal /></RouteProtegee>} />
         </Routes>
+        <PiedSiPublic />
       </AuthProvider>
     </BrowserRouter>
   )

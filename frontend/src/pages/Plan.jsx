@@ -13,11 +13,11 @@ const PARAMETRES = [
   { cle: 'arrondissement', libelle: 'Périmètre', type: 'arrondissement' },
   { cle: 'camions_en_panne', libelle: 'Camions en panne', type: 'nombre', min: 0 },
   { cle: 'saison_pluies', libelle: 'Saison des pluies', type: 'bool' },
-  { cle: 'budget_xof', libelle: 'Budget mensuel de la commune (XOF)', type: 'nombre', min: 0, pas: 1000000 },
+  { cle: 'budget_xof', libelle: 'Budget mensuel (XOF)', type: 'nombre', min: 0, pas: 1000000 },
 ]
 const TOURNEES_AFFICHEES = 30
 const fmt = (n) => Math.round(n).toLocaleString('fr-FR')
-const fmtNombre = (n) => (n == null ? '—' : typeof n === 'number' ? n.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) : n)
+const fmtNombre = (n) => (n == null ? '-' : typeof n === 'number' ? n.toLocaleString('fr-FR', { maximumFractionDigits: 1 }) : n)
 const LIBELLES_COMPARAISON = {
   capacite_collecte_pct: 'Capacité de collecte',
   part_captee_estimee_pct: 'Part captée estimée',
@@ -38,7 +38,7 @@ const LIBELLES_SIMULATION = { cout_total_xof: 'Coût simulé sur la période (XO
 // Valeur affichée d'un indicateur : les kg en tonnes, les parts avec « % » ;
 // un écart de parts se lit en points (« +4 pts »), pas en pourcentage.
 function valeurIndicateur(cle, n, ecart = false) {
-  if (n == null) return '—'
+  if (n == null) return '-'
   if (cle.endsWith('_kg')) return fmt(n / 1000)
   return fmtNombre(n) + (cle.endsWith('_pct') ? (ecart ? ' pts' : ' %') : '')
 }
@@ -68,7 +68,7 @@ function Courbe({ indicateurs }) {
         <line x1="0" x2={largeur} y1={hauteur - 8} y2={hauteur - 8} />
         <polyline points={points} />
       </svg>
-      <small>min. {fmtNombre(min)} % · max. {fmtNombre(max)} %</small>
+      <small>de {fmtNombre(min)} % à {fmtNombre(max)} %</small>
     </figure>
   )
 }
@@ -225,7 +225,7 @@ export default function Plan() {
 
         <div className="plan-etat">
           {calcul ? <span className="statut statut-attente">Recalcul…</span>
-            : <span className="statut statut-ok">À jour{dernierMs != null && ` · ${dernierMs} ms`}</span>}
+            : <span className="statut statut-ok">À jour{dernierMs != null && `, calculé en ${dernierMs} ms`}</span>}
         </div>
         {erreur && <p className="mod-erreur">{erreur}</p>}
 
@@ -301,7 +301,7 @@ export default function Plan() {
                 <p><strong>{fmtNombre(resume.part_captee_moyenne_pct)} %</strong> part captée moyenne</p>
                 <p><strong>{fmt(resume.dechets_sauvages_kg / 1000)} t</strong> de déchets sauvages</p>
                 {resume.nouveaux_depotoirs != null && <p><strong>{resume.nouveaux_depotoirs}</strong> nouveaux dépotoirs</p>}
-                <p><strong>{resume.depotoirs_actifs_debut} → {resume.depotoirs_actifs_fin}</strong> dépotoirs actifs</p>
+                <p>Dépotoirs actifs : <strong>de {resume.depotoirs_actifs_debut} à {resume.depotoirs_actifs_fin}</strong></p>
                 <p><strong>{fmtNombre(resume.cout_total_xof)} XOF</strong> de coût simulé</p>
                 <Courbe indicateurs={simulation.indicateurs} />
               </div>
@@ -324,7 +324,7 @@ export default function Plan() {
             </button>
             {comparaison && (
               <div className="plan-comparaison">
-                <p className="carte-texte">{comparaison.jours} jours · graine {comparaison.graine} · la première colonne est la référence.</p>
+                <p className="carte-texte">Sur {comparaison.jours} jours avec la graine {comparaison.graine}. La première colonne est la référence.</p>
                 <div className="plan-tableau-wrap">
                   <table>
                     <thead><tr><th>Indicateur</th>{comparaison.scenarios.map((s) => <th key={s.id}>{s.nom}</th>)}</tr></thead>
@@ -354,7 +354,7 @@ export default function Plan() {
             <p className="plan-chiffre" title="Part des déchets produits qui arrive aux points (pré-collecte + apport volontaire)">
               {ind.part_captee_estimee_pct.toLocaleString('fr-FR')} % <small>part captée estimée</small>
             </p>
-            <p className="plan-chiffre">{ind.nb_points_regroupement} <small>points · {ind.camions_utilises.length} camions mobilisés</small></p>
+            <p className="plan-chiffre">{ind.nb_points_regroupement} <small>points, {ind.camions_utilises.length} camions mobilisés</small></p>
             <p className="plan-chiffre">
               {fmt(ind.cout_mensuel_estime_xof)} <small>XOF/mois sur {fmt(ind.budget_mensuel_xof)} de budget</small>
             </p>
@@ -369,8 +369,8 @@ export default function Plan() {
             {plan.tournees.slice(0, TOURNEES_AFFICHEES).map((t, i) => (
               <p key={t.id} className="plan-tournee">
                 <span className="plan-pastille" style={{ background: COULEURS[i % COULEURS.length] }} />
-                {t.type === 'intervention' ? `Laabal, brigade ${t.brigade}` : `${t.camion_id}${t.jour ? ` · jour ${t.jour}` : ''}`}
-                {' · '}{t.distance_km} km · {Math.round(t.duree_min)} min
+                {t.type === 'intervention' ? `Laabal, brigade ${t.brigade}` : `${t.camion_id}${t.jour ? `, jour ${t.jour}` : ''}`}
+                {', '}{t.distance_km} km, {Math.round(t.duree_min)} min
               </p>
             ))}
             {plan.tournees.length > TOURNEES_AFFICHEES && (
@@ -388,7 +388,7 @@ export default function Plan() {
               const affecte = utilisateurs.find((u) => u.id === tournee.affectee_a)
               return (
                 <div className="plan-affectation" key={tournee.id}>
-                  <strong>{tournee.type === 'collecte' ? `${tournee.camion_id} · jour ${tournee.jour ?? 1}` : `Laabal · brigade ${tournee.brigade ?? 1}`}</strong>
+                  <strong>{tournee.type === 'collecte' ? `${tournee.camion_id}, jour ${tournee.jour ?? 1}` : `Laabal, brigade ${tournee.brigade ?? 1}`}</strong>
                   <small>{affecte ? `Affectée à ${affecte.nom}` : 'Non affectée'}</small>
                   <div>
                     <select value={affectations[tournee.id] ?? ''} onChange={(e) => setAffectations((courant) => ({ ...courant, [tournee.id]: e.target.value }))}>

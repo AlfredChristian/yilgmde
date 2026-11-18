@@ -7,31 +7,26 @@ import './Admin.css'
 
 const TYPES = { menager: 'Ordures ménagères', organique: 'Déchets organiques', plastiques: 'Plastiques', gravats: 'Gravats', encombrants: 'Encombrants', autre: 'Autre' }
 
-// Une carte de la file : un résumé. Valider ou rejeter se fait dans la fiche, après examen (D54).
-function Carte({ s }) {
-  // score_auto peut etre null (signalement importe ou ancien) : pas de note
-  const grade = s.score_auto == null ? '–' : s.score_auto >= 0.75 ? 'A' : s.score_auto >= 0.5 ? 'B' : 'C'
-  const recu = new Date(s.cree_le).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+// Une ligne de la file : un résumé. Valider ou rejeter se fait dans la fiche, après examen (D54).
+function Ligne({ s }) {
+  const recu = new Date(s.cree_le).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  const medias = [s.a_photo && 'Photo', s.a_audio && 'Note vocale'].filter(Boolean)
   return (
-    <Link to={`/admin/signalements/${s.id}`} className="carte mod-carte" aria-label={`Examiner le signalement n°${s.id}`}>
-      <div className="carte-gauche">
-        <span className="tuile"><Icone nom="carte" taille={28} /></span>
-        <span className="statut statut-attente">À vérifier</span>
-        <span className="carte-note">reçu le {recu}</span>
-      </div>
-      <div>
-        <h3 className="carte-titre">Signalement n°{s.id}</h3>
-        <p className="carte-texte">
-          {TYPES[s.type_dechet] ?? s.type_dechet} · volume {s.volume_estime}
-          {(s.a_photo || s.a_audio) && <><br />{[s.a_photo && 'photo', s.a_audio && 'note vocale'].filter(Boolean).join(' · ')}</>}
-        </p>
-        {s.alertes.length > 0 && (
-          <p className="mod-alerte">{s.alertes.length} alerte{s.alertes.length > 1 ? 's' : ''} : doublon ou dépotoir proche</p>
-        )}
-        <span className="mod-examiner">Examiner →</span>
-      </div>
-      <span className="badge" title={s.score_auto == null ? 'Pas de score automatique' : `Score automatique : ${Math.round(s.score_auto * 100)} %`}>{grade}</span>
-    </Link>
+    <li>
+      <Link to={`/admin/signalements/${s.id}`} className="file-ligne">
+        <span className="file-id">n°{s.id}</span>
+        <span className="file-quoi">
+          <strong>{TYPES[s.type_dechet] ?? s.type_dechet}</strong>
+          <span>Volume {s.volume_estime}</span>
+        </span>
+        <span className="file-recu">{recu}</span>
+        <span className="file-tags">
+          {medias.map((m) => <span key={m} className="puce">{m}</span>)}
+          {s.alertes.length > 0 && <span className="puce puce-alerte">{s.alertes.length} à proximité</span>}
+        </span>
+        <span className="btn-contour file-bouton">Examiner</span>
+      </Link>
+    </li>
   )
 }
 
@@ -46,24 +41,39 @@ export default function Admin() {
 
   return (
     <main className="admin">
-      <h1>Espace mairie</h1>
-      <p className="admin-intro">Connecté : {session.nom}</p>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
-        <Link to="/admin/plan" className="btn-contour plein">Plan de gestion</Link>
-        <Link to="/admin/utilisateurs" className="btn-contour">Comptes</Link>
-      </div>
-      <h2>Signalements à vérifier {file && `(${file.length})`}</h2>
-      <p className="admin-intro">Cliquez sur un signalement pour voir son emplacement, sa photo et son voisinage, puis décider.</p>
+      <header className="espace-tete">
+        <div>
+          <h1>Espace mairie</h1>
+          <p>Connecté en tant que {session.nom}</p>
+        </div>
+        <nav className="espace-actions" aria-label="Outils de la mairie">
+          <Link to="/admin/plan" className="btn-contour plein"><Icone nom="itineraire" taille={18} /> Plan de gestion</Link>
+          <Link to="/admin/utilisateurs" className="btn-contour"><Icone nom="mairie" taille={18} /> Comptes</Link>
+        </nav>
+      </header>
 
-      {erreur && <p className="mod-erreur">{erreur}</p>}
-      {file === null && !erreur && <div className="admin-etat"><span className="admin-etat-icone"><Icone nom="suivi" taille={28} /></span><strong>Chargement de la file</strong><span>Nous récupérons les signalements à vérifier.</span></div>}
-      {file?.length === 0 && <div className="admin-etat"><span className="admin-etat-icone admin-etat-ok"><Icone nom="check" taille={28} /></span><strong>Tout est à jour</strong><span>Rien à modérer pour le moment. Les nouveaux signalements apparaîtront ici.</span><Link to="/admin/plan" className="btn-contour">Ouvrir le plan de gestion</Link></div>}
+      <section className="file">
+        <div className="file-tete">
+          <h2>Signalements à vérifier</h2>
+          {file && <span className="file-compte">{file.length}</span>}
+        </div>
+        <p className="admin-intro">Ouvrez un signalement pour voir son emplacement, sa photo et son voisinage avant de décider.</p>
 
-      <div className="mod-grille">
-        {file?.map((s) => (
-          <Carte key={s.id} s={s} />
-        ))}
-      </div>
+        {erreur && <p className="mod-erreur" role="alert">{erreur}</p>}
+        {file === null && !erreur && <div className="admin-etat"><span className="role-spinner" /> Chargement des signalements</div>}
+        {file?.length === 0 && (
+          <div className="admin-etat">
+            <span className="admin-etat-icone"><Icone nom="check" taille={26} /></span>
+            <strong>Aucun signalement en attente</strong>
+            <span>Les nouveaux signalements apparaîtront ici.</span>
+          </div>
+        )}
+        {file?.length > 0 && (
+          <ol className="file-liste">
+            {file.map((s) => <Ligne key={s.id} s={s} />)}
+          </ol>
+        )}
+      </section>
     </main>
   )
 }

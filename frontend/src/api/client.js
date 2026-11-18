@@ -671,7 +671,8 @@ export async function getTournee() {
       t.arrets.map((a) => ({
         ...a,
         ordre: ++ordre,
-        nom: `Point de regroupement n°${a.cible_id}` + (tournees.length > 1 ? ` (rotation ${t.rotation ?? 1})` : ''),
+        rotation: t.rotation ?? 1,
+        nom: `Point de regroupement n°${a.cible_id}`,
       })),
     ),
   }

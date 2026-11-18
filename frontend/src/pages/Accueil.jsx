@@ -1,92 +1,90 @@
 import { Link } from 'react-router-dom'
 import Icone from '../components/Icone'
-import { NOM, SLOGAN } from '../config/projet'
+import CarteOuaga from '../components/CarteOuaga'
 import './Accueil.css'
 
-const SERVICES = [
-  { icone: 'carte', titre: 'Carte des dépotoirs', texte: 'Voir les dépotoirs vérifiés de la ville.', lien: '/carte' },
-  { icone: 'alerte', titre: 'Signaler un dépotoir', texte: 'Sans compte, par la voix ou par écrit.', lien: '/signaler' },
-  { icone: 'suivi', titre: 'Suivre mon signalement', texte: 'Entrez votre code de suivi.', lien: '/suivi' },
-  { icone: 'mairie', titre: 'Espace mairie', texte: 'Modération, paramètres et plan de gestion.', lien: '/connexion' },
-  { icone: 'camion', titre: 'Espace chauffeur', texte: 'Votre tournée et vos arrêts du jour.', lien: '/connexion' },
-  { icone: 'bouclier', titre: 'Brigade Laabal', texte: 'Interventions et surveillance.', lien: '/connexion' },
+const ACTIONS = [
+  { icone: 'alerte', titre: 'Signaler un dépotoir', texte: 'Sans compte. Placez le point, choisissez le type de déchets, ajoutez une photo ou un message vocal.', lien: '/signaler', bouton: 'Signaler' },
+  { icone: 'carte', titre: 'Consulter la carte', texte: 'Les dépotoirs vérifiés, ceux qui ont été traités et les centres de collecte de la mairie.', lien: '/carte', bouton: 'Ouvrir la carte' },
+  { icone: 'suivi', titre: 'Suivre un signalement', texte: 'Avec le code reçu après l’envoi, voyez si votre signalement a été vérifié et traité.', lien: '/suivi', bouton: 'Suivre' },
 ]
 
-const ETAPES = [
-  { icone: 'alerte', titre: 'Signaler', texte: 'Placez un dépotoir sur la carte en quelques secondes, sans compte.' },
-  { icone: 'bouclier', titre: 'Vérifier', texte: 'Doublons, positions incohérentes, abus : chaque rejet est expliqué.' },
-  { icone: 'itineraire', titre: 'Planifier', texte: 'Points de regroupement et tournées, recalculés en quelques secondes.' },
+const PARCOURS = [
+  { titre: 'Vous signalez', texte: 'Même sans réseau : l’envoi part dès que la connexion revient.' },
+  { titre: 'La mairie vérifie', texte: 'Lieu, photo et signalements voisins sont examinés avant toute décision.' },
+  { titre: 'Le plan s’adapte', texte: 'Points de regroupement et tournées sont recalculés sur les vraies rues.' },
+  { titre: 'Les équipes interviennent', texte: 'Chauffeurs et brigade Laabal cochent chaque arrêt depuis leur téléphone.' },
+]
+
+const EQUIPES = [
+  { icone: 'mairie', titre: 'Mairie', texte: 'Vérification des signalements, plan de gestion, suivi de la flotte et des comptes.' },
+  { icone: 'camion', titre: 'Chauffeurs', texte: 'La tournée du jour sur la carte et les arrêts à valider un par un.' },
+  { icone: 'bouclier', titre: 'Brigade Laabal', texte: 'Les dépotoirs à éradiquer par ordre de priorité, puis leur surveillance.' },
 ]
 
 export default function Accueil() {
   return (
-    <div>
+    <main className="accueil">
       <section className="hero">
-        <div className="hero-contenu">
-          <div className="hero-kicker"><span className="hero-point" /> Plateforme municipale de propreté</div>
-          <p className="hero-avant">Bienvenue sur</p>
-          <h1 className="hero-nom">{NOM}<span>.</span></h1>
-          <p className="hero-slogan">{SLOGAN}</p>
-          <p className="hero-description">Signalez un dépotoir, suivez les interventions et aidez la mairie à organiser les tournées plus efficacement.</p>
-
+        <div className="hero-texte">
+          <h1>Signalez un dépotoir. La mairie organise la collecte.</h1>
+          <p className="hero-chapo">
+            Yilgmdé relie les habitants de Ouagadougou, la mairie et les équipes de terrain. Chaque signalement
+            vérifié entre dans les tournées de collecte des 12 arrondissements.
+          </p>
           <div className="hero-actions">
-            <Link to="/signaler" className="hero-action hero-action-primaire"><Icone nom="alerte" taille={20} /> Signaler un dépotoir</Link>
-            <Link to="/carte" className="hero-action hero-action-secondaire"><Icone nom="carte" taille={20} /> Explorer la carte</Link>
-          </div>
-          <div className="hero-stats" aria-label="Fonctions principales">
-            <span><strong>01</strong> Signalement simple</span>
-            <span><strong>02</strong> Vérification terrain</span>
-            <span><strong>03</strong> Tournées optimisées</span>
+            <Link to="/signaler" className="btn btn-primaire hero-bouton"><Icone nom="alerte" taille={20} /> Signaler un dépotoir</Link>
+            <Link to="/carte" className="btn btn-secondaire hero-bouton"><Icone nom="carte" taille={20} /> Voir la carte</Link>
           </div>
         </div>
-        <div className="hero-bandeau">
-          <span className="hero-bandeau-point" /> Version de démonstration, données fictives pour la présentation
+        <div className="hero-carte">
+          <CarteOuaga />
         </div>
       </section>
 
-      <section className="bloc">
-        <h2 className="titre-section">Services</h2>
-        <div className="grille-services">
-          {SERVICES.map((s) => (
-            <article key={s.titre} className="carte">
-              <div className="carte-gauche">
-                <span className="tuile"><Icone nom={s.icone} taille={28} /></span>
-              </div>
-              <div>
-                <h3 className="carte-titre">{s.titre}</h3>
-                <p className="carte-texte">{s.texte}</p>
-                <Link to={s.lien} className="btn-contour">
-                  Ouvrir
-                </Link>
-              </div>
+      <section className="accueil-section">
+        <h2>Ce que vous pouvez faire</h2>
+        <div className="accueil-actions">
+          {ACTIONS.map((a) => (
+            <article key={a.titre} className="accueil-action">
+              <span className="tuile"><Icone nom={a.icone} taille={24} /></span>
+              <h3>{a.titre}</h3>
+              <p>{a.texte}</p>
+              <Link to={a.lien} className="btn-contour">{a.bouton}</Link>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="bande-verte">
-        <h2 className="titre-section titre-clair">Comment ça marche</h2>
-        <div className="grille-etapes">
-          {ETAPES.map((e, i) => (
-            <article key={e.titre} className="carte">
-              <div className="carte-gauche">
-                <span className="tuile tuile-jaune"><Icone nom={e.icone} taille={28} /></span>
-              </div>
+      <section className="accueil-section accueil-parcours">
+        <h2>D’un signalement à la collecte</h2>
+        <ol className="parcours">
+          {PARCOURS.map((p) => (
+            <li key={p.titre}>
+              <h3>{p.titre}</h3>
+              <p>{p.texte}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="accueil-section">
+        <div className="accueil-equipes-tete">
+          <h2>Pour les équipes de la ville</h2>
+          <Link to="/connexion" className="btn-contour plein">Se connecter</Link>
+        </div>
+        <div className="accueil-equipes">
+          {EQUIPES.map((e) => (
+            <article key={e.titre} className="accueil-equipe">
+              <Icone nom={e.icone} taille={22} />
               <div>
-                <h3 className="carte-titre">{e.titre}</h3>
-                <p className="carte-texte">{e.texte}</p>
+                <h3>{e.titre}</h3>
+                <p>{e.texte}</p>
               </div>
-              <span className="badge">{i + 1}</span>
             </article>
           ))}
         </div>
       </section>
-
-      <footer className="pied">
-        <div className="pied-trait" />
-        <p className="pied-nom">{NOM}</p>
-        <p>Code libre MIT - Données cartographiques © contributeurs OpenStreetMap</p>
-      </footer>
-    </div>
+    </main>
   )
 }
