@@ -133,6 +133,27 @@ def _photo_avec_plaque_moto(angle=8.0):
     return fond
 
 
+def _photo_avec_plaque_moto_sans_flash():
+    """Même plaque, sans flash : jaune terne, aussi lumineuse que la latérite qui l'entoure."""
+    rng = np.random.default_rng(6)
+    fond = np.dstack([rng.normal(m, 8, (600, 900)) for m in (95, 110, 140)]).clip(0, 255).astype(np.uint8)   # latérite (BGR)
+    plaque = np.full((120, 150, 3), (60, 125, 130), np.uint8)       # jaune terne, même gris que le sol
+    cv2.putText(plaque, "7021", (18, 52), cv2.FONT_HERSHEY_SIMPLEX, 1.3, (25, 25, 25), 4)
+    cv2.putText(plaque, "2DR 09", (8, 108), cv2.FONT_HERSHEY_SIMPLEX, 1.1, (25, 25, 25), 4)
+    fond[380:500, 100:250] = plaque
+    return fond
+
+
+def test_plaque_de_moto_sans_flash_trouvee_par_sa_couleur():
+    image = _photo_avec_plaque_moto_sans_flash()
+    gris = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    assert masquage._plaques_fond_clair(gris) == []                 # pas plus claire que le sol
+    zones = masquage._plaques_fond_clair(gris, image)               # mais jaune
+    assert len(zones) == 1
+    x, y, w, h = zones[0]
+    assert x <= 110 and x + w >= 240 and y <= 390 and y + h >= 490
+
+
 def test_plaque_de_moto_jaune_sur_deux_lignes(config):
     """D59 : sur une vraie photo, la recherche par rangée unique ne voit pas ces plaques presque carrées."""
     image = _photo_avec_plaque_moto()

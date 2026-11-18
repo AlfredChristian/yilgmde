@@ -144,18 +144,13 @@ def _plaques_par_forme(gris) -> list[tuple[int, int, int, int]]:
     return plaques
 
 
-def _plaques_fond_clair(gris) -> list[tuple[int, int, int, int]]:
-    """Plaques vues comme un fond clair (jaune, blanc) plus lumineux que leur entourage,
-    à peu près rectangulaire, portant 4 à 16 caractères sombres sur **une ou deux lignes**.
-    Couvre les plaques de moto burkinabè (jaunes, deux lignes, presque carrées) que la
-    recherche par rangée unique ne voit pas (D59)."""
+def _plaques_dans_masque(gris, masque) -> list[tuple[int, int, int, int]]:
+    """Zones du masque (fond de plaque supposé) à peu près rectangulaires, portant 4 à 16
+    caractères sombres sur une ou deux lignes."""
     h, w = gris.shape[:2]
-    k = max(15, (w // 20) | 1)
-    fond = cv2.blur(gris, (k * 3, k * 3))
-    clair = ((gris.astype(np.int16) - fond > 25) & (gris > 110)).astype(np.uint8)
     m = max(3, (w // 100) | 1)
-    clair = cv2.morphologyEx(clair, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (m, m)))
-    n, etiquettes, stats, _ = cv2.connectedComponentsWithStats(clair)
+    masque = cv2.morphologyEx(masque, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (m, m)))
+    n, etiquettes, stats, _ = cv2.connectedComponentsWithStats(masque)
     plaques = []
     for i in range(1, n):
         x, y, cw, ch, aire = (int(v) for v in stats[i])
@@ -188,6 +183,26 @@ def _plaques_fond_clair(gris) -> list[tuple[int, int, int, int]]:
         bonnes = [r for r in rangees if r["n"] >= 3]
         if 1 <= len(bonnes) <= 2 and 4 <= sum(r["n"] for r in bonnes) <= 16:
             plaques.append((x, y, cw, ch))
+    return plaques
+
+
+def _plaques_fond_clair(gris, image=None) -> list[tuple[int, int, int, int]]:
+    """Plaques vues par leur fond (D59) : un fond **plus clair que son entourage** (plaque
+    blanche, ou jaune éclairée par le flash), ou un fond **jaune** (plaques de moto burkinabè,
+    qui sans flash ont la même luminosité que la latérite mais pas la même couleur). Le fond
+    doit porter 4 à 16 caractères sombres sur une ou deux lignes."""
+    h, w = gris.shape[:2]
+    k = max(15, (w // 20) | 1)
+    fond = cv2.blur(gris, (k * 3, k * 3))
+    masques = [((gris.astype(np.int16) - fond > 25) & (gris > 110)).astype(np.uint8)]
+    if image is not None:
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        jaune = ((hsv[..., 0] >= 20) & (hsv[..., 0] <= 40) & (hsv[..., 1] >= 40) & (hsv[..., 2] >= 80)).astype(np.uint8)
+        # Points jaunes isolés (grain du sol, herbe sèche) retirés : ils relieraient la plaque au décor.
+        masques.append(cv2.morphologyEx(jaune, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8)))
+    plaques = []
+    for masque in masques:
+        plaques += [z for z in _plaques_dans_masque(gris, masque) if z not in plaques]
     return plaques
 
 
@@ -226,7 +241,7 @@ def detecter(image, config: dict) -> dict[str, list[tuple[int, int, int, int]]]:
         visages = yunet
     gris_brut = cv2.cvtColor(petite, cv2.COLOR_BGR2GRAY)
     plaques = _detecter(gris, CASCADES_PLAQUES, p["facteur"], p["voisins_plaque"], taille_min) + _plaques_par_forme(gris_brut) \
-        + _plaques_fond_clair(gris_brut)
+        + _plaques_fond_clair(gris_brut, petite)
     return {"visages": remettre(visages), "plaques": remettre(plaques)}
 
 

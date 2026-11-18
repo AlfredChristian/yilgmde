@@ -195,18 +195,28 @@ function dansEnveloppe(env, x, y) {
   return true
 }
 
-/**
- * Plaques vues comme un fond clair (jaune, blanc) plus lumineux que leur entourage, à peu près
- * rectangulaire, portant 4 à 16 caractères sombres sur une ou deux lignes : plaques de moto
- * burkinabè notamment. Portage de `_plaques_fond_clair` (backend/masquage.py).
- */
-export function plaquesFondClair(gris, w, h) {
-  const k = Math.max(15, Math.floor(w / 20) | 1)
-  const fond = moyenne(gris, w, h, k * 3)
-  let clair = new Uint8Array(w * h)
-  for (let i = 0; i < w * h; i++) clair[i] = gris[i] - fond[i] > 25 && gris[i] > 110 ? 1 : 0
+// Masque des pixels jaunes (teinte 20 à 40 sur 180, saturation >= 40, valeur >= 80), avec la
+// conversion HSV 8 bits d'OpenCV.
+function masqueJaune(rgba, w, h) {
+  const out = new Uint8Array(w * h)
+  for (let i = 0; i < w * h; i++) {
+    const r = rgba[i * 4], g = rgba[i * 4 + 1], b = rgba[i * 4 + 2]
+    const v = Math.max(r, g, b), mn = Math.min(r, g, b), d = v - mn
+    if (v < 80 || d === 0) continue
+    if (Math.round((d * 255) / v) < 40) continue
+    let t = v === r ? (60 * (g - b)) / d : v === g ? 120 + (60 * (b - r)) / d : 240 + (60 * (r - g)) / d
+    if (t < 0) t += 360
+    const teinte = Math.round(t / 2)
+    if (teinte >= 20 && teinte <= 40) out[i] = 1
+  }
+  return out
+}
+
+// Zones du masque (fond de plaque supposé) à peu près rectangulaires, portant 4 à 16 caractères
+// sombres sur une ou deux lignes. Portage de `_plaques_dans_masque` (backend/masquage.py).
+function plaquesDansMasque(gris, masque, w, h) {
   const m = Math.max(3, Math.floor(w / 100) | 1)
-  clair = fermer(clair, w, h, m, m)
+  const clair = fermer(masque, w, h, m, m)
   const etiq = new Int32Array(w * h)
   const plaques = []
   composantes(clair, w, h, etiq).forEach((c, n) => {
@@ -238,5 +248,25 @@ export function plaquesFondClair(gris, w, h) {
     const total = bonnes.reduce((a, r) => a + r.n, 0)
     if (bonnes.length >= 1 && bonnes.length <= 2 && total >= 4 && total <= 16) plaques.push([x, y, cw, ch])
   })
+  return plaques
+}
+
+/**
+ * Plaques vues par leur fond (D59) : plus clair que son entourage (plaque blanche, ou jaune sous
+ * le flash) ou jaune (plaques de moto burkinabè, qui sans flash ont la luminosité de la latérite
+ * mais pas sa couleur). Portage de `_plaques_fond_clair` (backend/masquage.py).
+ */
+export function plaquesFondClair(gris, w, h, rgba = null) {
+  const k = Math.max(15, Math.floor(w / 20) | 1)
+  const fond = moyenne(gris, w, h, k * 3)
+  const clair = new Uint8Array(w * h)
+  for (let i = 0; i < w * h; i++) clair[i] = gris[i] - fond[i] > 25 && gris[i] > 110 ? 1 : 0
+  const masques = [clair]
+  // Points jaunes isolés (grain du sol, herbe sèche) retirés : ils relieraient la plaque au décor.
+  if (rgba) masques.push(dilater(eroder(masqueJaune(rgba, w, h), w, h, 3, 3), w, h, 3, 3))
+  const plaques = []
+  for (const masque of masques)
+    for (const z of plaquesDansMasque(gris, masque, w, h))
+      if (!plaques.some((p) => p.every((v, i) => v === z[i]))) plaques.push(z)
   return plaques
 }
