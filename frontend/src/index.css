@@ -230,3 +230,6 @@ select { padding-right: 32px; }
 input:hover, select:hover, textarea:hover { border-color: #b9c6bd; }
 input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--vert); box-shadow: 0 0 0 3px var(--vert-clair); }
 input[type='checkbox'], input[type='radio'], input[type='range'] { accent-color: var(--vert); }
+
+/* Message de confirmation */
+.util-message { padding: 10px 14px; background: var(--vert-clair); border-radius: 10px; color: var(--vert); }
