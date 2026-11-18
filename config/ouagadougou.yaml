@@ -19,7 +19,7 @@ population_totale: 2415266        # INSD, RGPH 2019 (monographie de Ouagadougou,
 
 population:
   production_dechets_kg_hab_jour: 0.60   # DGEP, cité par Sidwaya ; la mairie donne 0,57 (0,21 t/hab/an)
-  taux_abonnement_precollecteurs: 0.3    # [H]
+  taux_abonnement_precollecteurs: 0.35   # D63 : estimation de l'équipe, 35 % des ménages de Ouaga abonnés
   batiments: data/ouaga/batiments.csv.gz   # D58 : Google Open Buildings v3 ; absent = grille uniforme
 
 collecte:
@@ -40,6 +40,9 @@ laabal:
   capacite_eradication_par_jour: 4       # [H]
 
 simulation:
+  # D63 : sur 100 ménages, 35 abonnés, 15 apportent eux-mêmes au point, 50 jettent en dépôt sauvage.
+  # 15 % de l'ensemble = 15/65 des non-abonnés, d'où 0,23 pour un ménage à distance de marche.
+  prob_apport_volontaire: 0.23
   # [H] D48 recalibré (D50) : un secteur de Ouaga laisse 12 à 20 t de déchets sauvages par jour ;
   # avec 1 500 kg la probabilité restait au plafond dans tous les scénarios. 40 t donne ≈ 15 %/jour
   # pour un secteur moyen et fait réagir le nombre de nouveaux dépotoirs aux scénarios.

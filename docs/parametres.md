@@ -41,7 +41,7 @@ Les sources sont détaillées dans `data/ouaga/LISEZMOI.md`. Un test (`tests/tes
 | Paramètre | Rôle | Unité | Défaut | Ouaga | Statut |
 |---|---|---|---|---|---|
 | `population.production_dechets_kg_hab_jour` | Déchets produits par habitant (demande, C1) | kg/hab/jour | 0,5 | 0,60 | source : DGEP (cité par *Sidwaya*) ; mairie 0,57 |
-| `population.taux_abonnement_precollecteurs` | Part des ménages abonnés à un pré-collecteur | 0–1 | 0,3 | 0,3 | [H] |
+| `population.taux_abonnement_precollecteurs` | Part des ménages abonnés à un pré-collecteur | 0–1 | 0,3 | 0,35 | [H] estimation de l'équipe (D63) |
 | `population.batiments` | Fichier des bâtiments Google Open Buildings v3 (`scripts/telecharger_batiments.py`) : les ménages sont placés là où sont les maisons, pondérés par la surface bâtie, pour situer les points de regroupement et mesurer la couverture (D58). Vide ou absent = répartition uniforme [H] | chemin | — | `data/ouaga/batiments.csv.gz` | source |
 | `population.evolution_pct` | Scénario : évolution de la population de toutes les zones (exode, croissance) ; la demande suit | % | 0 | 0 | levier de scénario |
 | `population.habitants_par_menage` | Taille moyenne d'un ménage | habitants | 6 | | informatif (pas encore utilisé) |
@@ -139,7 +139,7 @@ Les sources sont détaillées dans `data/ouaga/LISEZMOI.md`. Un test (`tests/tes
 
 | Paramètre | Rôle | Unité | Défaut | Ouaga | Statut |
 |---|---|---|---|---|---|
-| `simulation.prob_apport_volontaire` | Un ménage non abonné à distance de marche apporte ses déchets au point. **Levier principal de la part captée** (D41) | 0–1 | 0,6 |  | [H] |
+| `simulation.prob_apport_volontaire` | Un ménage non abonné à distance de marche apporte ses déchets au point. **Levier principal de la part captée** (D41). Ouaga : 15 % de l'ensemble des ménages apportent eux-mêmes, soit 15/65 des non-abonnés (D63) | 0–1 | 0,6 | 0,23 | [H] estimation de l'équipe (D63) |
 | `simulation.seuil_nouveau_depotoir_kg` | Échelle de déchets sauvages du jour : plus elle est basse, plus le risque d'un nouveau dépotoir augmente vite. Ouaga : recalibré sur 12 à 20 t/jour de déchets sauvages par secteur (D50) | kg | 1500 | 40 000 | [H] |
 | `simulation.prob_nouveau_depotoir_max` | Plafond journalier de probabilité d'apparition d'un nouveau dépotoir ; évite qu'un seuil dépassé crée un dépôt à coup sûr | 0–1 | 0,45 |  | [H] |
 | `simulation.prob_reapparition` | Réapparition d'un site surveillé, par jour (× (1 − dissuasion)) | 0–1 | 0,05 |  | [H] |

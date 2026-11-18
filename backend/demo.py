@@ -29,7 +29,7 @@ def _scenarios_demo(config: dict) -> list[tuple[str, dict]]:
     return [
         ("pluies", {**perimetre, "scenario": {"saison": "pluies"}}),
         ("panne", {**perimetre, "camions": en_panne}),
-        ("sensibilisation", {**perimetre, "simulation": {"prob_apport_volontaire": 0.8}}),
+        ("sensibilisation", {**perimetre, "simulation": {"prob_apport_volontaire": 0.5}}),   # D63
     ]
 
 

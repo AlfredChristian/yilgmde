@@ -40,20 +40,26 @@ COULEURS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"]
 ENCRE, ENCRE_2, GRILLE, FOND = "#0b0b0b", "#52514e", "#e4e3df", "#fcfcfb"
 
 
+SENSIBILISATION = 0.5    # D63 : une campagne double à peu près l'apport volontaire (0,23 à Ouaga)
+ABONNEMENTS = 0.5
+
+
 def scenarios(config: dict) -> list[tuple[str, str, dict]]:
     """(nom court, description, surcharges). La panne retire les 60 premiers camions sur 70."""
     n = len(config["camions"])
     panne = [{"id": c["id"], "disponible": False} for c in config["camions"][: max(0, n - 10)]]
     budget = config["mairie"]["budget_mensuel_xof"]
+    pct = lambda v: f"{round(float(v) * 100)} %"
+    apport, abonnes = config["simulation"]["prob_apport_volontaire"], config["population"]["taux_abonnement_precollecteurs"]
     return [
         ("Base", "Paramètres de Ouagadougou, saison sèche", {}),
         ("Pluies", "Saison des pluies : +10 % de déchets, camions 30 % plus lents, moins d'apport volontaire",
          {"scenario": {"saison": "pluies"}}),
         ("Panne", f"{len(panne)} camions sur {n} indisponibles (il en reste {n - len(panne)})", {"camions": panne}),
-        ("Sensibilisation", "Apport volontaire aux points porté de 60 % à 80 %",
-         {"simulation": {"prob_apport_volontaire": 0.8}}),
-        ("Abonnements", "Abonnement aux pré-collecteurs porté de 30 % à 50 % des ménages",
-         {"population": {"taux_abonnement_precollecteurs": 0.5}}),
+        ("Sensibilisation", f"Apport volontaire aux points porté de {pct(apport)} à {pct(SENSIBILISATION)} des non-abonnés proches d'un point",
+         {"simulation": {"prob_apport_volontaire": SENSIBILISATION}}),
+        ("Abonnements", f"Abonnement aux pré-collecteurs porté de {pct(abonnes)} à {pct(ABONNEMENTS)} des ménages",
+         {"population": {"taux_abonnement_precollecteurs": ABONNEMENTS}}),
         ("Budget ÷ 2", f"Budget mensuel de la commune réduit de moitié ({budget // 2:,} XOF)".replace(",", " "),
          {"mairie": {"budget_mensuel_xof": budget // 2}}),
     ]
