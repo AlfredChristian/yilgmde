@@ -1,8 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { MapContainer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Marker, Polyline, Tooltip, useMap } from 'react-leaflet'
 import FondDeCarte from './FondDeCarte'
 import { getSuiviFlotte } from '../api/client'
+import { iconeCamion, svgCamion } from './iconeCamion'
+
+const COULEUR_AFFECTE = '#0e5a3a'
+const COULEUR_NON_AFFECTE = '#6b7570'
+const icones = new Map()
+function icone(couleur, versGauche) {
+  const cle = `${couleur}-${versGauche}`
+  if (!icones.has(cle)) icones.set(cle, iconeCamion({ couleur, versGauche }))
+  return icones.get(cle)
+}
 
 // Suivi de la flotte (D51), en 2D sur la vraie carte, avec deux informations bien séparées :
 // - AVANCEMENT RÉEL : les arrêts cochés par le chauffeur ou la brigade (GET /admin/suivi,
@@ -204,11 +214,14 @@ function VueSuivi({ onRetourCarte }) {
             ))}
             {camions.map((c) => {
               const { pos, etat } = positionPrevue(c.plan, minute)
+              // Sens de marche : où sera le camion deux minutes plus tard.
+              const suivant = positionPrevue(c.plan, minute + 2).pos
+              const versGauche = Boolean(pos && suivant && suivant[1] < pos[1] - 1e-7)
               return pos ? (
-                <CircleMarker key={`c${c.id}`} center={pos} radius={8}
-                  pathOptions={{ color: '#ffffff', weight: 2, fillColor: c.agent ? '#e0a100' : '#52514e', fillOpacity: 1 }}>
+                <Marker key={`c${c.id}`} position={pos} zIndexOffset={c.agent ? 1000 : 500}
+                  icon={icone(c.agent ? COULEUR_AFFECTE : COULEUR_NON_AFFECTE, versGauche)}>
                   <Tooltip>{c.id}{c.agent ? `, ${c.agent}` : ''}, {etat} (prévu à {heure(minute)})</Tooltip>
-                </CircleMarker>
+                </Marker>
               ) : null
             })}
             <CircleMarker center={depot} radius={9} pathOptions={{ color: '#ffffff', weight: 2, fillColor: '#0b3d2a', fillOpacity: 1 }}>
@@ -251,8 +264,8 @@ function VueSuivi({ onRetourCarte }) {
       <div className="flotte-legende">
         <span><i className="flotte-dot" style={{ background: '#1f9d55' }} /> Arrêt fait (coché sur le terrain)</span>
         <span><i className="flotte-dot" style={{ background: '#fff', border: '1.5px solid #6b7c72' }} /> Arrêt à faire</span>
-        <span><i className="flotte-dot" style={{ background: '#e0a100' }} /> Camion affecté, position prévue</span>
-        <span><i className="flotte-dot" style={{ background: '#52514e' }} /> Camion non affecté, position prévue</span>
+        <span><i className="icone-camion-legende" dangerouslySetInnerHTML={{ __html: svgCamion(COULEUR_AFFECTE, { largeur: 30 }) }} />Camion affecté, position prévue</span>
+        <span><i className="icone-camion-legende" dangerouslySetInnerHTML={{ __html: svgCamion(COULEUR_NON_AFFECTE, { largeur: 30 }) }} />Camion non affecté, position prévue</span>
         <span><i className="suivi-cle-barre" /> Barre : vert = arrêts cochés (réel), gris = arrêts prévus à l'heure choisie</span>
       </div>
       <p className="flotte-note">

@@ -1,0 +1,17 @@
+/* Suivi de l'éradication (D60) : reprend la mise en page du suivi de la flotte */
+.eradication .suivi-liste { grid-auto-rows: max-content; }
+.eradication .suivi-liste li { padding: 0; overflow: hidden; }
+.eradication .suivi-liste li.choisi { border-color: var(--vert); box-shadow: 0 0 0 2px rgba(14, 90, 58, .15); }
+.eradication-vide { padding: 14px !important; color: var(--gris); font-size: .85rem; }
+.eradication-ligne { display: grid; gap: 3px; width: 100%; padding: 10px 12px 6px; border: 0; background: none; text-align: left; font: inherit; cursor: pointer; }
+.eradication-ligne:focus-visible { outline: 3px solid var(--or); outline-offset: -3px; }
+.eradication-etat { flex: 0 0 auto; padding: 2px 8px; border-radius: 999px; font-size: .7rem; font-weight: 700; color: #1d2b24;
+  background: color-mix(in srgb, var(--c) 18%, white); border: 1px solid color-mix(in srgb, var(--c) 55%, white); }
+.eradication-etapes { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 0; padding: 4px 12px 10px; }
+.eradication-etapes li { position: relative; display: grid; gap: 2px; padding: 8px 4px 0 0; border: 0 !important; border-top: 3px solid #dfe6e1 !important; border-radius: 0 !important;
+  background: none !important; font-size: .68rem; color: var(--gris); }
+.eradication-etapes li.fait { border-top-color: var(--vert) !important; color: #1d2b24; }
+.eradication-etapes li span { font-weight: 700; }
+.eradication-etapes time { font-variant-numeric: tabular-nums; }
+.eradication-detail { margin: 0; padding: 0 12px 12px; font-size: .76rem; line-height: 1.45; color: #34443b; }
+.eradication-halo { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: rgba(14, 90, 58, .22); box-shadow: inset 0 0 0 3px rgba(14, 90, 58, .9); }

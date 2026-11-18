@@ -17,6 +17,8 @@
 
 - [x] D58 — Ménages situés d'après les bâtiments Open Buildings (P2) — fichier poussé, rapport régénéré
 
+- [x] D60 — Suivi de l'éradication des dépotoirs (signalé, validé, intervention, éradiqué, rejouable), caméra sur ordinateur, camions dessinés sur les cartes
+
 **Socle**
 - [x] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
 - [x] Modèle de données SQLite + schémas Pydantic (P1)
