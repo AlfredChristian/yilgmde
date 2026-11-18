@@ -36,6 +36,10 @@ export default function EnregistreurVocal({ onChange }) {
   async function demarrer() {
     setErreur(null)
     const format = choisirFormat()
+    if (!window.isSecureContext) {
+      setErreur("La note vocale demande une adresse sécurisée (https). Ouvrez l'application par son adresse https.")
+      return
+    }
     if (format === null || !navigator.mediaDevices?.getUserMedia) {
       setErreur("L'enregistrement vocal n'est pas disponible sur cet appareil.")
       return

@@ -1,10 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 
-export default defineConfig({
+const PROXY_API = {
+  '/api': {
+    target: 'http://localhost:8000', // [H] port de l'API
+    changeOrigin: true,
+    rewrite: (path) => path.replace(/^\/api/, ''),
+  },
+}
+
+// `npm run dev:telephone` (mode « telephone ») sert l'application en https sur le réseau local,
+// avec un certificat créé sur place : le micro (note vocale) et la caméra ne marchent qu'en https.
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
+    ...(mode === 'telephone' ? [basicSsl({ name: 'yilgmde-local' })] : []),
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
@@ -41,13 +53,7 @@ export default defineConfig({
       },
     }),
   ],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000', // [H] port de l'API
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
-      },
-    },
-  },
-})
+  // Même relais vers l'API pour `npm run dev` et pour `vite preview` (version construite, installable).
+  server: { proxy: PROXY_API },
+  preview: { proxy: PROXY_API },
+}))
