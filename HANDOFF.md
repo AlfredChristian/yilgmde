@@ -17,7 +17,7 @@
 1. `npm run build`, puis PR vers `main`.
 2. Vérifier le contrat (`id_client`, `capture_le`, `note_vocale`, `X-Device-Token`).
 3. Comparaison de scénarios (D6).
-4. Masquage visages/plaques : fait côté serveur (D36) ; sur l'appareil, à décider (D47).
+4. Masquage visages/plaques : fait sur le serveur (D36, D57) **et sur le téléphone avant l'envoi** (D59, `src/masquage/`, branche `front/masquage-appareil`). Le modèle est dans `public/modeles/` ; s'il change, relancer `python scripts/exporter_yunet_web.py` puis `python scripts/verifier_masquage_web.py`.
 5. Brancher les routes réelles `/chauffeur/*` et `/laabal/*` avec Faissal (noms marqués [H]).
 
 ## Faissal (back / moteur)

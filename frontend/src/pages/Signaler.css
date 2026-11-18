@@ -114,6 +114,8 @@
 .photo-apercu-info { display: grid; gap: 4px; min-width: 0; font-size: .82rem; }
 .photo-apercu-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .photo-apercu-info span { color: var(--gris); }
+.photo-masquage { margin: 10px 0 0; font-size: .85rem; color: var(--gris); }
+.photo-apercu-info .photo-masquage-etat { color: var(--vert); font-weight: 600; }
 .photo-supprimer { padding: 7px 9px; border: 1px solid var(--rouge); border-radius: 8px; background: white; color: var(--rouge); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; }
 @media (max-width: 560px) {
   .photo-actions { display: grid; grid-template-columns: 1fr; }

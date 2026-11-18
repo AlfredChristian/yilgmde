@@ -7,6 +7,7 @@ import 'leaflet/dist/leaflet.css'
 import Icone from '../components/Icone'
 import EnregistreurVocal from '../components/EnregistreurVocal'
 import { signalerAvecFile } from '../api/client'
+import { masquerPhoto } from '../masquage'
 import './Signaler.css'
 
 const CENTRE = [12.3714, -1.5197] // [H] a deplacer dans la config
@@ -25,6 +26,18 @@ const VOLUMES = [
   { valeur: 'moyen', libelle: 'Moyen', icone: 'tas_moyen' },
   { valeur: 'gros', libelle: 'Gros', icone: 'tas_gros' },
 ]
+
+const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`
+
+function texteMasquage(m) {
+  if (!m) return null
+  if (m.etat === 'serveur') return 'Le masquage sera fait à la réception.'
+  if (m.etat !== 'fait') return null
+  if (!m.visages && !m.plaques) return 'Aucun visage ni plaque repéré. Position GPS de la photo retirée.'
+  const parts = [m.visages && pluriel(m.visages, 'visage'), m.plaques && pluriel(m.plaques, 'plaque')].filter(Boolean)
+  const accord = (m.visages ? 'masqué' : 'masquée') + (m.visages + m.plaques > 1 ? 's' : '')
+  return `${parts.join(' et ')} ${accord} sur votre téléphone.`
+}
 
 function ClicCarte({ onChoix }) {
   useMapEvents({ click: (e) => onChoix([e.latlng.lat, e.latlng.lng]) })
@@ -46,6 +59,7 @@ export default function Signaler() {
   const [description, setDescription] = useState('')
   const [photo, setPhoto] = useState(null)
   const [photoUrl, setPhotoUrl] = useState(null)
+  const [masquage, setMasquage] = useState(null) // { etat: 'en_cours' | 'fait' | 'serveur', visages, plaques }
   const [audio, setAudio] = useState(null)
   const [message, setMessage] = useState(null)
   const [envoiEnCours, setEnvoiEnCours] = useState(false)
@@ -61,7 +75,7 @@ export default function Signaler() {
     return () => URL.revokeObjectURL(url)
   }, [photo])
 
-  function choisirPhoto(e) {
+  async function choisirPhoto(e) {
     const fichier = e.target.files?.[0]
     e.target.value = ''
     if (!fichier) return
@@ -69,12 +83,32 @@ export default function Signaler() {
       setMessage('Format non accepté. Utilisez une image JPEG, PNG ou WebP.')
       return
     }
-    if (fichier.size > 5 * 1024 * 1024) {
-      setMessage('Image trop volumineuse. La taille maximale est de 5 Mo.')
+    if (fichier.size > 25 * 1024 * 1024) {
+      setMessage('Image trop volumineuse. La taille maximale est de 25 Mo.')
       return
     }
     setMessage(null)
-    setPhoto(fichier)
+    setPhoto(null)
+    setMasquage({ etat: 'en_cours' })
+    // Visages et plaques masqués ici, avant l'envoi : la photo d'origine reste sur le téléphone (D59).
+    try {
+      const r = await masquerPhoto(fichier)
+      setPhoto(r.fichier)
+      setMasquage({ etat: 'fait', visages: r.visages, plaques: r.plaques })
+    } catch {
+      if (fichier.size > 5 * 1024 * 1024) {
+        setMasquage(null)
+        setMessage('Image trop volumineuse pour ce téléphone. La taille maximale est de 5 Mo.')
+        return
+      }
+      setPhoto(fichier)
+      setMasquage({ etat: 'serveur' })
+    }
+  }
+
+  function retirerPhoto() {
+    setPhoto(null)
+    setMasquage(null)
   }
 
   function utiliserMaPosition() {
@@ -128,6 +162,7 @@ export default function Signaler() {
     setPosition(null)
     setDescription('')
     setPhoto(null)
+    setMasquage(null)
     setAudio(null)
     setType('menager')
     setVolume('moyen')
@@ -272,11 +307,18 @@ if (confirmation) {
                   <input type="file" accept="image/jpeg,image/png,image/webp" onChange={choisirPhoto} />
                 </label>
               </div>
+              {masquage?.etat === 'en_cours' && (
+                <p className="photo-masquage" role="status">Masquage des visages et des plaques sur votre téléphone…</p>
+              )}
               {photo && (
                 <div className="photo-apercu">
-                  {photoUrl && <img src={photoUrl} alt="Aperçu du dépotoir signalé" />}
-                  <div className="photo-apercu-info"><strong>{photo.name}</strong><span>{(photo.size / 1024 / 1024).toFixed(2)} Mo</span></div>
-                  <button type="button" className="photo-supprimer" onClick={() => setPhoto(null)}>Supprimer</button>
+                  {photoUrl && <img src={photoUrl} alt="Aperçu du dépotoir signalé, visages et plaques masqués" />}
+                  <div className="photo-apercu-info">
+                    <strong>{photo.name}</strong>
+                    <span>{(photo.size / 1024 / 1024).toFixed(2)} Mo</span>
+                    <span className="photo-masquage-etat">{texteMasquage(masquage)}</span>
+                  </div>
+                  <button type="button" className="photo-supprimer" onClick={retirerPhoto}>Supprimer</button>
                 </div>
               )}
         </section>
@@ -298,7 +340,7 @@ if (confirmation) {
 
         {message && <p className="signaler-message">{message}</p>}
         {!position && <p className="signaler-aide signaler-rappel">Placez d’abord le point sur la carte.</p>}
-        <button type="submit" className="btn btn-primaire signaler-envoyer" disabled={envoiEnCours}>
+        <button type="submit" className="btn btn-primaire signaler-envoyer" disabled={envoiEnCours || masquage?.etat === 'en_cours'}>
           {envoiEnCours ? 'Envoi en cours…' : 'Envoyer le signalement'}
         </button>
       </form>

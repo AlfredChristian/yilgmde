@@ -50,7 +50,7 @@
 
 - [x] Choisir et initialiser le framework (React + Vite), Leaflet + OSM (P1)
 - [x] A6 — Mode hors ligne : file IndexedDB avec `id_client` / `capture_le`, nouvel essai au retour du réseau, PWA installable (P1) — masquage local restant à décider (D47)
-- [ ] Masquage automatique des visages et plaques sur les photos, avant envoi (P1) — côté serveur fait et renforcé (D57 : YuNet, plaques par la forme) ; reste le masquage sur le téléphone avant envoi (D47)
+- [x] Masquage automatique des visages et plaques sur les photos, avant envoi (P1) — sur le téléphone (D59 : YuNet en JavaScript, plaques par la forme, GPS retiré) et sur le serveur en filet de sécurité (D57)
 - [x] D6 — Tableau de bord des scénarios et plan d'un arrondissement, comparaison côte à côte (P1) — simulation et comparaison à graine commune dans `/admin/plan`
 - [ ] Parcours de la vidéo de démo (3 min) : signaler, modérer, plan, changement de paramètre, recalcul (P1)
 - [x] Page de suivi d'un signalement, note vocale, pictogrammes (P1)
