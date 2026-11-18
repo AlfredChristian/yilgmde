@@ -60,3 +60,21 @@ def test_statut_importe_sans_historique_a_des_dates_estimees(client):
     assert r["depotoirs"] == len(s["depotoirs"])
     assert r["a_traiter"] + r["en_intervention"] + r["eradiques"] == r["depotoirs"]
     assert s["debut"] <= s["fin"]
+
+
+def test_itineraire_de_la_brigade_aller_et_retour(client):
+    """D61 : trajet de la base au dépotoir et retour, pour l'animation de la carte de la brigade."""
+    _, hc = compte(client, Role.chauffeur)
+    _, hl = compte(client, Role.laabal)
+    d = client.get("/laabal/depotoirs-a-traiter", headers=hl).json()[0]
+    url = f"/laabal/depotoirs/{d['id']}/itineraire"
+    assert client.get(url, headers=hc).status_code == 403
+    assert client.get("/laabal/depotoirs/999999/itineraire", headers=hl).status_code == 404
+    r = client.get(url, headers=hl).json()
+    base = (r["base"]["latitude"], r["base"]["longitude"])
+    proche = lambda p, q: abs(p[0] - q[0]) < 1e-4 and abs(p[1] - q[1]) < 1e-4
+    assert proche(r["aller"][0], base) and proche(r["aller"][-1], (d["latitude"], d["longitude"]))
+    assert proche(r["retour"][0], (d["latitude"], d["longitude"])) and proche(r["retour"][-1], base)
+    assert r["distance_aller_m"] > 0 and r["distance_retour_m"] > 0
+    if r["sur_les_voies"]:
+        assert len(r["aller"]) > 2           # le trajet suit les rues, pas une ligne droite

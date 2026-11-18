@@ -25,6 +25,8 @@ from backend.routes.signalements import _extension_photo, dossier_uploads
 from backend.schemas import Role, StatutDepotoir
 from backend.securite import exiger_role
 from backend.utilisateurs import journaliser
+from simulation.geometrie import distance_m
+from simulation.routes import Itineraires, reseau_de
 from simulation.tournees import depotoirs_a_traiter
 
 router = APIRouter(tags=["terrain"])
@@ -241,6 +243,33 @@ def a_traiter(request: Request, _=Depends(laabal)):
                            "nb_signalements", "nb_reapparitions", "priorite", "raison")}
         for d in depotoirs_a_traiter(donnees["depotoirs"], request.app.state.config)
     ]
+
+
+@router.get("/laabal/depotoirs/{depotoir_id}/itineraire")
+def itineraire_laabal(request: Request, depotoir_id: int, _=Depends(laabal)):
+    """Trajet de la brigade, de sa base au dépotoir et retour, sur les voies (D61).
+
+    Sert à l'animation de la carte de la brigade : le camion se rend sur place quand
+    l'intervention commence, et repart une fois le dépotoir éradiqué. Sans réseau routier
+    configuré, le trajet est une ligne droite (`sur_les_voies` vaut alors false).
+    """
+    config = request.app.state.config
+    base = (config.get("laabal") or {}).get("base") or config["collecte"].get("depot")
+    if not base:
+        raise HTTPException(409, "base des brigades inconnue (laabal.base ou collecte.depot)")
+    with acces_db(request) as conn:
+        d = _lire_depotoir(conn, depotoir_id)
+    depart = (float(base["latitude"]), float(base["longitude"]))
+    site = (float(d["latitude"]), float(d["longitude"]))
+    aller, retour, sur_les_voies = [list(depart), list(site)], [list(site), list(depart)], False
+    reseau = reseau_de(config)
+    if reseau is not None:
+        aller, retour = Itineraires(reseau, [depart, site]).trace_tournee([1])
+        sur_les_voies = True
+    longueur = lambda t: sum(distance_m(a[0], a[1], b[0], b[1]) for a, b in zip(t, t[1:]))
+    return {"depotoir_id": depotoir_id, "base": {"latitude": depart[0], "longitude": depart[1]},
+            "aller": aller, "retour": retour, "distance_aller_m": round(longueur(aller)),
+            "distance_retour_m": round(longueur(retour)), "sur_les_voies": sur_les_voies}
 
 
 @router.get("/laabal/tournee")

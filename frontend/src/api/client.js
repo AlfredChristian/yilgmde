@@ -769,6 +769,18 @@ export async function getDepotoirsLaabal() {
 
 // action : 'intervention_planifiee' (intervention en cours), 'eradique' ou 'sous_surveillance'.
 // Cycle cote serveur (B5) : actif -> intervention_planifiee -> eradique -> sous_surveillance.
+// Trajet de la brigade, de sa base au dépotoir et retour, sur les voies (D61), pour l'animation.
+export async function getItineraireLaabal(id) {
+  if (USE_MOCK) {
+    const d = MOCK_LAABAL.find((x) => x.id === id)
+    const base = [12.43, -1.47], site = [d.latitude, d.longitude]
+    const coude = [base[0], site[1]]
+    return { depotoir_id: id, base: { latitude: base[0], longitude: base[1] }, aller: [base, coude, site], retour: [site, coude, base],
+      distance_aller_m: 9000, distance_retour_m: 9000, sur_les_voies: false }
+  }
+  return appelAuth(`/laabal/depotoirs/${id}/itineraire`)
+}
+
 export async function changerStatutDepotoir(id, action, photo = null) {
   if (USE_MOCK) {
     MOCK_LAABAL = MOCK_LAABAL.map((d) => (d.id === id ? { ...d, statut: action } : d))
