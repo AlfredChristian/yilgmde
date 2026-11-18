@@ -15,6 +15,7 @@ from backend import db, plans
 from backend.config import ConfigError
 from backend.deps import acces_db
 from backend.synthese import synthese_markdown
+from simulation.plan import zones_du_scenario
 from backend.zones import lire_zones
 from backend.schemas import Role, ScenarioCreation, ScenarioSortie, SimulationEntree
 from backend.securite import exiger_role
@@ -214,6 +215,7 @@ def synthese(request: Request, scenario_id: int, _=Depends(admin)):
         scenario = plans.lire_scenario(conn, scenario_id)
         zones = lire_zones(conn)
     config = plans.config_effective(request.app.state.config, scenario)
+    zones = zones_du_scenario(zones, config)          # nouveaux quartiers compris (D56)
     texte = synthese_markdown(plan, scenario, zones, config)
     return PlainTextResponse(texte, media_type="text/markdown; charset=utf-8",
                              headers={"Content-Disposition": f'inline; filename="plan_scenario_{scenario_id}.md"'})

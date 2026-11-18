@@ -20,11 +20,11 @@ Généré par `scripts/resultats_scenarios.py` le 2026-11-18 : jeu `data/ouaga/`
 
 | Scénario | Capacité de collecte | Part captée estimée | Points | Camions utilisés | Distance (km) | Coût mensuel (M XOF) | Budget de l'arr. (M XOF) | Calcul |
 |---|---|---|---|---|---|---|---|---|
-| Base | 100,0 % | 60,2 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 7,2 s |
+| Base | 100,0 % | 60,2 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 6,8 s |
 | Pluies | 100,0 % | 55,2 % | 240 | 15 | 2 904 | 21,8 | 25,1 | 4,2 s |
-| Panne | 77,4 % | 60,2 % | 240 | 10 | 1 863 | 14,1 | 25,1 | 4,2 s |
-| Sensibilisation | 100,0 % | 70,3 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 4,2 s |
-| Abonnements | 100,0 % | 71,6 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 4,3 s |
+| Panne | 77,4 % | 60,2 % | 240 | 10 | 1 863 | 14,1 | 25,1 | 4,0 s |
+| Sensibilisation | 100,0 % | 70,3 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 4,1 s |
+| Abonnements | 100,0 % | 71,6 % | 240 | 13 | 2 591 | 19,2 | 25,1 | 4,2 s |
 | Budget ÷ 2 | 100,0 % | 60,2 % | 240 | 13 | 2 591 | 19,2 | 12,5 | 4,3 s |
 
 ## Simulation sur 30 jours

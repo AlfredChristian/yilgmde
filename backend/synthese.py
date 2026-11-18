@@ -38,9 +38,9 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
     l = [f"# {titre}", "",
          f"Scénario **{scenario['nom']}**, plan n° {plan['id']} calculé le {plan['calcule_le'][:16].replace('T', ' ')} UTC"
          f" en {plan['duree_calcul_ms']} ms, saison {'des pluies' if ind['saison'] == 'pluies' else 'sèche'}, {lieu}.", ""]
-    if scenario.get("parametres"):
-        l += ["Paramètres modifiés par rapport à la configuration de base :", "", "```json",
-              json.dumps(scenario["parametres"], ensure_ascii=False), "```", ""]
+    resume = _parametres_lisibles(scenario.get("parametres") or {})
+    if resume:
+        l += ["Paramètres modifiés par rapport à la configuration de base :", "", *[f"- {x}" for x in resume], ""]
 
     l += ["## En bref", "",
           "| Indicateur | Valeur |", "|---|---|",
@@ -120,3 +120,36 @@ def synthese_markdown(plan: dict, scenario: dict, zones: list[dict], config: dic
           "Plan calculé par yilgmde (code MIT). Les valeurs marquées [H] dans la configuration sont des hypothèses "
           "de départ ; voir `docs/parametres.md`.", ""]
     return "\n".join(l)
+
+
+def _parametres_lisibles(p: dict) -> list[str]:
+    """Paramètres du scénario en phrases, pour la mairie (le détail technique reste dans l'API)."""
+    lignes = []
+    arr = (p.get("perimetre") or {}).get("arrondissements")
+    if arr:
+        lignes.append(f"périmètre : arrondissement{'s' if len(arr) > 1 else ''} {', '.join(map(str, arr))}")
+    saison = (p.get("scenario") or {}).get("saison") or p.get("saison")
+    if saison:
+        lignes.append(f"saison : {'des pluies' if saison == 'pluies' else 'sèche'}")
+    pannes = [c["id"] for c in p.get("camions") or [] if c.get("disponible") is False]
+    if pannes:
+        lignes.append(f"camions en panne : {len(pannes)}")
+    budget = (p.get("mairie") or {}).get("budget_mensuel_xof")
+    if budget is not None:
+        lignes.append(f"budget mensuel de la commune : {_xof(budget)}")
+    pop = p.get("population") or {}
+    if pop.get("evolution_pct"):
+        lignes.append(f"évolution de la population : {pop['evolution_pct']:+g} %")
+    if pop.get("taux_abonnement_precollecteurs") is not None:
+        lignes.append(f"ménages abonnés aux pré-collecteurs : {_nb(pop['taux_abonnement_precollecteurs'] * 100)} %")
+    freq = (p.get("collecte") or {}).get("frequence_passages_par_semaine")
+    if freq is not None:
+        lignes.append(f"passages de collecte : {freq} par semaine")
+    apport = (p.get("simulation") or {}).get("prob_apport_volontaire")
+    if apport is not None:
+        lignes.append(f"apport volontaire aux points : {_nb(apport * 100)} %")
+    for z in p.get("zones_ajoutees") or []:
+        props = (json.loads(z) if isinstance(z, str) else z).get("properties") or {}
+        lignes.append(f"nouveau quartier : {props.get('nom', 'sans nom')}"
+                      + (f", {_nb(props['population'])} habitants" if props.get("population") else ""))
+    return lignes

@@ -130,6 +130,13 @@ def test_nouveau_quartier_s_ajoute(client):
     assert len(plan["zones_ajoutees"]) == 2                             # ajout, pas remplacement
 
 
+def test_synthese_compte_le_nouveau_quartier(client):
+    h = entetes(client)
+    q = dict(NOUVEAU_QUARTIER, properties={"nom": "Extension test", "population": 5000})
+    client.put("/scenarios/1/parametres", json={"zones_ajoutees": [q]}, headers=h)
+    assert "Extension test" in client.get("/scenarios/1/plan/synthese", headers=h).text
+
+
 def test_retirer_un_quartier_ajoute(client):
     """D56 : un quartier ajouté par erreur se retire par sa position."""
     h = entetes(client)
