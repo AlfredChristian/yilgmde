@@ -118,7 +118,7 @@ def test_photo_valide_est_enregistree(client, tmp_path):
     assert (tmp_path / "uploads" / f"{sid}.jpg").read_bytes().startswith(b"\xff\xd8\xff")
     nom = app.state.db.execute("SELECT photo FROM signalement WHERE id = ?", (sid,)).fetchone()["photo"]
     assert nom == f"{sid}.jpg"
-    assert r.json()["photo_masquee"] == {"visages": 0, "plaques": 0, "methode": "opencv-haar"}
+    assert r.json()["photo_masquee"] == {"visages": 0, "plaques": 0, "methode": "opencv-yunet"}
 
 
 def test_photo_qui_n_est_pas_une_image_est_refusee(client):

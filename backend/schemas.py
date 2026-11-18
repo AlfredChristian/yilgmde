@@ -75,7 +75,7 @@ class SignalementCree(BaseModel):
     code_suivi: str
     statut: StatutSignalement
     motif: str | None = None
-    photo_masquee: dict | None = None     # {"visages": 1, "plaques": 0, "methode": "opencv-haar"}
+    photo_masquee: dict | None = None     # {"visages": 1, "plaques": 0, "methode": "opencv-yunet"}
     deja_recu: bool = False               # True : renvoi d'un signalement déjà enregistré
 
 

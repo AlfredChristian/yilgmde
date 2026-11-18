@@ -20,6 +20,7 @@ population_totale: 2415266        # INSD, RGPH 2019 (monographie de Ouagadougou,
 population:
   production_dechets_kg_hab_jour: 0.60   # DGEP, cité par Sidwaya ; la mairie donne 0,57 (0,21 t/hab/an)
   taux_abonnement_precollecteurs: 0.3    # [H]
+  batiments: data/ouaga/batiments.csv.gz   # D58 : Google Open Buildings v3 ; absent = grille uniforme
 
 collecte:
   reseau_routier: data/ouaga/reseau_routier.json.gz   # D52 : vraies voies OSM, sens uniques, sans camps ni aéroport

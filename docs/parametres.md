@@ -42,6 +42,7 @@ Les sources sont détaillées dans `data/ouaga/LISEZMOI.md`. Un test (`tests/tes
 |---|---|---|---|---|---|
 | `population.production_dechets_kg_hab_jour` | Déchets produits par habitant (demande, C1) | kg/hab/jour | 0,5 | 0,60 | source : DGEP (cité par *Sidwaya*) ; mairie 0,57 |
 | `population.taux_abonnement_precollecteurs` | Part des ménages abonnés à un pré-collecteur | 0–1 | 0,3 | 0,3 | [H] |
+| `population.batiments` | Fichier des bâtiments Google Open Buildings v3 (`scripts/telecharger_batiments.py`) : les ménages sont placés là où sont les maisons, pondérés par la surface bâtie, pour situer les points de regroupement et mesurer la couverture (D58). Vide ou absent = répartition uniforme [H] | chemin | — | `data/ouaga/batiments.csv.gz` | source |
 | `population.evolution_pct` | Scénario : évolution de la population de toutes les zones (exode, croissance) ; la demande suit | % | 0 | 0 | levier de scénario |
 | `population.habitants_par_menage` | Taille moyenne d'un ménage | habitants | 6 | | informatif (pas encore utilisé) |
 | `saisons.seche.coef_production` | Multiplie la production en saison sèche | × | 1,0 | | référence |
@@ -81,6 +82,7 @@ Les sources sont détaillées dans `data/ouaga/LISEZMOI.md`. Un test (`tests/tes
 | `masquage.voisins_min_plaque` | Idem pour les plaques | — | 4 | [H] |
 | `masquage.taille_min_px` | Plus petit visage ou plaque cherché | px | 20 | technique |
 | `masquage.marge` | Zone floutée élargie de chaque côté | fraction | 0,25 | choix (prudence) |
+| `masquage.seuil_visage` | Confiance minimale du détecteur de visages YuNet ; plus bas = plus de visages floutés, plus de faux positifs | 0–1 | 0,6 | | [H] |
 | `masquage.qualite_jpeg` | Qualité du JPEG enregistré | 0–100 | 85 | technique |
 
 ## Points de regroupement (C2)

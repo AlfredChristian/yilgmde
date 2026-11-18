@@ -18,7 +18,9 @@ from simulation.regroupement import jours_entre_passages, placer_points
 
 @pytest.fixture
 def config():
-    return charger_config("ouagadougou")
+    c = charger_config("ouagadougou")
+    c["population"]["batiments"] = None      # grille uniforme : tests indépendants du fichier réel (voir test_batiments.py)
+    return c
 
 
 def carre(lat, lon, cote_deg):

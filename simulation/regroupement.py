@@ -12,8 +12,10 @@ Méthode, zone par zone (les zones ne se chevauchent pas, D23) :
      les points (`points_regroupement.capacite_kg` chacun) ;
    - marche : chaque point dessert un disque de rayon `distance_max_a_pied_m` ;
      il en faut au moins `aire de la zone / (π r²)`.
-2. **Où ?** k-means (scikit-learn, D08) sur une grille d'échantillons de la zone,
-   où les ménages sont supposés répartis uniformément [H], plus les dépotoirs
+2. **Où ?** k-means (scikit-learn, D08) pondéré sur les ménages de la zone : les
+   bâtiments réels (Open Buildings, `population.batiments`, D58) regroupés par
+   paquets et pondérés par leur surface bâtie ; à défaut, une grille où les ménages
+   sont supposés répartis uniformément [H]. S'y ajoutent les dépotoirs
    actifs de la zone avec un poids `poids_depotoir` [H] : un dépotoir montre où les
    déchets s'accumulent faute de solution proche. Chaque centre est recalé sur
    l'échantillon le plus proche, donc **toujours dans la zone**.
@@ -37,6 +39,7 @@ from typing import Sequence
 import numpy as np
 from sklearn.cluster import KMeans
 
+from simulation.batiments import batiments_de, menages_dans_zone
 from simulation.demande import estimer_demande
 from simulation.geometrie import aire_m2, depuis_metres, distance_m, echantillonner, vers_metres
 
@@ -92,7 +95,8 @@ def _plus_proche(xy: np.ndarray, sites: np.ndarray) -> tuple[np.ndarray, np.ndar
     return idx, np.sqrt(d2[np.arange(len(xy)), idx])
 
 
-def _placer_dans_zone(zone: dict, demande: dict, depotoirs: list[dict], p: dict) -> tuple[list[dict], dict | None]:
+def _placer_dans_zone(zone: dict, demande: dict, depotoirs: list[dict], p: dict,
+                      batiments=None) -> tuple[list[dict], dict | None]:
     geometrie = zone["geometrie"]
     aire = aire_m2(geometrie)
     demande_jour = demande["demande_kg_jour"]
@@ -102,14 +106,23 @@ def _placer_dans_zone(zone: dict, demande: dict, depotoirs: list[dict], p: dict)
     if demande_jour <= 0 and not depotoirs:
         return [], None   # population nulle : rien à collecter
 
-    echantillons = echantillonner(geometrie, p["pas_m"], p["max_echantillons"])
+    # Où sont les ménages ? Les bâtiments réels s'ils sont connus (D58), pondérés par leur
+    # surface bâtie ; sinon une grille uniforme sur la zone [H].
+    echantillons, poids_menages, source = [], np.array([]), "grille"
+    if batiments is not None and demande["population_connue"]:
+        echantillons, poids_menages = menages_dans_zone(batiments, geometrie, p["pas_m"], p["max_echantillons"])
+        source = "batiments" if echantillons else "grille"
+    if not echantillons:
+        echantillons = echantillonner(geometrie, p["pas_m"], p["max_echantillons"])
+        poids_menages = np.ones(len(echantillons))
+    poids_menages = poids_menages / poids_menages.mean()
     lat0 = sum(e[0] for e in echantillons) / len(echantillons)
     lon0 = sum(e[1] for e in echantillons) / len(echantillons)
     xy_menages = np.array([vers_metres(la, lo, lat0, lon0) for la, lo in echantillons])
     xy_depotoirs = np.array([vers_metres(d["latitude"], d["longitude"], lat0, lon0) for d in depotoirs]).reshape(-1, 2)
 
     candidats = np.vstack([xy_menages, xy_depotoirs])
-    poids = np.concatenate([np.ones(len(xy_menages)), np.full(len(xy_depotoirs), p["poids_depotoir"])])
+    poids = np.concatenate([poids_menages, np.full(len(xy_depotoirs), p["poids_depotoir"])])
     if not demande["population_connue"]:
         # sans population, on ne place des points que pour les dépotoirs
         candidats, poids = xy_depotoirs, np.ones(len(xy_depotoirs))
@@ -120,23 +133,25 @@ def _placer_dans_zone(zone: dict, demande: dict, depotoirs: list[dict], p: dict)
     k = max(1, k_capacite, k_marche)
     k_initial = k
     a_couvrir = candidats if not demande["population_connue"] else xy_menages
+    poids_couverture = np.ones(len(candidats)) if not demande["population_connue"] else poids_menages
 
     while True:
         k = min(k, p["max_points"])
         sites = candidats[_recaler(_kmeans(candidats, poids, k, p["graine"]), candidats)]
         _, dist = _plus_proche(a_couvrir, sites)
-        couverture = float((dist <= p["distance_m"]).mean())
+        couverture = float(np.average(dist <= p["distance_m"], weights=poids_couverture))
         if couverture >= p["couverture_cible"] or k >= p["max_points"] or k >= len(candidats):
             break
         k += max(1, k // 10)
 
-    # Répartition de la demande : chaque échantillon de ménages va au point le plus proche.
+    # Répartition de la demande : chaque échantillon de ménages va au point le plus proche,
+    # avec son poids (surface bâtie si les bâtiments sont connus).
     idx_menages, _ = _plus_proche(xy_menages, sites)
     idx_depotoirs, dist_depotoirs = _plus_proche(xy_depotoirs, sites) if len(depotoirs) else (np.array([], int), np.array([]))
 
     points = []
     for i, (x, y) in enumerate(sites):
-        part = float((idx_menages == i).mean()) if demande["population_connue"] else 0.0
+        part = float(poids_menages[idx_menages == i].sum() / poids_menages.sum()) if demande["population_connue"] else 0.0
         charge = demande_jour * part
         ids_dep = [depotoirs[j]["id"] for j in range(len(depotoirs)) if idx_depotoirs[j] == i]
         lat, lon = depuis_metres(float(x), float(y), lat0, lon0)
@@ -156,7 +171,7 @@ def _placer_dans_zone(zone: dict, demande: dict, depotoirs: list[dict], p: dict)
         )
 
     for pt in points:
-        pt["explication"] = _expliquer_zone(pt, zone, demande, p, k_initial, k_capacite, k_marche, len(points), couverture)
+        pt["explication"] = _expliquer_zone(pt, zone, demande, p, k_initial, k_capacite, k_marche, len(points), couverture, source)
 
     raisons = []
     if demande["population_connue"] and couverture < p["couverture_cible"]:
@@ -178,7 +193,7 @@ def _placer_dans_zone(zone: dict, demande: dict, depotoirs: list[dict], p: dict)
 
 
 def _expliquer_zone(pt: dict, zone: dict, demande: dict, p: dict, k_initial: int, k_capacite: int,
-                    k_marche: int, n: int, couverture: float) -> str:
+                    k_marche: int, n: int, couverture: float, source: str = "grille") -> str:
     nom = zone.get("nom") or f"zone {zone['id']}"
     morceaux = []
     if demande["population_connue"]:
@@ -187,6 +202,12 @@ def _expliquer_zone(pt: dict, zone: dict, demande: dict, p: dict, k_initial: int
             f"(capacité : {k_capacite}, marche ≤ {p['distance_m']:.0f} m : {k_marche}"
             + (f", ajoutés pour la couverture : {n - k_initial}" if n > k_initial else "")
             + f") ; couverture {couverture * 100:.0f} %."
+        )
+        morceaux.append(
+            "Ménages situés d'après les bâtiments vus sur l'imagerie satellite (Open Buildings), "
+            "pondérés par leur surface bâtie."
+            if source == "batiments" else
+            "Ménages supposés répartis uniformément sur la zone (bâtiments non chargés)."
         )
         morceaux.append(
             f"Ce point dessert environ {pt['_part_menages'] * 100:.0f} % des ménages de la zone, "
@@ -250,6 +271,7 @@ def placer_points(depotoirs_actifs: Sequence[dict], zones: Sequence[dict], confi
     à partir de 1 dans un ordre stable (zone, puis nord → sud, ouest → est).
     """
     p = _parametres(config)
+    batiments = batiments_de(config)
     demandes = {d["zone_id"]: d for d in estimer_demande(zones, config)}
     ids_zones = {z["id"] for z in zones}
 
@@ -257,7 +279,7 @@ def placer_points(depotoirs_actifs: Sequence[dict], zones: Sequence[dict], confi
     non_couverts: list[dict] = []
     for zone in sorted(zones, key=lambda z: z["id"]):
         dans_zone = [d for d in depotoirs_actifs if d.get("zone_id") == zone["id"]]
-        pts, manque = _placer_dans_zone(zone, demandes[zone["id"]], dans_zone, p)
+        pts, manque = _placer_dans_zone(zone, demandes[zone["id"]], dans_zone, p, batiments)
         points.extend(sorted(pts, key=lambda x: (-x["latitude"], x["longitude"])))
         if manque:
             non_couverts.append(manque)

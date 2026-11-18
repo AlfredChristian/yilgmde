@@ -5,25 +5,27 @@ avant l'envoi quand elle le peut, mais aucune photo n'est enregistrée sans pass
 ici. Ainsi, même une photo envoyée par un client qui ne floute pas n'est jamais
 gardée en clair.
 
-Méthode (OpenCV, sans service externe ni modèle à télécharger) :
+Méthode (OpenCV, sans service externe ; D57) :
 1. décodage de l'image (une image illisible est refusée) et réduction si elle
    dépasse `masquage.cote_max_px` ;
 2. détection en niveaux de gris égalisés, sur une copie réduite à
    `masquage.cote_detection_px` (rapide) :
-   - visages : cascades de Haar de face (`frontalface_default`) et de profil
-     (`profileface`, aussi sur l'image retournée pour l'autre profil) ;
-   - plaques : cascades `russian_plate_number` et `license_plate_rus_16stages`
-     (plaques rectangulaires à caractères sombres sur fond clair, proches des
-     plaques burkinabè) ;
+   - visages : **YuNet** (réseau de neurones léger fourni par OpenCV, modèle ONNX de
+     230 Ko dans `backend/modeles/`, licence MIT), qui voit aussi les visages de trois
+     quarts, petits ou dans l'ombre. Sans le modèle, retour aux cascades de Haar de
+     face et de profil ;
+   - plaques : **recherche par la forme**, valable quel que soit le pays : un rectangle
+     plus clair que son entourage, 2 à 6,5 fois plus large que haut, qui contient une
+     rangée de 4 à 12 caractères sombres de même hauteur (2 à 10 fois plus large que haute) ; complétée par les cascades
+     `russian_plate_number` et `license_plate_rus_16stages` ;
 3. chaque zone, élargie de `marge`, est **pixelisée puis floutée** (irréversible) ;
 4. ré-encodage en JPEG : les métadonnées EXIF (dont la position GPS de l'appareil
    et son modèle) disparaissent.
 
-Limites connues : les cascades de Haar manquent des visages de trois quarts, très
-petits ou dans l'ombre, et des plaques inclinées ou sales ; elles floutent parfois
-un motif qui n'est ni un visage ni une plaque (on préfère flouter trop que pas
-assez). C'est pourquoi le masquage côté téléphone reste souhaitable, et l'admin
-peut toujours rejeter une photo.
+Limites connues : un visage de moins de 10 pixels ou de dos, une plaque très inclinée,
+sale ou à demi cachée peuvent échapper au floutage ; un panneau ou une inscription peut
+être flouté à tort (on préfère flouter trop que pas assez). L'admin voit la photo avant
+de valider et peut la rejeter.
 """
 
 from __future__ import annotations
@@ -37,6 +39,9 @@ try:
 except ImportError:   # pragma: no cover - dépend de l'environnement
     cv2 = None
 
+from pathlib import Path
+
+MODELE_YUNET = Path(__file__).resolve().parent / "modeles" / "face_detection_yunet_2023mar.onnx"
 CASCADES_VISAGES = ("haarcascade_frontalface_default.xml", "haarcascade_profileface.xml")
 CASCADES_PLAQUES = ("haarcascade_russian_plate_number.xml", "haarcascade_license_plate_rus_16stages.xml")
 
@@ -57,7 +62,7 @@ class Resultat:
     hauteur: int
 
     def resume(self) -> dict:
-        return {"visages": self.visages, "plaques": self.plaques, "methode": "opencv-haar"}
+        return {"visages": self.visages, "plaques": self.plaques, "methode": "opencv-yunet" if MODELE_YUNET.exists() else "opencv-haar"}
 
 
 def disponible() -> bool:
@@ -84,7 +89,58 @@ def _parametres(config: dict) -> dict:
         "taille_min": int(m.get("taille_min_px", 20)),
         "marge": float(m.get("marge", 0.25)),
         "qualite": int(m.get("qualite_jpeg", 85)),
+        "seuil_yunet": float(m.get("seuil_visage", 0.6)),
     }
+
+
+def _visages_yunet(image, seuil: float) -> list[tuple[int, int, int, int]] | None:
+    """Visages par YuNet, ou None si le modèle est absent."""
+    if not MODELE_YUNET.exists() or not hasattr(cv2, "FaceDetectorYN"):
+        return None
+    h, w = image.shape[:2]
+    cle = f"yunet-{seuil}"
+    if cle not in _cache:
+        _cache[cle] = cv2.FaceDetectorYN.create(str(MODELE_YUNET), "", (w, h), seuil, 0.3, 5000)
+    detecteur = _cache[cle]
+    detecteur.setInputSize((w, h))
+    _, visages = detecteur.detect(image)
+    if visages is None:
+        return []
+    return [(int(v[0]), int(v[1]), int(v[2]), int(v[3])) for v in visages]
+
+
+def _plaques_par_forme(gris) -> list[tuple[int, int, int, int]]:
+    """Rectangles clairs contenant une rangée de caractères sombres (plaques de tout pays)."""
+    h, w = gris.shape[:2]
+    kx = max(9, (w // 45) | 1)
+    noir_sur_clair = cv2.morphologyEx(gris, cv2.MORPH_BLACKHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (kx, max(5, kx // 3))))
+    grad = np.absolute(cv2.Sobel(noir_sur_clair, cv2.CV_32F, 1, 0, ksize=3))
+    grad = cv2.normalize(grad, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    grad = cv2.morphologyEx(cv2.GaussianBlur(grad, (5, 5), 0), cv2.MORPH_CLOSE,
+                            cv2.getStructuringElement(cv2.MORPH_RECT, (kx * 2 + 1, max(3, kx // 3))))
+    _, masque = cv2.threshold(grad, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    masque = cv2.dilate(cv2.erode(masque, None, iterations=2), None, iterations=2)
+    contours, _ = cv2.findContours(masque, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    plaques = []
+    for c in contours:
+        # La zone trouvée est la rangée de caractères : 2 à 10 fois plus large que haute.
+        x, y, cw, ch = cv2.boundingRect(c)
+        if ch < 8 or not 2.0 <= cw / ch <= 10 or not 0.0003 * w * h <= cw * ch <= 0.06 * w * h:
+            continue
+        dy = int(ch * 0.5)                             # la plaque déborde la rangée de caractères
+        y0, y1 = max(0, y - dy), min(h, y + ch + dy)
+        region = gris[y0:y1, x:x + cw]
+        _, encre = cv2.threshold(region, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)
+        if encre.mean() / 255 > 0.6:          # surtout sombre : pas un fond clair à caractères
+            continue
+        n, _, stats, _ = cv2.connectedComponentsWithStats(encre)
+        caracteres = [s for s in stats[1:] if 0.6 * ch <= s[cv2.CC_STAT_HEIGHT] <= 1.2 * ch
+                      and s[cv2.CC_STAT_WIDTH] <= 0.3 * cw and s[cv2.CC_STAT_AREA] >= 6]
+        if 4 <= len(caracteres) <= 12:
+            hauteurs = [s[cv2.CC_STAT_HEIGHT] for s in caracteres]
+            if max(hauteurs) <= 1.6 * min(hauteurs):      # caractères de même taille
+                plaques.append((x, y0, cw, y1 - y0))
+    return plaques
 
 
 def _detecter(gris, cascades, facteur, voisins, taille_min, miroir=False) -> list[tuple[int, int, int, int]]:
@@ -115,10 +171,14 @@ def detecter(image, config: dict) -> dict[str, list[tuple[int, int, int, int]]]:
     def remettre(zones):
         return [(int(x / echelle), int(y / echelle), int(zw / echelle), int(zh / echelle)) for x, y, zw, zh in zones]
 
-    return {
-        "visages": remettre(_detecter(gris, CASCADES_VISAGES, p["facteur"], p["voisins_visage"], taille_min, miroir=True)),
-        "plaques": remettre(_detecter(gris, CASCADES_PLAQUES, p["facteur"], p["voisins_plaque"], taille_min)),
-    }
+    yunet = _visages_yunet(petite, p["seuil_yunet"])
+    if yunet is None:          # modèle absent : anciennes cascades de face et de profil
+        visages = _detecter(gris, CASCADES_VISAGES, p["facteur"], p["voisins_visage"], taille_min, miroir=True)
+    else:
+        visages = yunet
+    gris_brut = cv2.cvtColor(petite, cv2.COLOR_BGR2GRAY)
+    plaques = _detecter(gris, CASCADES_PLAQUES, p["facteur"], p["voisins_plaque"], taille_min) + _plaques_par_forme(gris_brut)
+    return {"visages": remettre(visages), "plaques": remettre(plaques)}
 
 
 def _fusionner(zones: list[tuple[int, int, int, int]]) -> list[tuple[int, int, int, int]]:
@@ -140,8 +200,9 @@ def flouter(image, zone: tuple[int, int, int, int], marge: float) -> None:
     if x1 <= x0 or y1 <= y0:
         return
     region = image[y0:y1, x0:x1]
-    bloc = max(4, min(x1 - x0, y1 - y0) // 8)
-    petite = cv2.resize(region, (max(1, (x1 - x0) // bloc), max(1, (y1 - y0) // bloc)), interpolation=cv2.INTER_LINEAR)
+    # Blocs de 1/5 de la zone : même un détecteur moderne (YuNet) n'y retrouve plus de visage.
+    bloc = max(4, min(x1 - x0, y1 - y0) // 5)
+    petite = cv2.resize(region, (max(1, (x1 - x0) // bloc), max(1, (y1 - y0) // bloc)), interpolation=cv2.INTER_AREA)
     pixel = cv2.resize(petite, (x1 - x0, y1 - y0), interpolation=cv2.INTER_NEAREST)
     noyau = max(3, (bloc * 2) | 1)
     image[y0:y1, x0:x1] = cv2.GaussianBlur(pixel, (noyau, noyau), 0)

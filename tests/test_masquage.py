@@ -41,7 +41,7 @@ def test_image_sans_visage_ni_plaque_inchangee(config):
     uni = cv2.imencode(".png", np.full((120, 160, 3), 200, np.uint8))[1].tobytes()
     r = masquer_photo(uni, config)
     assert (r.visages, r.plaques, r.largeur, r.hauteur) == (0, 0, 160, 120)
-    assert r.resume() == {"visages": 0, "plaques": 0, "methode": "opencv-haar"}
+    assert r.resume() == {"visages": 0, "plaques": 0, "methode": "opencv-yunet"}
 
 
 def test_plaques_floutees(config, monkeypatch):
@@ -87,3 +87,43 @@ def test_image_illisible_et_opencv_absent(config, monkeypatch):
     monkeypatch.setattr(masquage, "cv2", None)
     with pytest.raises(MasquageIndisponible):
         masquer_photo(PORTRAIT, config)
+
+
+
+def test_yunet_utilise_et_haar_en_secours(config, monkeypatch):
+    """D57 : YuNet trouve le visage ; sans le modèle, les cascades de Haar prennent le relais."""
+    assert masquage.MODELE_YUNET.exists()
+    assert len(detecter(decoder(PORTRAIT), config)["visages"]) == 1
+    monkeypatch.setattr(masquage, "MODELE_YUNET", Path("/inexistant.onnx"))
+    assert len(detecter(decoder(PORTRAIT), config)["visages"]) >= 1
+
+
+def _photo_avec_plaque(texte="11 KJ 4521", echelle=1.1):
+    rng = np.random.default_rng(3)
+    fond = rng.normal(120, 25, (600, 900, 3)).clip(0, 255).astype(np.uint8)
+    (tw, th), _ = cv2.getTextSize(texte, cv2.FONT_HERSHEY_SIMPLEX, echelle, 3)
+    cv2.rectangle(fond, (288, 300 - th - 14), (312 + tw, 314), (235, 235, 235), -1)
+    cv2.putText(fond, texte, (300, 300), cv2.FONT_HERSHEY_SIMPLEX, echelle, (15, 15, 15), 3)
+    return fond
+
+
+def test_plaque_trouvee_par_sa_forme_quel_que_soit_le_pays(config):
+    """D57 : rectangle clair + rangée de caractères sombres, sans cascade entraînée sur un pays."""
+    image = _photo_avec_plaque()
+    zones = masquage._plaques_par_forme(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+    assert len(zones) == 1
+    x, y, w, h = zones[0]
+    assert x <= 310 and x + w >= 400 and y <= 290 <= y + h       # la plaque est couverte
+    r = masquer_photo(cv2.imencode(".png", image)[1].tobytes(), config)
+    assert r.plaques >= 1
+
+
+def test_pas_de_fausse_plaque_sur_un_tas_de_dechets(config):
+    rng = np.random.default_rng(7)
+    for _ in range(10):
+        image = rng.normal(110, 30, (600, 900, 3)).clip(0, 255).astype(np.uint8)
+        for _ in range(60):
+            couleur = tuple(int(c) for c in rng.integers(0, 255, 3))
+            cv2.ellipse(image, (int(rng.integers(0, 900)), int(rng.integers(0, 600))),
+                        (int(rng.integers(5, 60)), int(rng.integers(5, 40))), int(rng.integers(0, 180)), 0, 360, couleur, -1)
+        assert detecter(image, config)["plaques"] == []
