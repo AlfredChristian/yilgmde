@@ -163,6 +163,7 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
 - **Plan d'un arrondissement** (livrable 3) : `{"perimetre": {"arrondissements": [4]}}` (ou `{"zones": [12, 13]}`, ou les deux : union ; listes vides = toute la commune). Plan, tournées, Laabal, simulation et comparaison se limitent aux zones choisies et à leurs dépotoirs ; les nouveaux quartiers du scénario sont toujours gardés. `422` (rien n'est enregistré) si le périmètre ne contient aucune zone. `indicateurs.perimetre` = `{"arrondissements": [4], "zones": [12, 13], "population": 180000, "part_budget": 0.0745}` (`null` sans périmètre). `budget_mensuel_xof` est alors la part du budget communal revenant au périmètre, au prorata de sa population (D39) ; la simulation utilise la même part.
 - `POST /scenarios/{id}/calculer` → Plan, calcul forcé.
 - `GET /scenarios/{id}/plan/synthese` → **plan de gestion lisible** en Markdown (`text/markdown`) : en bref, points par zone avec une explication, tournées par camion et rotation, brigade Laabal, ce qui n'est pas couvert. Pour le tableau de bord, le rapport ou l'impression.
+- `GET /scenarios/{id}/plan/synthese.pdf` (admin) → le même plan de gestion mis en page en PDF A4 (`application/pdf`, téléchargement), D65.
 - `GET /scenarios/{id}/plan` → dernier Plan, **recalculé d'abord si les entrées ont changé** (dépotoirs, zones, paramètres) ; sinon le même plan est renvoyé.
 - `POST /scenarios/{id}/simuler` : `{"jours": 30, "graine": 42}` (corps optionnel ; `jours` de 1 à 365, défaut `scenario.horizon_jours` (30) ; `graine` par défaut celle de la config). Simule sur le plan à jour du scénario ; **même graine = mêmes résultats**. `422` si `jours` hors bornes, `404` si scénario inconnu. Les colonnes `pct_collecte`, `depotoirs_actifs`, `cout_xof`, `distance_km` sont enregistrées dans `indicateur_simulation` (la simulation précédente du même plan est remplacée).
 ```json
@@ -213,7 +214,8 @@ Un scénario = des surcharges **partielles** de la config (`config/*.yaml`). Au 
     "depotoirs_planifies_laabal": 2, "depotoirs_en_attente_laabal": 0,
     "camions_utilises": ["camion_1", "camion_2", "camion_3"], "camions_indisponibles": [], "camions_flotte": ["camion_1", "camion_2", "camion_3"],
     "distance_totale_km": 145.1, "cout_total_xof": 100000, "cout_mensuel_estime_xof": 866667,
-    "budget_mensuel_xof": 5000000, "budget_depasse": false, "saison": "seche", "methode_tournees": "ortools"
+    "budget_mensuel_xof": 5000000, "budget_depasse": false,
+    "cout_detail": {"distance_km_passage": 48.6, "camion_jours_passage": 2, "cout_km_passage_xof": 19440, "cout_jours_passage_xof": 30000, "passages_par_mois": 8.67}, "saison": "seche", "methode_tournees": "ortools"
   },
   "non_couverts": [
     { "zone_id": 3, "raison": "population inconnue et aucun dépotoir actif : besoin non estimable" },

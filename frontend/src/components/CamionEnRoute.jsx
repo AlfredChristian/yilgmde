@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Marker, Polyline, Tooltip } from 'react-leaflet'
+import { Marker, Polyline, Tooltip } from '../carte'
 import { iconeCamion } from './iconeCamion'
 
 // Camion qui parcourt un trajet (liste de [lat, lon]) en `duree` ms, puis appelle `onFin`.

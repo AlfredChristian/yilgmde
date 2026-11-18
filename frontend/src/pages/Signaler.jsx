@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, Marker, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, useMap, useMapEvents } from '../carte'
 import FondDeCarte from '../components/FondDeCarte'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'

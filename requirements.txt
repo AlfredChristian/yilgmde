@@ -15,4 +15,5 @@ scipy                            # itinéraires sur le réseau routier (D52)
 ortools
 pytest
 httpx
+reportlab                        # plan de gestion en PDF (D65), licence BSD
 opencv-python-headless>=4.8,<5   # masquage visages/plaques ; la v5 ne fournit plus les cascades de Haar

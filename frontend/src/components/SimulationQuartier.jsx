@@ -1,6 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { MapContainer, CircleMarker, Marker, Polygon, Tooltip, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Marker, Polygon, Tooltip, useMap } from '../carte'
 import FondDeCarte from './FondDeCarte'
 import { getSecteursQuartier, getSimulationQuartier } from '../api/client'
 import { iconeCamion, svgCamion } from './iconeCamion'

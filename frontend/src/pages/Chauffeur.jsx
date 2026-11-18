@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { MapContainer, CircleMarker, Marker, Tooltip, Polyline, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Marker, Tooltip, Polyline, useMap } from '../carte'
 import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
 import { useAuth } from '../auth/AuthContext'

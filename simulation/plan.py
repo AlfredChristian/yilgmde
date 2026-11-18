@@ -192,6 +192,15 @@ def calculer_plan(donnees: dict, config: dict) -> dict:
         "distance_totale_km": round(sum(t["distance_km"] for t in tournees), 2),
         "cout_total_xof": round(cout_passage),
         "cout_mensuel_estime_xof": round(cout_mensuel),
+        # D65 : de quoi est fait le coût mensuel, pour l'expliquer à l'écran.
+        "cout_detail": {
+            "distance_km_passage": round(sum(t["distance_km"] for t in collecte["tournees"]), 1),
+            "camion_jours_passage": len({(t["camion_id"], t.get("jour", 1)) for t in collecte["tournees"]}),
+            "cout_jours_passage_xof": round(sum(next((c.get("cout_jour_xof", 0) for c in config["camions"] if c["id"] == cid), 0)
+                                                for cid, _ in {(t["camion_id"], t.get("jour", 1)) for t in collecte["tournees"]})),
+            "cout_km_passage_xof": round(sum(t["distance_km"] * next((c.get("cout_km_xof", 0) for c in config["camions"] if c["id"] == t["camion_id"]), 0) for t in collecte["tournees"])),
+            "passages_par_mois": round(passages_mois, 2),
+        },
         "budget_mensuel_xof": budget,
         "budget_depasse": bool(budget is not None and cout_mensuel > budget),
         "saison": config["scenario"]["saison"],

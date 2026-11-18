@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { MapContainer, CircleMarker, Polyline, Tooltip, useMap } from 'react-leaflet'
+import { MapContainer, CircleMarker, Polyline, Tooltip, useMap } from '../carte'
 import FondDeCarte from './FondDeCarte'
 import { getSuiviDepotoirs } from '../api/client'
 import './SuiviEradication.css'

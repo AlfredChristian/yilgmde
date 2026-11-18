@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapContainer, CircleMarker, Polyline, Polygon, Popup, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, CircleMarker, Polyline, Polygon, Popup, Tooltip, useMap, useMapEvents } from '../carte'
 import FondDeCarte from '../components/FondDeCarte'
 import 'leaflet/dist/leaflet.css'
-import { activerScenario, affecterTournee, comparerScenarios, creerScenario, getArrondissements, getParametres, getPlan, getScenarios, getSynthese, getUtilisateurs, majParametres, simulerScenario } from '../api/client'
+import { activerScenario, affecterTournee, comparerScenarios, creerScenario, getArrondissements, getParametres, getPlan, getScenarios, getSynthese, getSynthesePdf, getUtilisateurs, majParametres, simulerScenario } from '../api/client'
 import './Plan.css'
 import SuiviFlotte from '../components/SuiviFlotte'
 import SuiviEradication from '../components/SuiviEradication'
@@ -226,12 +226,17 @@ export default function Plan() {
     }
   }
 
-  function telechargerSynthese() {
-    const lien = document.createElement('a')
-    lien.href = URL.createObjectURL(new Blob([synthese], { type: 'text/markdown;charset=utf-8' }))
-    lien.download = 'plan-de-gestion.md'
-    lien.click()
-    URL.revokeObjectURL(lien.href)
+  async function telechargerSynthese() {
+    try {
+      const pdf = await getSynthesePdf()
+      const lien = document.createElement('a')
+      lien.href = URL.createObjectURL(pdf)
+      lien.download = 'plan-de-gestion.pdf'
+      lien.click()
+      setTimeout(() => URL.revokeObjectURL(lien.href), 1000)
+    } catch (e) {
+      setErreur(e.message)
+    }
   }
 
   async function rafraichirScenario() {
@@ -450,7 +455,11 @@ export default function Plan() {
 
         <section className="carte plan-bloc">
           <div>
-            <h2 className="carte-titre">Indicateurs</h2>
+            <h2 className="carte-titre">Indicateurs du plan</h2>
+            <p className="carte-texte plan-aide">
+              Calculés à partir des paramètres du scénario actif : ils changent quand vous modifiez un paramètre, le périmètre
+              ou le scénario actif. Une simulation ne les modifie pas ; ses résultats sur plusieurs jours sont dans la carte « Simulation ».
+            </p>
             <p className="plan-chiffre" title="Part du stock des points que les camions peuvent vider à chaque passage">
               {ind.capacite_collecte_pct.toLocaleString('fr-FR')} % <small>capacité de collecte</small>
             </p>
@@ -462,6 +471,22 @@ export default function Plan() {
               {fmt(ind.cout_mensuel_estime_xof)} <small>XOF/mois sur {fmt(ind.budget_mensuel_xof)} de budget</small>
             </p>
             {ind.budget_depasse && <p className="mod-alerte">Budget dépassé</p>}
+            {ind.cout_detail && (
+              <details className="plan-cout">
+                <summary>Comment ce coût est calculé</summary>
+                <p>
+                  Un passage de collecte, c’est {fmtNombre(ind.cout_detail.distance_km_passage)} km parcourus
+                  ({fmt(ind.cout_detail.cout_km_passage_xof)} XOF, au coût par kilomètre de chaque camion)
+                  et {ind.cout_detail.camion_jours_passage} journées de camion ({fmt(ind.cout_detail.cout_jours_passage_xof ?? ind.cout_total_xof - ind.cout_detail.cout_km_passage_xof)} XOF
+                  au coût fixe par jour de chaque camion), soit {fmt(ind.cout_total_xof)} XOF.
+                </p>
+                <p>
+                  Avec {String(ind.cout_detail.passages_par_mois).replace('.', ',')} passages par mois, cela fait {fmt(ind.cout_mensuel_estime_xof)} XOF.
+                  Le budget est la part du budget mensuel de la commune qui revient au périmètre, au prorata de sa population.
+                  Le coût ne compte que les camions de collecte : ni les précollecteurs, payés par les ménages abonnés, ni la brigade Laabal.
+                </p>
+              </details>
+            )}
           </div>
         </section>
 
@@ -568,7 +593,7 @@ export default function Plan() {
           <section className="synthese">
             <header className="affectations-tete synthese-tete">
               <div className="plan-boutons">
-                {synthese && <button className="btn-contour" onClick={telechargerSynthese}>Télécharger</button>}
+                {synthese && <button className="btn-contour" onClick={telechargerSynthese}>Télécharger en PDF</button>}
                 <button className="btn-contour" onClick={() => setVue('carte')}>Revenir à la carte</button>
               </div>
             </header>
