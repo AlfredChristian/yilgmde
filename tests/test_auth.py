@@ -198,6 +198,9 @@ def test_routes_publiques_restent_ouvertes(client):
 def test_creer_admin_depuis_l_environnement(monkeypatch):
     conn = db.connecter(":memory:")
     db.initialiser(conn)
+    # Le terminal peut avoir ces variables (scripts/lancer_demo.ps1) : le test les retire.
+    monkeypatch.delenv("YILGMDE_ADMIN_EMAIL", raising=False)
+    monkeypatch.delenv("YILGMDE_ADMIN_PASSWORD", raising=False)
     assert creer_admin_si_absent(conn) is False            # variables absentes
     monkeypatch.setenv("YILGMDE_ADMIN_EMAIL", "boss@exemple.bf")
     monkeypatch.setenv("YILGMDE_ADMIN_PASSWORD", MDP)

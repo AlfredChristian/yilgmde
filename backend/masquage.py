@@ -94,6 +94,9 @@ def _parametres(config: dict) -> dict:
     }
 
 
+CONTRASTE_MIN_VISAGE = 6.0   # écart type des gris en dessous duquel une zone est jugée unie
+
+
 def _visages_yunet(image, seuil: float) -> list[tuple[int, int, int, int]] | None:
     """Visages par YuNet, ou None si le modèle est absent."""
     if not MODELE_YUNET.exists() or not hasattr(cv2, "FaceDetectorYN"):
@@ -107,7 +110,16 @@ def _visages_yunet(image, seuil: float) -> list[tuple[int, int, int, int]] | Non
     _, visages = detecteur.detect(image)
     if visages is None:
         return []
-    return [(int(v[0]), int(v[1]), int(v[2]), int(v[3])) for v in visages]
+    gris = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) if image.ndim == 3 else image
+    sortie = []
+    for v in visages:
+        x, y, vw, vh = (int(v[0]), int(v[1]), int(v[2]), int(v[3]))
+        zone = gris[max(0, y):max(0, y + vh), max(0, x):max(0, x + vw)]
+        # Un vrai visage a du relief (yeux, nez, bouche). Certaines versions d'OpenCV (vu sous
+        # Windows, 4.14) voient un « visage » dans une zone unie : on l'écarte.
+        if zone.size and float(zone.std()) >= CONTRASTE_MIN_VISAGE:
+            sortie.append((x, y, vw, vh))
+    return sortie
 
 
 def _plaques_par_forme(gris) -> list[tuple[int, int, int, int]]:

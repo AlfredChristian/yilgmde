@@ -48,8 +48,24 @@ export function decoder(sorties, seuil = 0.6, seuilNms = 0.3) {
   return gardes
 }
 
-/** Visages d'une image RGBA d'au plus 640 px de côté. */
+export const CONTRASTE_MIN_VISAGE = 6   // comme backend/masquage.py
+
+/** Écart type des gris dans la zone [x, y, l, h] d'une image RGBA (0 si vide). */
+function contraste({ width: w, height: h, data }, [x, y, l, hz]) {
+  const x0 = Math.max(0, Math.floor(x)), y0 = Math.max(0, Math.floor(y))
+  const x1 = Math.min(w, Math.floor(x + l)), y1 = Math.min(h, Math.floor(y + hz))
+  let n = 0, s = 0, s2 = 0
+  for (let j = y0; j < y1; j++)
+    for (let i = x0; i < x1; i++) {
+      const k = (j * w + i) * 4
+      const g = 0.299 * data[k] + 0.587 * data[k + 1] + 0.114 * data[k + 2]
+      n++; s += g; s2 += g * g
+    }
+  return n ? Math.sqrt(Math.max(0, s2 / n - (s / n) ** 2)) : 0
+}
+
+/** Visages d'une image RGBA d'au plus 640 px de côté. Une zone unie n'est pas un visage. */
 export function detecterVisages(reseau, image, seuil) {
   const sorties = reseau.executer(preparer(image), COTE, COTE)
-  return decoder(sorties, seuil)
+  return decoder(sorties, seuil).filter((v) => contraste(image, v) >= CONTRASTE_MIN_VISAGE)
 }

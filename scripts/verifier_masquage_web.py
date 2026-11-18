@@ -22,8 +22,8 @@ RACINE = Path(__file__).resolve().parent.parent
 MODELE = RACINE / "backend" / "modeles" / "face_detection_yunet_2023mar.onnx"
 HARNAIS = """
 import fs from 'node:fs'
-import { Reseau } from '%(racine)s/frontend/src/masquage/reseau.js'
-import { decoder } from '%(racine)s/frontend/src/masquage/visages.js'
+import { Reseau } from '%(uri)s/frontend/src/masquage/reseau.js'
+import { decoder } from '%(uri)s/frontend/src/masquage/visages.js'
 const g = JSON.parse(fs.readFileSync('%(racine)s/frontend/public/modeles/yunet.json'))
 const bin = fs.readFileSync('%(racine)s/frontend/public/modeles/yunet.bin')
 const r = new Reseau(g, bin.buffer.slice(bin.byteOffset, bin.byteOffset + bin.length))
@@ -50,7 +50,7 @@ def main() -> None:
     reference = dict(zip([o.name for o in ort.InferenceSession(str(MODELE)).get_outputs()],
                          ort.InferenceSession(str(MODELE)).run(None, {"input": entree})))
     with tempfile.TemporaryDirectory() as d:
-        (Path(d) / "h.mjs").write_text(HARNAIS % {"racine": RACINE.as_posix()})
+        (Path(d) / "h.mjs").write_text(HARNAIS % {"racine": RACINE.as_posix(), "uri": RACINE.as_uri()}, encoding="utf-8")
         entree.tofile(Path(d) / "e.bin")
         subprocess.run(["node", str(Path(d) / "h.mjs"), str(Path(d) / "e.bin"), str(Path(d) / "s.json")], check=True)
         js = json.loads((Path(d) / "s.json").read_text())
