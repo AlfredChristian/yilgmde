@@ -19,6 +19,8 @@
 
 - [x] D60 — Suivi de l'éradication des dépotoirs (signalé, validé, intervention, éradiqué, rejouable), caméra sur ordinateur, camions dessinés sur les cartes
 
+- [x] D61 — Camion de la brigade animé sur sa carte (aller par les rues, travail sur place, retour)
+
 **Socle**
 - [x] Charger la config : `default.yaml` fusionné avec `ouagadougou.yaml` (P1)
 - [x] Modèle de données SQLite + schémas Pydantic (P1)

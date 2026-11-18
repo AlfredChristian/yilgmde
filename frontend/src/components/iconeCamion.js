@@ -22,13 +22,14 @@ export function svgCamion(couleur = '#0e5a3a', { largeur = 44 } = {}) {
 </svg>`
 }
 
-export function iconeCamion({ couleur, versGauche = false, largeur = 44, classe = '' } = {}) {
+// `audessus` : le camion se gare juste au-dessus du point, pour laisser voir sa couleur.
+export function iconeCamion({ couleur, versGauche = false, largeur = 44, classe = '', audessus = false } = {}) {
   const hauteur = Math.round((largeur * 28) / 44)
   return L.divIcon({
     className: `icone-camion ${classe}`.trim(),
     html: `<span class="icone-camion-corps${versGauche ? ' vers-gauche' : ''}">${svgCamion(couleur, { largeur })}</span>`,
     iconSize: [largeur, hauteur],
-    iconAnchor: [largeur / 2, hauteur - 2],
+    iconAnchor: [largeur / 2, audessus ? hauteur + 9 : hauteur - 2],
     tooltipAnchor: [0, -hauteur + 4],
   })
 }
