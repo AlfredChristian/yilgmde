@@ -64,6 +64,20 @@ precollecteurs:
   abonnement_mensuel_xof: 1000           # [H]
   capacite_kg_jour: 150                  # [H]
 
+quartier:                                # D62 : journée animée d'un secteur (écran « Simulation d'un quartier »)
+  rayon_m: 450                           # [H] le quartier animé : disque autour d'un point de regroupement
+  maisons_affichees: 150                 # technique : maisons tirées parmi les bâtiments (le navigateur ne peut pas tout animer)
+  maisons_par_tricycle: 20               # [H] poubelles ramassées par tournée de tricycle
+  vitesse_tricycle_kmh: 8                # [H]
+  vitesse_a_pied_kmh: 4                  # [H]
+  arret_maison_min: 1.5                  # [H] arrêt du tricycle devant une maison
+  vidage_min: 6                          # [H] vidage d'un tricycle ou d'un point par le camion
+  sortie_poubelles: [6.0, 7.5]           # [H] heures où les ménages sortent leur poubelle
+  depart_tricycles: 7.0                  # [H] heure de départ des précollecteurs
+  heures_apport: [6.5, 9.0]              # [H] heures où les non-abonnés portent eux-mêmes leurs déchets
+  delai_camion_min: 30                   # [H] passage du camion après le dernier apport au point
+  approche_camion_m: 2500                # technique : part du trajet du camion montrée dans le secteur
+
 laabal:
   nombre_brigades: 1                     # [H]
   capacite_eradication_par_jour: 2       # [H] dépotoirs traités par jour

@@ -6,6 +6,7 @@ import { activerScenario, affecterTournee, comparerScenarios, creerScenario, get
 import './Plan.css'
 import SuiviFlotte from '../components/SuiviFlotte'
 import SuiviEradication from '../components/SuiviEradication'
+import SimulationQuartier from '../components/SimulationQuartier'
 import Affectations from '../components/Affectations'
 import LectureMarkdown from '../components/LectureMarkdown'
 
@@ -142,6 +143,7 @@ export default function Plan() {
   const [utilisateurs, setUtilisateurs] = useState([])
   const [flotteOuverte, setFlotteOuverte] = useState(false)
   const [eradicationOuverte, setEradicationOuverte] = useState(false)
+  const [quartierOuvert, setQuartierOuvert] = useState(false)
   const [vue, setVue] = useState('carte')     // panneau de droite : 'carte', 'affectations' ou 'synthese'
   const [trace, setTrace] = useState(null)     // coins du quartier en cours de tracé, null hors tracé
   const [nouveauQuartier, setNouveauQuartier] = useState({ nom: '', population: '' })
@@ -551,6 +553,7 @@ export default function Plan() {
               </button>
               <button className="btn-contour" onClick={() => setFlotteOuverte(true)}>Suivi de la flotte</button>
               <button className="btn-contour" onClick={() => setEradicationOuverte(true)}>Suivi de l’éradication</button>
+              <button className="btn-contour" onClick={() => setQuartierOuvert(true)}>Simulation d’un quartier</button>
             </div>
           </div>
         </section>
@@ -558,6 +561,7 @@ export default function Plan() {
 
       <div className={`plan-carte ${flotteOuverte ? 'plan-carte-flotte' : ''}`}>
         {eradicationOuverte && <SuiviEradication onRetour={() => setEradicationOuverte(false)} />}
+        {quartierOuvert && <SimulationQuartier onRetour={() => setQuartierOuvert(false)} />}
         {flotteOuverte ? <SuiviFlotte onRetourCarte={() => setFlotteOuverte(false)} /> : vue === 'affectations' ? (
           <Affectations tournees={plan.tournees} utilisateurs={utilisateurs} onAffecter={affecterSimple} onRetour={() => setVue('carte')} />
         ) : vue === 'synthese' ? (
