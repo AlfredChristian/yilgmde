@@ -88,19 +88,4 @@ scripts/      scripts utilitaires (préparation des données, etc.)
 - `docs/api-contract.md` : routes, formats JSON, droits par rôle.
 - `TODO.md` : suivi par personne. `DECISIONS.md` : choix et raisons. `HANDOFF.md` : reprise de travail.
 
-## 10. Consignes à l'IA
 
-- Réponds en français, de façon concrète, avec du code qui tourne sous **Windows (PowerShell)** comme sous Linux.
-- Respecte `docs/api-contract.md` et `docs/modele-donnees.md`. Ne change pas la stack sans passer par `DECISIONS.md`.
-- Privilégie le simple : un MVP qui marche vaut mieux qu'un projet ambitieux à moitié fini.
-- Signale toute hypothèse que tu fais (surtout chiffrée) et marque-la `[H]`.
-
-## 11. Questions ouvertes
-
-- Date et heure exactes de la finale et du rendu (pour caler `TODO.md`).
-- Quel est **notre secteur** de collecte des signalements, et quand collecte-t-on ?
-- Comment le jury injecte-t-il ses signalements piégés (formulaire, API, fichier) et dans quel format ?
-- Les paramètres de départ de la mairie nous sont-ils fournis, et sous quelle forme ?
-- Règles de rendu : dépôt public dès maintenant ? licence imposée ?
-- Procédure et règles pour verser la carte dans OpenStreetMap (règles d'import de la communauté).
-- Confirmer qu'on dispose de la version complète de l'énoncé.
