@@ -7,7 +7,7 @@ import pytest
 
 from backend.config import appliquer_surcharges, charger_config
 from simulation.geometrie import distance_m
-from simulation.routes import Itineraires, Reseau, reseau_de
+from simulation.routes import Itineraires, Reseau, itineraires, reseau_de
 from simulation.tournees import planifier_tournees
 
 # Grille 3 × 3 de carrefours (~110 m d'écart) :
@@ -92,3 +92,16 @@ def test_reseau_introuvable():
     config = appliquer_surcharges(charger_config(None), {"collecte": {"reseau_routier": "nimporte.json.gz"}})
     with pytest.raises(ValueError, match="introuvable"):
         reseau_de(config)
+
+
+def test_itineraires_reutilise_le_calcul_des_memes_sites(reseau):
+    """D68 : mêmes sites, même réseau, mêmes réglages => même objet, mêmes distances."""
+    sites = [NOEUDS["1"], NOEUDS["3"], NOEUDS["4"]]
+    a = itineraires(reseau, sites)
+    b = itineraires(reseau, [tuple(x) for x in sites])
+    assert a is b
+    assert (a.matrice_m == Itineraires(reseau, sites).matrice_m).all()
+    assert itineraires(reseau, sites[:2]) is not a                    # autres sites : nouveau calcul
+    assert itineraires(reseau, sites, max_sites_complet=1) is not a   # autres réglages aussi
+    autre = Reseau({"noeuds": NOEUDS, "voies": VOIES})
+    assert itineraires(autre, sites) is not a                        # autre réseau aussi

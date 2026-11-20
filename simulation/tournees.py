@@ -31,7 +31,7 @@ import math
 from typing import Sequence
 
 from simulation.geometrie import distance_m
-from simulation.routes import Itineraires, reseau_de
+from simulation.routes import Itineraires, itineraires, reseau_de
 
 try:   # OR-Tools est une dépendance (D08), mais le repli doit marcher sans lui.
     from ortools.constraint_solver import pywrapcp, routing_enums_pb2
@@ -114,7 +114,7 @@ def distances(sites: Sequence[tuple[float, float]], config: dict):
     reseau = reseau_de(config, len(sites))
     if reseau is not None:
         c = config["collecte"]
-        itin = Itineraires(reseau, sites, max_sites_complet=int(c.get("reseau_routier_max_sites", 600)),
+        itin = itineraires(reseau, sites, max_sites_complet=int(c.get("reseau_routier_max_sites", 600)),
                            rayon_m=float(c.get("reseau_routier_rayon_m", 5000)),
                            coef_lointain=float(c.get("coef_detour", 1.3)))
         return itin.matrice_entiers(), itin

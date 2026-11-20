@@ -22,6 +22,8 @@ from __future__ import annotations
 import gzip
 import json
 import math
+import threading
+from collections import OrderedDict
 from functools import lru_cache
 from pathlib import Path
 
@@ -151,6 +153,35 @@ def reseau_de(config: dict, nb_sites: int = 0) -> Reseau | None:
     if not p.exists():
         raise ValueError(f"réseau routier introuvable : {p} (lancer scripts/telecharger_reseau_routier.py)")
     return _charger(str(p), p.stat().st_mtime)
+
+
+_MEMOIRE_ITINERAIRES: "OrderedDict[tuple, Itineraires]" = OrderedDict()
+_VERROU_ITINERAIRES = threading.Lock()
+
+
+def itineraires(reseau: "Reseau", sites, max_sites_complet: int = 600, rayon_m: float = 5000.0,
+                coef_lointain: float = 1.3, garder: int = 8) -> "Itineraires":
+    """Comme `Itineraires(...)`, mais réutilise le calcul des mêmes sites sur le même réseau (D68).
+
+    Le calcul des distances sur les routes est l'étape la plus longue d'un plan (≈ 1,6 s pour un
+    arrondissement). Un recalcul qui garde les mêmes points (panne de camions, budget, nouveau
+    scénario sur la même zone) retrouve ainsi le résultat au lieu de le refaire. Le résultat est
+    identique : seuls les sites, le réseau et les réglages entrent dans la clé.
+    """
+    cle = (id(reseau), tuple((round(float(a), 7), round(float(b), 7)) for a, b in sites),
+           int(max_sites_complet), float(rayon_m), float(coef_lointain))
+    with _VERROU_ITINERAIRES:
+        trouve = _MEMOIRE_ITINERAIRES.get(cle)
+        if trouve is not None and trouve.reseau is reseau:
+            _MEMOIRE_ITINERAIRES.move_to_end(cle)
+            return trouve
+    itin = Itineraires(reseau, sites, max_sites_complet=max_sites_complet, rayon_m=rayon_m,
+                       coef_lointain=coef_lointain)
+    with _VERROU_ITINERAIRES:
+        _MEMOIRE_ITINERAIRES[cle] = itin
+        while len(_MEMOIRE_ITINERAIRES) > garder:
+            _MEMOIRE_ITINERAIRES.popitem(last=False)
+    return itin
 
 
 class Itineraires:
