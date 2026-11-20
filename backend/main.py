@@ -1,4 +1,6 @@
+import logging
 import os
+import threading
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -11,6 +13,23 @@ from backend.plans import creer_scenario_base_si_absent
 from backend.routes import (admin_donnees, admin_export, admin_signalements, admin_utilisateurs, auth, depotoirs,
                             donnees_ouvertes, eradication, quartier, scenarios, signalements, terrain, zones)
 from backend.utilisateurs import creer_admin_si_absent
+
+
+def _prechauffer(config: dict) -> None:
+    """Charge en arrière-plan ce que le premier calcul chargerait (D68) : réseau routier,
+    bâtiments, solveur. Sans cela, le premier plan ou la première simulation de quartier après
+    le démarrage prend 6 à 10 s au lieu de 1 à 4. Un échec ici ne bloque rien : le calcul
+    chargera les données lui-même, comme avant."""
+    try:
+        from simulation.batiments import batiments_de
+        from simulation.routes import reseau_de
+        import ortools.constraint_solver.pywrapcp  # noqa: F401
+        import sklearn.cluster  # noqa: F401
+
+        reseau_de(config)
+        batiments_de(config)
+    except Exception:  # pragma: no cover - préchauffage facultatif
+        logging.getLogger(__name__).warning("préchauffage des données impossible", exc_info=True)
 
 
 @asynccontextmanager
@@ -27,6 +46,8 @@ async def lifespan(app: FastAPI):
     creer_scenario_base_si_absent(app.state.db)
     # Compteurs d'échecs de connexion (D32), en mémoire : remis à zéro au démarrage.
     app.state.limiteurs_login = creer_limiteurs(app.state.config)
+    if os.environ.get("YILGMDE_PRECHAUFFER", "1") != "0":
+        threading.Thread(target=_prechauffer, args=(app.state.config,), daemon=True).start()
     yield
     app.state.db.close()
 
